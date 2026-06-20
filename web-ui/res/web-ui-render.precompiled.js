@@ -518,12 +518,36 @@ return function render(_ctx, _cache) {
               ])
             ]),
             _createElementVNode("div", { class: "side-rail-lang" }, [
-              _createElementVNode("button", {
-                type: "button",
-                class: "language-settings-link",
-                "aria-label": _ctx.t('settings.language.sideLabel', { language: _ctx.currentLanguageLabel() }),
-                onClick: _ctx.openLanguageSettings
-              }, _toDisplayString(_ctx.t('settings.language.sideLabel', { language: _ctx.currentLanguageLabel() })), 9 /* TEXT, PROPS */, ["aria-label", "onClick"])
+              _createElementVNode("div", { class: "side-rail-lang-actions" }, [
+                _createElementVNode("button", {
+                  type: "button",
+                  class: "language-settings-link",
+                  "aria-label": _ctx.t('settings.language.sideLabel', { language: _ctx.currentLanguageLabel() }),
+                  onClick: _ctx.openLanguageSettings
+                }, _toDisplayString(_ctx.t('settings.language.sideLabel', { language: _ctx.currentLanguageLabel() })), 9 /* TEXT, PROPS */, ["aria-label", "onClick"]),
+                _createElementVNode("button", {
+                  type: "button",
+                  class: "side-announcement-button",
+                  "aria-label": _ctx.t('announcement.providerCache.open'),
+                  title: _ctx.t('announcement.providerCache.open'),
+                  onClick: _ctx.openProviderCacheAnnouncementModal
+                }, [
+                  (_openBlock(), _createElementBlock("svg", {
+                    viewBox: "0 0 20 20",
+                    fill: "none",
+                    stroke: "currentColor",
+                    "stroke-width": "1.7",
+                    "stroke-linecap": "round",
+                    "stroke-linejoin": "round",
+                    width: "16",
+                    height: "16",
+                    "aria-hidden": "true"
+                  }, [
+                    _createElementVNode("path", { d: "M15 8.5a5 5 0 0 0-10 0c0 2.75-1 4.25-2 5.5h14c-1-1.25-2-2.75-2-5.5Z" }),
+                    _createElementVNode("path", { d: "M8 16a2 2 0 0 0 4 0" })
+                  ]))
+                ], 8 /* PROPS */, ["aria-label", "title", "onClick"])
+              ])
             ])
           ]))
         : _createCommentVNode("v-if", true),
@@ -2891,12 +2915,12 @@ return function render(_ctx, _cache) {
                         ], 8 /* PROPS */, ["aria-label"]))
                       : _createCommentVNode("v-if", true)
                   ]),
-                  (_ctx.sessionsLoading)
+                  (_ctx.sessionsLoading && _ctx.sessionsList.length === 0)
                     ? (_openBlock(), _createElementBlock("div", {
                         key: 0,
                         class: "state-message"
                       }, _toDisplayString(_ctx.t('sessions.loadingList')), 1 /* TEXT */))
-                    : (_ctx.sessionsList.length === 0)
+                    : (!_ctx.sessionsLoading && _ctx.sessionsList.length === 0)
                       ? (_openBlock(), _createElementBlock("div", {
                           key: 1,
                           class: "session-empty"
@@ -4915,6 +4939,42 @@ return function render(_ctx, _cache) {
                 ], 8 /* PROPS */, ["aria-label"]),
                 _createElementVNode("section", {
                   class: "settings-card",
+                  "aria-label": _ctx.t('settings.providerCache.title')
+                }, [
+                  _createElementVNode("div", { class: "settings-card-main" }, [
+                    _createElementVNode("div", { class: "settings-card-content" }, [
+                      _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.providerCache.title')), 1 /* TEXT */),
+                      _createElementVNode("p", { class: "settings-card-desc" }, _toDisplayString(_ctx.t('settings.providerCache.meta')), 1 /* TEXT */),
+                      _createElementVNode("p", { class: "settings-card-hint" }, _toDisplayString(_ctx.t('settings.providerCache.hint')), 1 /* TEXT */),
+                      (_ctx.providerCacheSyncMessage)
+                        ? (_openBlock(), _createElementBlock("p", {
+                            key: 0,
+                            class: "settings-card-hint provider-cache-sync-message"
+                          }, _toDisplayString(_ctx.providerCacheSyncMessage), 1 /* TEXT */))
+                        : _createCommentVNode("v-if", true),
+                      (_ctx.providerCacheError)
+                        ? (_openBlock(), _createElementBlock("p", {
+                            key: 1,
+                            class: "settings-card-hint form-error"
+                          }, _toDisplayString(_ctx.providerCacheError), 1 /* TEXT */))
+                        : _createCommentVNode("v-if", true)
+                    ])
+                  ]),
+                  _createElementVNode("div", { class: "settings-card-actions" }, [
+                    _createElementVNode("button", {
+                      class: "settings-card-action",
+                      onClick: $event => (_ctx.openProviderCacheModal({ forceRefresh: true })),
+                      disabled: _ctx.providerCacheLoading || _ctx.providerCacheSyncing
+                    }, _toDisplayString(_ctx.providerCacheLoading ? _ctx.t('settings.providerCache.loading') : _ctx.t('settings.providerCache.open')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                    _createElementVNode("button", {
+                      class: "settings-card-action",
+                      onClick: _ctx.syncProviderCacheRecords,
+                      disabled: _ctx.providerCacheLoading || _ctx.providerCacheSyncing
+                    }, _toDisplayString(_ctx.providerCacheSyncing ? _ctx.t('settings.providerCache.syncing') : _ctx.t('settings.providerCache.sync')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                  ])
+                ], 8 /* PROPS */, ["aria-label"]),
+                _createElementVNode("section", {
+                  class: "settings-card",
                   "aria-label": _ctx.t('settings.trashConfig.title')
                 }, [
                   _createElementVNode("div", { class: "settings-card-main" }, [
@@ -6633,10 +6693,327 @@ return function render(_ctx, _cache) {
           ])
         ], 8 /* PROPS */, ["onClick"]))
       : _createCommentVNode("v-if", true),
+    _createCommentVNode(" 项目功能公告模态框 "),
+    (_ctx.showProviderCacheAnnouncementModal)
+      ? (_openBlock(), _createElementBlock("div", {
+          key: 7,
+          class: "modal-overlay project-announcement-overlay",
+          onClick: _withModifiers(_ctx.closeProviderCacheAnnouncementModal, ["self"])
+        }, [
+          _createElementVNode("div", {
+            class: "modal provider-cache-announcement-modal project-announcement-modal",
+            role: "dialog",
+            "aria-modal": "true",
+            "aria-labelledby": "provider-cache-announcement-title"
+          }, [
+            _createElementVNode("button", {
+              type: "button",
+              class: "project-announcement-close",
+              "aria-label": _ctx.t('announcement.project.closeAria'),
+              onClick: _ctx.closeProviderCacheAnnouncementModal
+            }, "×", 8 /* PROPS */, ["aria-label", "onClick"]),
+            _createElementVNode("div", { class: "project-announcement-header" }, [
+              _createElementVNode("div", { class: "project-announcement-eyebrow" }, _toDisplayString(_ctx.t('announcement.project.eyebrow')), 1 /* TEXT */),
+              _createElementVNode("div", {
+                class: "modal-title project-announcement-title",
+                id: "provider-cache-announcement-title"
+              }, _toDisplayString(_ctx.t('announcement.project.title')), 1 /* TEXT */),
+              _createElementVNode("p", { class: "provider-cache-announcement-copy provider-cache-announcement-lede" }, _toDisplayString(_ctx.t('announcement.project.subtitle')), 1 /* TEXT */)
+            ]),
+            _createElementVNode("div", {
+              class: "project-announcement-feature-grid",
+              "aria-label": _ctx.t('announcement.project.features.aria')
+            }, [
+              _createElementVNode("article", { class: "project-announcement-feature-card" }, [
+                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.config.title')), 1 /* TEXT */),
+                _createElementVNode("div", { class: "project-announcement-feature-meta" }, _toDisplayString(_ctx.t('announcement.project.feature.config.meta')), 1 /* TEXT */)
+              ]),
+              _createElementVNode("article", { class: "project-announcement-feature-card" }, [
+                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.sessions.title')), 1 /* TEXT */),
+                _createElementVNode("div", { class: "project-announcement-feature-meta" }, _toDisplayString(_ctx.t('announcement.project.feature.sessions.meta')), 1 /* TEXT */)
+              ]),
+              _createElementVNode("article", { class: "project-announcement-feature-card" }, [
+                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.usage.title')), 1 /* TEXT */),
+                _createElementVNode("div", { class: "project-announcement-feature-meta" }, _toDisplayString(_ctx.t('announcement.project.feature.usage.meta')), 1 /* TEXT */)
+              ]),
+              _createElementVNode("article", { class: "project-announcement-feature-card" }, [
+                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.tasks.title')), 1 /* TEXT */),
+                _createElementVNode("div", { class: "project-announcement-feature-meta" }, _toDisplayString(_ctx.t('announcement.project.feature.tasks.meta')), 1 /* TEXT */)
+              ]),
+              _createElementVNode("article", { class: "project-announcement-feature-card" }, [
+                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.skills.title')), 1 /* TEXT */),
+                _createElementVNode("div", { class: "project-announcement-feature-meta" }, _toDisplayString(_ctx.t('announcement.project.feature.skills.meta')), 1 /* TEXT */)
+              ]),
+              _createElementVNode("article", { class: "project-announcement-feature-card" }, [
+                _createElementVNode("div", { class: "project-announcement-feature-title" }, _toDisplayString(_ctx.t('announcement.project.feature.data.title')), 1 /* TEXT */),
+                _createElementVNode("div", { class: "project-announcement-feature-meta" }, _toDisplayString(_ctx.t('announcement.project.feature.data.meta')), 1 /* TEXT */)
+              ])
+            ], 8 /* PROPS */, ["aria-label"]),
+            _createElementVNode("details", {
+              class: "project-announcement-cache-section",
+              "aria-labelledby": "project-announcement-cache-title"
+            }, [
+              _createElementVNode("summary", { class: "project-announcement-section-head" }, [
+                _createElementVNode("span", null, [
+                  _createElementVNode("span", {
+                    class: "project-announcement-section-title",
+                    id: "project-announcement-cache-title"
+                  }, _toDisplayString(_ctx.t('announcement.project.cache.title')), 1 /* TEXT */),
+                  _createElementVNode("span", { class: "project-announcement-section-meta" }, _toDisplayString(_ctx.t('announcement.project.cache.meta')), 1 /* TEXT */)
+                ]),
+                (_ctx.getProviderCacheAnnouncementSummary().loadedAt)
+                  ? (_openBlock(), _createElementBlock("span", {
+                      key: 0,
+                      class: "provider-cache-loaded-at"
+                    }, _toDisplayString(_ctx.t('modal.providerCache.loadedAt')) + ": " + _toDisplayString(_ctx.getProviderCacheAnnouncementSummary().loadedAt), 1 /* TEXT */))
+                  : _createCommentVNode("v-if", true)
+              ]),
+              (_ctx.providerCacheError)
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: "state-message error provider-cache-error"
+                  }, _toDisplayString(_ctx.providerCacheError), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true),
+              (_ctx.providerCacheSyncMessage)
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 1,
+                    class: "state-message provider-cache-sync-message"
+                  }, _toDisplayString(_ctx.providerCacheSyncMessage), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true),
+              (_ctx.providerCacheLoading && !_ctx.providerCacheLoadedOnce)
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 2,
+                    class: "state-message"
+                  }, _toDisplayString(_ctx.t('modal.providerCache.loading')), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true),
+              _createElementVNode("div", { class: "provider-cache-announcement-body" }, [
+                _createElementVNode("div", {
+                  class: "project-announcement-mini-status",
+                  "aria-label": _ctx.t('announcement.project.status.aria')
+                }, [
+                  _createElementVNode("span", null, [
+                    _createTextVNode(_toDisplayString(_ctx.t('announcement.project.status.provider')) + ": ", 1 /* TEXT */),
+                    _createElementVNode("strong", null, _toDisplayString(_ctx.currentProvider || _ctx.t('common.notSelected')), 1 /* TEXT */)
+                  ]),
+                  _createElementVNode("span", null, [
+                    _createTextVNode(_toDisplayString(_ctx.t('announcement.project.status.model')) + ": ", 1 /* TEXT */),
+                    _createElementVNode("strong", null, _toDisplayString(_ctx.currentModel || _ctx.t('common.notSelected')), 1 /* TEXT */)
+                  ]),
+                  _createElementVNode("span", null, [
+                    _createTextVNode(_toDisplayString(_ctx.t('announcement.project.status.cacheFiles')) + ": ", 1 /* TEXT */),
+                    _createElementVNode("strong", null, _toDisplayString(_ctx.getProviderCacheAnnouncementSummary().fileCount), 1 /* TEXT */)
+                  ])
+                ], 8 /* PROPS */, ["aria-label"]),
+                _createElementVNode("div", { class: "provider-cache-summary-grid" }, [
+                  _createElementVNode("div", { class: "provider-cache-summary-card" }, [
+                    _createElementVNode("span", { class: "provider-cache-summary-label" }, _toDisplayString(_ctx.t('announcement.project.cache.files')), 1 /* TEXT */),
+                    _createElementVNode("strong", null, _toDisplayString(_ctx.getProviderCacheAnnouncementSummary().fileCount), 1 /* TEXT */)
+                  ]),
+                  _createElementVNode("div", { class: "provider-cache-summary-card" }, [
+                    _createElementVNode("span", { class: "provider-cache-summary-label" }, _toDisplayString(_ctx.t('announcement.project.cache.providers')), 1 /* TEXT */),
+                    _createElementVNode("strong", null, _toDisplayString(_ctx.getProviderCacheAnnouncementSummary().providerCount), 1 /* TEXT */)
+                  ]),
+                  _createElementVNode("div", { class: "provider-cache-summary-card" }, [
+                    _createElementVNode("span", { class: "provider-cache-summary-label" }, _toDisplayString(_ctx.t('announcement.project.cache.groups')), 1 /* TEXT */),
+                    _createElementVNode("strong", null, _toDisplayString(_ctx.getProviderCacheAnnouncementSummary().groupCount), 1 /* TEXT */)
+                  ])
+                ]),
+                _createElementVNode("div", {
+                  class: "provider-cache-announcement-list",
+                  "aria-label": _ctx.t('announcement.project.cache.groupList')
+                }, [
+                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getProviderCacheAnnouncementGroups(), (group) => {
+                    return (_openBlock(), _createElementBlock("div", {
+                      key: group.key,
+                      class: "provider-cache-announcement-row"
+                    }, [
+                      _createElementVNode("span", null, _toDisplayString(group.label), 1 /* TEXT */),
+                      _createElementVNode("span", null, _toDisplayString(_ctx.t('announcement.project.cache.groupSummary', { files: group.existingCount, providers: group.providerCount })), 1 /* TEXT */)
+                    ]))
+                  }), 128 /* KEYED_FRAGMENT */))
+                ], 8 /* PROPS */, ["aria-label"]),
+                _createElementVNode("div", { class: "project-announcement-cache-actions" }, [
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: "btn-tool btn-tool-compact",
+                    onClick: _ctx.syncProviderCacheRecords,
+                    disabled: _ctx.providerCacheLoading || _ctx.providerCacheSyncing
+                  }, _toDisplayString(_ctx.providerCacheSyncing ? _ctx.t('modal.providerCache.syncing') : _ctx.t('announcement.project.cache.sync')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: "btn-tool btn-tool-compact",
+                    onClick: _ctx.loadProviderCacheRecords,
+                    disabled: _ctx.providerCacheLoading
+                  }, _toDisplayString(_ctx.providerCacheLoading ? _ctx.t('modal.providerCache.refreshing') : _ctx.t('announcement.project.cache.refresh')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: "btn-tool btn-tool-compact",
+                    onClick: _ctx.openProviderCacheDetailsFromAnnouncement
+                  }, _toDisplayString(_ctx.t('announcement.project.cache.details')), 9 /* TEXT, PROPS */, ["onClick"])
+                ])
+              ])
+            ]),
+            _createElementVNode("div", { class: "btn-group provider-cache-footer project-announcement-footer" }, [
+              _createElementVNode("button", {
+                class: "btn btn-confirm",
+                onClick: _ctx.closeProviderCacheAnnouncementModal
+              }, _toDisplayString(_ctx.t('announcement.project.primaryAction')), 9 /* TEXT, PROPS */, ["onClick"])
+            ])
+          ])
+        ], 8 /* PROPS */, ["onClick"]))
+      : _createCommentVNode("v-if", true),
+    _createCommentVNode(" Provider 缓存记录模态框 "),
+    (_ctx.showProviderCacheModal)
+      ? (_openBlock(), _createElementBlock("div", {
+          key: 8,
+          class: "modal-overlay",
+          onClick: _withModifiers(_ctx.closeProviderCacheModal, ["self"])
+        }, [
+          _createElementVNode("div", {
+            class: "modal modal-wide provider-cache-modal",
+            role: "dialog",
+            "aria-modal": "true",
+            "aria-labelledby": "provider-cache-modal-title"
+          }, [
+            _createElementVNode("div", {
+              class: "modal-title",
+              id: "provider-cache-modal-title"
+            }, _toDisplayString(_ctx.t('modal.providerCache.title')), 1 /* TEXT */),
+            _createElementVNode("div", { class: "form-hint provider-cache-root" }, _toDisplayString(_ctx.t('modal.providerCache.root')) + ": " + _toDisplayString((_ctx.providerCacheRecords && _ctx.providerCacheRecords.root) || '~/.codexmate'), 1 /* TEXT */),
+            _createElementVNode("div", { class: "provider-cache-toolbar" }, [
+              _createElementVNode("button", {
+                type: "button",
+                class: "btn-tool btn-tool-compact",
+                onClick: _ctx.loadProviderCacheRecords,
+                disabled: _ctx.providerCacheLoading
+              }, _toDisplayString(_ctx.providerCacheLoading ? _ctx.t('modal.providerCache.refreshing') : _ctx.t('modal.providerCache.refresh')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+              _createElementVNode("button", {
+                type: "button",
+                class: "btn-tool btn-tool-compact",
+                onClick: _ctx.syncProviderCacheRecords,
+                disabled: _ctx.providerCacheLoading || _ctx.providerCacheSyncing
+              }, _toDisplayString(_ctx.providerCacheSyncing ? _ctx.t('modal.providerCache.syncing') : _ctx.t('modal.providerCache.sync')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+              (_ctx.providerCacheLoadedAt)
+                ? (_openBlock(), _createElementBlock("span", {
+                    key: 0,
+                    class: "provider-cache-loaded-at"
+                  }, _toDisplayString(_ctx.t('modal.providerCache.loadedAt')) + ": " + _toDisplayString(_ctx.providerCacheLoadedAt), 1 /* TEXT */))
+                : _createCommentVNode("v-if", true)
+            ]),
+            (_ctx.providerCacheError)
+              ? (_openBlock(), _createElementBlock("div", {
+                  key: 0,
+                  class: "state-message error provider-cache-error"
+                }, _toDisplayString(_ctx.providerCacheError), 1 /* TEXT */))
+              : _createCommentVNode("v-if", true),
+            (_ctx.providerCacheSyncMessage)
+              ? (_openBlock(), _createElementBlock("div", {
+                  key: 1,
+                  class: "state-message provider-cache-sync-message"
+                }, _toDisplayString(_ctx.providerCacheSyncMessage), 1 /* TEXT */))
+              : _createCommentVNode("v-if", true),
+            (_ctx.providerCacheLoading && !_ctx.providerCacheLoadedOnce)
+              ? (_openBlock(), _createElementBlock("div", {
+                  key: 2,
+                  class: "state-message"
+                }, _toDisplayString(_ctx.t('modal.providerCache.loading')), 1 /* TEXT */))
+              : (_openBlock(), _createElementBlock("div", {
+                  key: 3,
+                  class: "provider-cache-body"
+                }, [
+                  _createElementVNode("div", { class: "provider-cache-groups" }, [
+                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getProviderCacheGroups(), (group) => {
+                      return (_openBlock(), _createElementBlock("section", {
+                        key: group.key,
+                        class: "provider-cache-group"
+                      }, [
+                        _createElementVNode("div", { class: "provider-cache-group-header" }, [
+                          _createElementVNode("div", { class: "provider-cache-group-title" }, _toDisplayString(group.label), 1 /* TEXT */),
+                          _createElementVNode("div", { class: "provider-cache-group-meta" }, _toDisplayString(_ctx.t('modal.providerCache.groupMeta', { count: group.existingCount || 0 })), 1 /* TEXT */)
+                        ]),
+                        (!_ctx.hasProviderCacheExistingFiles(group))
+                          ? (_openBlock(), _createElementBlock("div", {
+                              key: 0,
+                              class: "provider-cache-empty"
+                            }, _toDisplayString(_ctx.t('modal.providerCache.empty')), 1 /* TEXT */))
+                          : (_openBlock(), _createElementBlock("div", {
+                              key: 1,
+                              class: "provider-cache-file-list"
+                            }, [
+                              (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getProviderCacheExistingFiles(group), (file) => {
+                                return (_openBlock(), _createElementBlock("article", {
+                                  key: _ctx.getProviderCacheFileKey(file),
+                                  class: "provider-cache-file"
+                                }, [
+                                  _createElementVNode("div", { class: "provider-cache-file-header" }, [
+                                    _createElementVNode("div", null, [
+                                      _createElementVNode("div", { class: "provider-cache-file-name" }, _toDisplayString(file.name), 1 /* TEXT */),
+                                      _createElementVNode("div", { class: "provider-cache-file-summary" }, _toDisplayString(_ctx.getProviderCacheFileSummary(file)), 1 /* TEXT */)
+                                    ]),
+                                    _createElementVNode("div", { class: "provider-cache-file-meta" }, [
+                                      _createElementVNode("span", null, _toDisplayString(_ctx.formatProviderCacheFileSize(file.size)), 1 /* TEXT */),
+                                      (file.mtime)
+                                        ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(file.mtime), 1 /* TEXT */))
+                                        : _createCommentVNode("v-if", true)
+                                    ])
+                                  ]),
+                                  _createElementVNode("div", { class: "provider-cache-file-path" }, _toDisplayString(_ctx.getProviderCacheFilePath(file)), 1 /* TEXT */),
+                                  (_ctx.hasProviderCacheProviders(file))
+                                    ? (_openBlock(), _createElementBlock("div", {
+                                        key: 0,
+                                        class: "provider-cache-provider-list"
+                                      }, [
+                                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getProviderCacheFileProviders(file), (provider, providerIndex) => {
+                                          return (_openBlock(), _createElementBlock("details", {
+                                            key: provider.name || (_ctx.getProviderCacheFileKey(file) + ':' + providerIndex),
+                                            class: "provider-cache-provider",
+                                            open: ""
+                                          }, [
+                                            _createElementVNode("summary", { class: "provider-cache-provider-summary" }, [
+                                              _createElementVNode("span", { class: "provider-cache-provider-name" }, _toDisplayString(provider.name || 'provider'), 1 /* TEXT */),
+                                              _createElementVNode("span", { class: "provider-cache-provider-badges" }, [
+                                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getProviderCacheProviderMeta(provider), (item) => {
+                                                  return (_openBlock(), _createElementBlock("span", {
+                                                    key: item.label,
+                                                    class: "provider-cache-provider-badge"
+                                                  }, _toDisplayString(item.label) + ": " + _toDisplayString(item.value), 1 /* TEXT */))
+                                                }), 128 /* KEYED_FRAGMENT */))
+                                              ])
+                                            ]),
+                                            _createElementVNode("pre", { class: "provider-cache-json provider-cache-json-compact" }, _toDisplayString(_ctx.getProviderCacheProviderText(provider)), 1 /* TEXT */)
+                                          ]))
+                                        }), 128 /* KEYED_FRAGMENT */))
+                                      ]))
+                                    : _createCommentVNode("v-if", true),
+                                  _createElementVNode("details", {
+                                    class: "provider-cache-raw",
+                                    open: !_ctx.hasProviderCacheProviders(file) || file.ok === false
+                                  }, [
+                                    _createElementVNode("summary", null, _toDisplayString(file.ok === false ? _ctx.t('modal.providerCache.errorDetails') : _ctx.t('modal.providerCache.rawJson')), 1 /* TEXT */),
+                                    _createElementVNode("pre", {
+                                      class: _normalizeClass(['provider-cache-json', { error: file.ok === false }])
+                                    }, _toDisplayString(_ctx.getProviderCacheRecordText(file)), 3 /* TEXT, CLASS */)
+                                  ], 8 /* PROPS */, ["open"])
+                                ]))
+                              }), 128 /* KEYED_FRAGMENT */))
+                            ]))
+                      ]))
+                    }), 128 /* KEYED_FRAGMENT */))
+                  ])
+                ])),
+            _createElementVNode("div", { class: "btn-group provider-cache-footer" }, [
+              _createElementVNode("button", {
+                class: "btn btn-confirm",
+                onClick: _ctx.closeProviderCacheModal
+              }, _toDisplayString(_ctx.t('common.close')), 9 /* TEXT, PROPS */, ["onClick"])
+            ])
+          ])
+        ], 8 /* PROPS */, ["onClick"]))
+      : _createCommentVNode("v-if", true),
     _createCommentVNode(" 添加Claude配置模态框 "),
     (_ctx.showClaudeConfigModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 7,
+          key: 9,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeClaudeConfigModal, ["self"])
         }, [
@@ -6788,7 +7165,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" 编辑Claude配置模态框 "),
     (_ctx.showEditConfigModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 8,
+          key: 10,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeEditConfigModal, ["self"])
         }, [
@@ -6941,7 +7318,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" Codex bridge pool modal "),
     (_ctx.showCodexBridgePoolModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 9,
+          key: 11,
           class: "modal-overlay",
           onClick: _withModifiers($event => (_ctx.showCodexBridgePoolModal = false), ["self"])
         }, [
@@ -7034,7 +7411,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showClaudeBridgePoolModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 10,
+          key: 12,
           class: "modal-overlay",
           onClick: _withModifiers($event => (_ctx.showClaudeBridgePoolModal = false), ["self"])
         }, [
@@ -7128,7 +7505,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" Webhook settings modal "),
     (_ctx.showWebhookModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 11,
+          key: 13,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeWebhookModal, ["self"])
         }, [
@@ -7201,7 +7578,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showOpenclawConfigModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 12,
+          key: 14,
           class: "modal-overlay",
           onClick: _withModifiers($event => (!(_ctx.openclawSaving || _ctx.openclawApplying) && _ctx.closeOpenclawConfigModal()), ["self"])
         }, [
@@ -7913,7 +8290,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showConfigTemplateModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 13,
+          key: 15,
           class: "modal-overlay",
           onClick: _withModifiers($event => (!_ctx.configTemplateApplying && _ctx.closeConfigTemplateModal()), ["self"])
         }, [
@@ -8058,7 +8435,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showAgentsModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 14,
+          key: 16,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeAgentsModal, ["self"])
         }, [
@@ -8225,7 +8602,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showSkillsModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 15,
+          key: 17,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeSkillsModal, ["self"])
         }, [
@@ -8523,7 +8900,7 @@ return function render(_ctx, _cache) {
     }, null, 40 /* PROPS, NEED_HYDRATION */, ["onChange"]),
     (_ctx.showHealthCheckModal)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 16,
+          key: 18,
           class: "modal-overlay",
           onClick: _withModifiers($event => (_ctx.showHealthCheckModal = false), ["self"])
         }, [
@@ -8614,7 +8991,7 @@ return function render(_ctx, _cache) {
       : _createCommentVNode("v-if", true),
     (_ctx.showConfirmDialog)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 17,
+          key: 19,
           class: "modal-overlay",
           onClick: _withModifiers(_ctx.closeConfirmDialog, ["self"])
         }, [
@@ -8652,7 +9029,7 @@ return function render(_ctx, _cache) {
     _createCommentVNode(" Toast "),
     (_ctx.message)
       ? (_openBlock(), _createElementBlock("div", {
-          key: 18,
+          key: 20,
           class: _normalizeClass(['toast', _ctx.messageType]),
           role: "status",
           "aria-live": "polite",

@@ -96,6 +96,91 @@ test('Japanese orchestration template copy stays localized', () => {
     }
 });
 
+test('provider cache and local Web preference settings are localized in every locale', () => {
+    const keys = [
+        'announcement.providerCache.open',
+        'announcement.project.eyebrow',
+        'announcement.project.title',
+        'announcement.project.subtitle',
+        'announcement.project.closeAria',
+        'announcement.project.primaryAction',
+        'announcement.project.features.aria',
+        'announcement.project.feature.config.title',
+        'announcement.project.feature.config.meta',
+        'announcement.project.feature.sessions.title',
+        'announcement.project.feature.sessions.meta',
+        'announcement.project.feature.usage.title',
+        'announcement.project.feature.usage.meta',
+        'announcement.project.feature.tasks.title',
+        'announcement.project.feature.tasks.meta',
+        'announcement.project.feature.skills.title',
+        'announcement.project.feature.skills.meta',
+        'announcement.project.feature.data.title',
+        'announcement.project.feature.data.meta',
+        'announcement.project.status.aria',
+        'announcement.project.status.provider',
+        'announcement.project.status.model',
+        'announcement.project.status.cacheFiles',
+        'announcement.project.cache.title',
+        'announcement.project.cache.meta',
+        'announcement.project.cache.files',
+        'announcement.project.cache.providers',
+        'announcement.project.cache.groups',
+        'announcement.project.cache.groupList',
+        'announcement.project.cache.groupSummary',
+        'announcement.project.cache.sync',
+        'announcement.project.cache.refresh',
+        'announcement.project.cache.details',
+        'settings.sharePrefix.title',
+        'settings.sharePrefix.meta',
+        'settings.sharePrefix.label',
+        'settings.sharePrefix.hint',
+        'settings.providerCache.title',
+        'settings.providerCache.meta',
+        'settings.providerCache.open',
+        'settings.providerCache.sync',
+        'settings.providerCache.syncing',
+        'settings.providerCache.loading',
+        'settings.providerCache.hint',
+        'settings.trashConfig.title',
+        'settings.trashConfig.meta',
+        'modal.providerCache.title',
+        'modal.providerCache.root',
+        'modal.providerCache.refresh',
+        'modal.providerCache.refreshing',
+        'modal.providerCache.sync',
+        'modal.providerCache.syncing',
+        'modal.providerCache.syncSucceeded',
+        'modal.providerCache.syncFailed',
+        'modal.providerCache.noSyncableProviders',
+        'modal.providerCache.loading',
+        'modal.providerCache.loadedAt',
+        'modal.providerCache.groupMeta',
+        'modal.providerCache.empty',
+        'modal.providerCache.providerCount',
+        'modal.providerCache.rawJsonOnly',
+        'modal.providerCache.tooLarge',
+        'modal.providerCache.parseFailed',
+        'modal.providerCache.rawJson',
+        'modal.providerCache.errorDetails',
+        'modal.providerCache.loadFailed'
+    ];
+    for (const code of expectedLocales) {
+        for (const key of keys) {
+            assert.strictEqual(typeof DICT[code][key], 'string', `${code} should define ${key}`);
+            assert(DICT[code][key].trim(), `${code} ${key} should not be empty`);
+        }
+        assert(
+            !/localStorage|browser local|stored in the browser|浏览器本地|瀏覽器本地|ブラウザローカル/i.test(DICT[code]['settings.sharePrefix.hint']),
+            `${code} share prefix hint should describe backend preferences persistence, not browser-only storage`
+        );
+        assert(
+            DICT[code]['settings.sharePrefix.hint'].includes('~/.codexmate/preferences.json'),
+            `${code} share prefix hint should mention ~/.codexmate/preferences.json`
+        );
+    }
+});
+
 
 test('plugins catalog metadata is localized from i18n dictionaries', async () => {
     const { createPluginsComputed } = await import('../../plugins/prompt-templates/computed.mjs');

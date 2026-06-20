@@ -79,6 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 projectPathOptionsLoading: false,
                 showSkillsModal: false,
                 showHealthCheckModal: false,
+                showProviderCacheModal: false,
+                showProviderCacheAnnouncementModal: false,
                 showCodexBridgePoolModal: false,
                 showClaudeBridgePoolModal: false,
                 showWebhookModal: false,
@@ -378,6 +380,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 codexDownloadLoading: false,
                 codexDownloadProgress: 0,
                 codexDownloadTimer: null,
+                providerCacheRecords: { root: '', generatedAt: '', groups: [] },
+                providerCacheLoadedOnce: false,
+                providerCacheLoadedAt: '',
+                providerCacheLoading: false,
+                providerCacheSyncing: false,
+                providerCacheSyncMessage: '',
+                providerCacheError: '',
                 settingsTab: 'general',
                 toolConfigPermissions: (function() {
                     try {
@@ -505,6 +514,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (typeof this.loadWebhookSettings === 'function') {
                 this.loadWebhookSettings();
+            }
+            if (typeof this.loadWebUiPreferences === 'function') {
+                const applyPreferenceNavigation = (() => {
+                    try {
+                        const url = new URL(window.location.href);
+                        if (url.pathname === '/session') return false;
+                        return !String(url.searchParams.get('tab') || '').trim();
+                    } catch (_) {
+                        return true;
+                    }
+                })();
+                void this.loadWebUiPreferences({ applyNavigation: applyPreferenceNavigation });
             }
             if (typeof this.t === 'function') {
                 this.confirmDialogConfirmText = this.t('confirm.ok');
@@ -743,6 +764,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearTimeout(this._initialLoadTimer);
                 this._initialLoadTimer = 0;
             }
+            if (this.__webUiPreferencesPersistTimer) {
+                clearTimeout(this.__webUiPreferencesPersistTimer);
+                this.__webUiPreferencesPersistTimer = 0;
+            }
             window.removeEventListener('resize', this.onWindowResize);
             window.removeEventListener('keydown', this.handleGlobalKeydown);
             window.removeEventListener('beforeunload', this.handleBeforeUnload);
@@ -767,6 +792,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     localStorage.setItem('codexmate_prompts_sub_tab', newVal);
                 } catch (_) {}
+                if (typeof this.persistWebUiPreferences === 'function') {
+                    this.persistWebUiPreferences({ promptsSubTab: newVal });
+                }
                 if (this.mainTab === 'prompts' && typeof this.loadPromptsContent === 'function') {
                     this.loadPromptsContent();
                 }
@@ -779,6 +807,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         localStorage.removeItem('codexmate_project_claude_md_path');
                     }
                 } catch (_) {}
+                if (typeof this.persistWebUiPreferences === 'function') {
+                    this.persistWebUiPreferences({ projectClaudeMdPath: newPath || '' });
+                }
             }
         },
 
