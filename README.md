@@ -10,6 +10,7 @@
   <a href="https://sakurabytecore.github.io/codexmate/">[Documentation]</a>
   <a href="#quick-start">[Quick Start]</a>
   <a href="README.zh.md">[简体中文]</a>
+  <a href="README.vi.md">[Tiếng Việt]</a>
 </p>
 
 [![Version](https://img.shields.io/npm/v/codexmate?style=flat-square&color=A179FF)](https://www.npmjs.com/package/codexmate)

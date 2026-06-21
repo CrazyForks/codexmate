@@ -284,6 +284,21 @@ body::after {
     transform: translateY(0);
 }
 
+.lang-switch-track[data-lang="vi"] .lang-switch-vi {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.lang-switch-track[data-lang="vi"] .lang-switch-en,
+.lang-switch-track[data-lang="vi"] .lang-switch-zh {
+    opacity: 0;
+}
+
+.lang-switch-track[data-lang="zh"] .lang-switch-vi,
+.lang-switch-track[data-lang="en"] .lang-switch-vi {
+    opacity: 0;
+}
+
 .lang-switch-track[data-lang="zh"] .lang-switch-en {
     opacity: 0;
 }
