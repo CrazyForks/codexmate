@@ -522,6 +522,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'providerCacheLoadedOnce',
         'providerCacheLoading',
         'providerCacheRecords',
+        'providerCacheRequestSeq',
         'providerCacheSyncing',
         'providerCacheSyncMessage',
         'showProviderCacheModal',
@@ -767,6 +768,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'getProviderCacheProviderText',
         'getProviderCacheRecordText',
         'buildWebUiPreferencesSnapshot',
+        'hydrateClaudeConfigsFromProviderCache',
         'applyWebUiPreferences',
         'loadWebUiPreferences',
         'persistWebUiPreferences'
