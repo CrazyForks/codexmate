@@ -43,6 +43,7 @@ await import(pathToFileURL(path.join(__dirname, 'session-actions-standalone.test
 await import(pathToFileURL(path.join(__dirname, 'session-resume-command.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-header-actions-layout.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-browser-timeline-regression.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'session-workspace-summary.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-detail-preview-fast.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-usage.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'session-usage-backend.test.mjs')));
@@ -54,10 +55,12 @@ await import(pathToFileURL(path.join(__dirname, 'provider-share-command.test.mjs
 await import(pathToFileURL(path.join(__dirname, 'web-ui-preferences.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'provider-cache-records.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'providers-validation.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'provider-default-names.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'provider-switch-regression.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'codex-proxy-options.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'builtin-proxy-responses-shim.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'claude-proxy-adapter.test.mjs')));
+await import(pathToFileURL(path.join(__dirname, 'local-bridge-claude-target-api.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'coderabbit-workflows.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'release-changelog.test.mjs')));
 await import(pathToFileURL(path.join(__dirname, 'update-version-status.test.mjs')));

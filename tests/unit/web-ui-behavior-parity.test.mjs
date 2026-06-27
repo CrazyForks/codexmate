@@ -465,6 +465,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'healthCheckBatchTotal',
         'healthCheckBatchDone',
         'healthCheckBatchFailed',
+        'healthCheckFailedProviderSelections',
+        'healthCheckFailedProviderDeleting',
         'showHealthCheckModal',
         'showCodexBridgePoolModal',
         'showClaudeBridgePoolModal',
@@ -558,6 +560,13 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'loadWebhookSettings',
         'saveWebhookSettings',
         'testWebhook',
+        'deleteSelectedHealthCheckFailedProviders',
+        'setAllHealthCheckFailedProviderSelections',
+        'toggleHealthCheckFailedProviderSelection',
+        'areAllHealthCheckFailedProvidersSelected',
+        'hasHealthCheckFailedProviderSelection',
+        'getSelectableHealthCheckFailedProviderItems',
+        'getHealthCheckFailedProviderItems',
         'toggleWebhookEvent',
         'restoreNavStateFromStorage',
         'cancelScheduledSessionListViewportFill',
@@ -567,6 +576,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'findProviderByName',
         'getProviderValidation',
         'getShareCommandPrefixInvocation',
+        'openAddProviderModal',
         'invalidateSessionsUsageData',
         'isReservedProviderCreationName',
         'isSessionLoadNativeDialogEnabled',
@@ -640,6 +650,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'claudeLocalBridgeCandidateProviders',
         'claudeLocalBridgeConfigured',
         'syncClaudeBridgeProviders',
+        'rememberDeletedClaudeSettingsImport',
+        'applyCurrentClaudeConfigSilently',
+        'selectClaudeFallbackConfigName',
+        'deleteClaudeProviderCacheRef',
         'syncProviderCacheRecords',
         'toggleAddClaudeConfigKey',
         'toggleAddProviderKey',
@@ -771,7 +785,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'hydrateClaudeConfigsFromProviderCache',
         'applyWebUiPreferences',
         'loadWebUiPreferences',
-        'persistWebUiPreferences'
+        'persistWebUiPreferences',
+        'copySessionWorkspaceBrief'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',
@@ -882,7 +897,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'providersHealthTone',
         'sessionContextUtilization',
         'isLocalProviderDisabled',
-        'sessionTimelineProgressPercent'
+        'sessionTimelineProgressPercent',
+        'activeSessionWorkspaceSummary'
     ];
     const allowedMissingCurrentComputedKeys = [
         'hasLocalAndProxy',

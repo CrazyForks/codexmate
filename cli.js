@@ -231,6 +231,15 @@ const PROVIDER_CACHE_FILE_GROUPS = Object.freeze({
         'opencode-provider-current-models.json'
     ]
 });
+const PROVIDER_CACHE_PROVIDER_FILES = Object.freeze([
+    'codex-providers.json',
+    'claude-providers.json',
+    'opencode-providers.json'
+]);
+const PROVIDER_CACHE_CURRENT_MODEL_FILES = Object.freeze([
+    'codex-provider-current-models.json',
+    'opencode-provider-current-models.json'
+]);
 const PROVIDER_CACHE_MAX_FILE_BYTES = 256 * 1024;
 const CODEXMATE_PREFERENCES_FILE = path.join(CODEXMATE_DIR, 'preferences.json');
 const CODEXMATE_OPENCODE_DIR = path.join(CODEXMATE_DIR, 'opencode');
@@ -1083,7 +1092,8 @@ function getApiToolConfigWriteTarget(action) {
         'restore-claude-dir',
         'claude-local-bridge-toggle',
         'claude-local-bridge-set-excluded',
-        'claude-local-bridge-sync-providers'
+        'claude-local-bridge-sync-providers',
+        'delete-provider-cache-record'
     ]);
     const opencodeWriteActions = new Set([
         'apply-opencode-config',
@@ -2877,6 +2887,99 @@ function normalizeProviderCacheProviderMap(rawProviders) {
     return providers;
 }
 
+function removeProviderFromProviderCacheContainer(rawProviders, providerName) {
+    const targetName = typeof providerName === 'string' ? providerName.trim() : '';
+    if (!targetName) return { value: rawProviders, changed: false };
+
+    const matchesProviderName = (name) => String(name || '').trim() === targetName;
+    if (Array.isArray(rawProviders)) {
+        const filtered = rawProviders.filter((item) => {
+            if (!isPlainObject(item)) return true;
+            const itemName = pickProviderCacheString(item, ['name', 'id', 'provider']);
+            return !matchesProviderName(itemName);
+        });
+        return { value: filtered, changed: filtered.length !== rawProviders.length };
+    }
+    if (!isPlainObject(rawProviders)) return { value: rawProviders, changed: false };
+
+    const next = { ...rawProviders };
+    let changed = false;
+    for (const [name, entry] of Object.entries(rawProviders)) {
+        const entryName = isPlainObject(entry)
+            ? pickProviderCacheString(entry, ['name', 'id', 'provider'])
+            : '';
+        if (matchesProviderName(name) || matchesProviderName(entryName)) {
+            delete next[name];
+            changed = true;
+        }
+    }
+    return { value: next, changed };
+}
+
+function resolveProviderCacheDeleteGroups(groups) {
+    const requested = Array.isArray(groups) ? groups : (groups ? [groups] : []);
+    const normalized = requested
+        .map((item) => String(item || '').trim().toLowerCase())
+        .filter((item) => Object.prototype.hasOwnProperty.call(PROVIDER_CACHE_FILE_GROUPS, item));
+    return normalized.length ? Array.from(new Set(normalized)) : Object.keys(PROVIDER_CACHE_FILE_GROUPS);
+}
+
+function removeProviderFromProviderCacheRecords(providerName, options = {}) {
+    const targetName = typeof providerName === 'string' ? providerName.trim() : '';
+    const summary = { removed: false, providerFiles: [], currentModelFiles: [] };
+    if (!targetName) return summary;
+
+    const groups = resolveProviderCacheDeleteGroups(options.groups || options.group);
+    const providerFiles = groups
+        .flatMap((group) => PROVIDER_CACHE_FILE_GROUPS[group] || [])
+        .filter((fileName) => PROVIDER_CACHE_PROVIDER_FILES.includes(fileName));
+    const currentModelFiles = groups
+        .flatMap((group) => PROVIDER_CACHE_FILE_GROUPS[group] || [])
+        .filter((fileName) => PROVIDER_CACHE_CURRENT_MODEL_FILES.includes(fileName));
+
+    for (const fileName of Array.from(new Set(providerFiles))) {
+        const existing = readProviderCacheJsonObject(fileName);
+        if (!isPlainObject(existing) || !Object.prototype.hasOwnProperty.call(existing, 'providers')) continue;
+        const removed = removeProviderFromProviderCacheContainer(existing.providers, targetName);
+        if (!removed.changed) continue;
+        writeProviderCacheJsonObject(fileName, {
+            ...existing,
+            generatedAt: new Date().toISOString(),
+            providers: removed.value
+        });
+        summary.removed = true;
+        summary.providerFiles.push(fileName);
+    }
+
+    for (const fileName of Array.from(new Set(currentModelFiles))) {
+        const existing = readProviderCacheJsonObject(fileName);
+        if (!isPlainObject(existing) || !Object.prototype.hasOwnProperty.call(existing, targetName)) continue;
+        const next = { ...existing };
+        delete next[targetName];
+        writeProviderCacheJsonObject(fileName, next);
+        summary.removed = true;
+        summary.currentModelFiles.push(fileName);
+    }
+    return summary;
+}
+
+function deleteProviderCacheRecord(params = {}) {
+    const name = typeof params.name === 'string' ? params.name.trim() : '';
+    if (!name) return { error: '名称不能为空' };
+    const group = typeof params.group === 'string' ? params.group.trim().toLowerCase() : '';
+    const groups = resolveProviderCacheDeleteGroups(group || params.groups);
+    const summary = removeProviderFromProviderCacheRecords(name, { groups });
+    return {
+        success: true,
+        name,
+        groups,
+        removed: summary.removed,
+        providerFiles: summary.providerFiles,
+        currentModelFiles: summary.currentModelFiles,
+        records: readProviderCacheRecords()
+    };
+}
+
 function readClaudeProviderCacheProvider(name) {
     const targetName = typeof name === 'string' ? name.trim() : '';
     if (!targetName) return null;
@@ -2953,10 +3056,11 @@ function buildProviderCacheSyncProviders() {
 function mergeProviderCacheFile(fileName, nextProviders, buildEntry) {
     const existing = readProviderCacheJsonObject(fileName);
     const existingProviders = normalizeProviderCacheProviderMap(existing.providers);
-    const providers = { ...existingProviders };
+    const providers = {};
     for (const provider of nextProviders) {
         const previous = isPlainObject(providers[provider.name]) ? providers[provider.name] : {};
-        providers[provider.name] = { ...previous, ...buildEntry(provider) };
+        const cachedPrevious = isPlainObject(existingProviders[provider.name]) ? existingProviders[provider.name] : previous;
+        providers[provider.name] = { ...cachedPrevious, ...buildEntry(provider) };
     }
     const next = {
         ...existing,
@@ -2970,9 +3074,13 @@ function mergeProviderCacheFile(fileName, nextProviders, buildEntry) {
 
 function mergeProviderCacheCurrentModelsFile(fileName, nextProviders) {
     const existing = readProviderCacheJsonObject(fileName);
-    const next = { ...existing };
+    const next = {};
     for (const provider of nextProviders) {
-        if (provider.model) next[provider.name] = provider.model;
+        if (provider.model) {
+            next[provider.name] = provider.model;
+        } else if (typeof existing[provider.name] === 'string' && existing[provider.name].trim()) {
+            next[provider.name] = existing[provider.name];
+        }
     }
     const displayPath = writeProviderCacheJsonObject(fileName, next);
     return { path: displayPath, modelCount: Object.keys(next).length };
@@ -3213,6 +3321,7 @@ function performProviderDeletion(name, options = {}) {
 
     writeCurrentModels(currentModels);
     writeConfig(updatedContent.trimEnd() + lineEnding);
+    removeProviderFromProviderCacheRecords(name);
 
     return result;
 }
@@ -12386,6 +12495,9 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             break;
                         case 'sync-provider-cache-records':
                             result = syncProviderCacheRecords();
+                            break;
+                        case 'delete-provider-cache-record':
+                            result = deleteProviderCacheRecord(params || {});
                             break;
                         case 'delete-provider':
                             result = deleteProviderFromConfig(params || {});

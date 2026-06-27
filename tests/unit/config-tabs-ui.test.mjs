@@ -126,6 +126,10 @@ test('config template keeps expected config tabs in top and side navigation', ()
         assert.match(styles, /\.task-action-row-right\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-wrap:\s*wrap;/);
         assert.match(styles, /\.task-runtime-item-actions\s*\{[\s\S]*flex-direction:\s*row;[\s\S]*align-items:\s*center;/);
     }
+    for (const styles of [bundledStyles]) {
+        assert.match(styles, /\.health-failed-provider-main input\s*\{[\s\S]*flex:\s*0 0 auto;[\s\S]*width:\s*13px;[\s\S]*height:\s*13px;[\s\S]*accent-color:\s*var\(--color-brand-dark\);/);
+        assert.match(styles, /\.health-failed-provider-main > span\s*\{[\s\S]*min-width:\s*0;/);
+    }
     const sideGhostTab = sideRail.match(/<div id="side-tab-new"[\s\S]*?<\/div>\s*<\/div>/)?.[0] || '';
     assert.match(sideGhostTab, /class="side-item side-item-ghost"/);
     assert.match(sideGhostTab, /tabindex="-1"/);
@@ -352,7 +356,16 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /<div[\s\S]*v-if="sessionListRenderEnabled"[\s\S]*class="session-list"/);
     assert.match(html, /:ref="setSessionListRef"/);
     assert.match(html, /@scroll\.passive="onSessionListScroll"/);
+    assert.match(html, /class="selector-section session-selector-section"/);
+    assert.match(html, /class="session-source-tabs-row"[\s\S]*class="session-toolbar"/);
+    assert.match(html, /class="session-source-tabs-row"[\s\S]*class="session-source-pills"/);
+    assert.match(html, /class="session-source-pills" role="group" :aria-label="t\('sessions\.sourceTitle'\)"/);
+    assert.doesNotMatch(sessionsPanel, /aria-label="Session source"/);
+    assert.doesNotMatch(sessionsPanel, /role="radio"/);
+    assert.doesNotMatch(html, /class="session-toolbar-group session-toolbar-primary"[\s\S]*class="session-source-pills"[\s\S]*class="session-path-select"/);
     assert.match(html, /v-memo="\[activeSessionExportKey === getSessionExportKey\(session\)/);
+    assert.match(html, /v-for="\(msg, idx\) in activeSessionVisibleMessages"/);
+    assert.match(html, /canLoadMoreSessionMessages/);
     assert.match(html, /v-memo="\[msg\.text,\s*msg\.timestamp,\s*msg\.roleLabel,\s*msg\.normalizedRole\]"/);
     assert.match(html, /v-memo="\[sessionTimelineActiveKey === node\.key,\s*node\.safePercent,\s*node\.title\]"/);
     const providerShareButton = html.match(
@@ -610,6 +623,12 @@ test('trash item styles stay aligned', () => {
     assert.match(styles, /\.codex-config-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(min\(240px,\s*100%\),\s*1fr\)\);/);
     assert.match(styles, /\.codex-config-field\s*\{/);
     assert.match(styles, /\.codex-config-field\s*\{[\s\S]*min-width:\s*0;/);
+    assert.match(styles, /#panel-config-provider \.card-list > \.card,\s*#panel-config-claude \.card-list > \.card\s*\{[\s\S]*min-height:\s*88px;[\s\S]*padding-top:\s*22px;[\s\S]*padding-bottom:\s*22px;/);
+    assert.match(styles, /@media \(max-width: 540px\)\s*\{[\s\S]*#panel-config-provider \.card-list > \.card,\s*#panel-config-claude \.card-list > \.card\s*\{[\s\S]*min-height:\s*84px;[\s\S]*padding-top:\s*18px;[\s\S]*padding-bottom:\s*18px;/);
+    assert.match(styles, /@media \(hover: none\) and \(pointer: coarse\)\s*\{[\s\S]*#panel-config-provider \.card-list,\s*#panel-config-claude \.card-list\s*\{[\s\S]*grid-template-columns:\s*1fr;/);
+    assert.match(styles, /@media \(hover: none\) and \(pointer: coarse\)\s*\{[\s\S]*#panel-config-provider \.card-list > \.card,\s*#panel-config-claude \.card-list > \.card\s*\{[\s\S]*min-height:\s*96px;[\s\S]*padding-top:\s*24px;[\s\S]*padding-bottom:\s*24px;/);
+    assert.match(styles, /#panel-config-provider \.card-list > \.card \.card-title,\s*#panel-config-claude \.card-list > \.card \.card-title\s*\{[\s\S]*flex-wrap:\s*wrap;[\s\S]*white-space:\s*normal;[\s\S]*overflow-wrap:\s*anywhere;/);
+    assert.match(styles, /#panel-config-provider \.card-list > \.card \.card-title > span:first-child,\s*#panel-config-claude \.card-list > \.card \.card-title > span:first-child\s*\{[\s\S]*white-space:\s*normal;[\s\S]*overflow-wrap:\s*anywhere;/);
 });
 
 test('settings tab header actions keep compact tool buttons inline on wider screens', () => {
@@ -659,4 +678,20 @@ test('settings tab header actions keep compact tool buttons inline on wider scre
     assert.match(styles, /--font-size-large:\s*[0-9.]+(?:px|rem);/);
     assert.doesNotMatch(styles, /\.market-online-list\s*\{/);
     assert.doesNotMatch(styles, /\.market-ecosystem-grid\s*\{/);
+});
+
+test('session responsive styles keep mobile toolbar reachable without deprecated wrapping', () => {
+    const toolbarStyles = readProjectFile('web-ui/styles/sessions-toolbar-trash.css');
+    const responsiveStyles = readProjectFile('web-ui/styles/responsive.css');
+
+    assert.match(
+        toolbarStyles,
+        /\.session-toolbar-secondary\s*\{[\s\S]*?justify-content:\s*flex-start;[\s\S]*?flex-wrap:\s*wrap;[\s\S]*?\}/
+    );
+    assert.match(
+        toolbarStyles,
+        /@media \(min-width: 1101px\) \{[\s\S]*?\.session-toolbar-secondary\s*\{[\s\S]*?justify-content:\s*flex-end;[\s\S]*?flex-wrap:\s*nowrap;[\s\S]*?\}/
+    );
+    assert.doesNotMatch(responsiveStyles, /word-break:\s*break-word/);
+    assert.match(responsiveStyles, /\.session-preview-title\s*\{[\s\S]*?overflow-wrap:\s*anywhere;[\s\S]*?\}/);
 });

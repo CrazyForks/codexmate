@@ -1115,7 +1115,7 @@ return function render(_ctx, _cache) {
                         ? (_openBlock(), _createElementBlock("button", {
                             key: 0,
                             class: "btn-add",
-                            onClick: $event => {_ctx.showAddProviderKey = false; _ctx.showAddModal = true},
+                            onClick: _ctx.openAddProviderModal,
                             disabled: !_ctx.isToolConfigWriteAllowed('codex')
                           }, [
                             (_openBlock(), _createElementBlock("svg", {
@@ -1373,7 +1373,7 @@ return function render(_ctx, _cache) {
                                 onClick: _ctx.runHealthCheck,
                                 disabled: _ctx.healthCheckLoading || _ctx.loading || !!_ctx.initError
                               }, _toDisplayString(_ctx.healthCheckLoading ? _ctx.t('config.health.running') : _ctx.t('config.health.run')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                              _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('config.health.hint')), 1 /* TEXT */)
+                              _createElementVNode("div", { class: "config-template-hint" }, _toDisplayString(_ctx.t('config.health.codexHint')), 1 /* TEXT */)
                             ])
                           ], 64 /* STABLE_FRAGMENT */))
                         : _createCommentVNode("v-if", true),
@@ -2749,7 +2749,7 @@ return function render(_ctx, _cache) {
                         ]))
                 ]))
               : (_openBlock(), _createElementBlock("div", { key: 1 }, [
-                  _createElementVNode("div", { class: "selector-section" }, [
+                  _createElementVNode("div", { class: "selector-section session-selector-section" }, [
                     _createElementVNode("div", {
                       class: "selector-header",
                       style: {"display":"none"}
@@ -2757,29 +2757,30 @@ return function render(_ctx, _cache) {
                       _createElementVNode("span", { class: "selector-title" }, _toDisplayString(_ctx.t('sessions.sourceTitle')), 1 /* TEXT */),
                       _createElementVNode("div", { class: "selector-actions sessions-header-actions" })
                     ]),
+                    _createElementVNode("div", { class: "session-source-tabs-row" }, [
+                      _createElementVNode("div", {
+                        class: "session-source-pills",
+                        role: "group",
+                        "aria-label": _ctx.t('sessions.sourceTitle')
+                      }, [
+                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionSourceOptions, (src) => {
+                          return (_openBlock(), _createElementBlock("button", {
+                            key: src.value,
+                            class: _normalizeClass(['session-source-pill', { active: _ctx.sessionFilterSource === src.value }]),
+                            "data-source": src.value,
+                            onClick: $event => (_ctx.setSessionSource(src.value)),
+                            disabled: _ctx.sessionsLoading,
+                            "aria-pressed": _ctx.sessionFilterSource === src.value,
+                            type: "button"
+                          }, [
+                            _createElementVNode("span", { class: "session-source-pill-dot" }),
+                            _createElementVNode("span", { class: "session-source-pill-label" }, _toDisplayString(src.label), 1 /* TEXT */)
+                          ], 10 /* CLASS, PROPS */, ["data-source", "onClick", "disabled", "aria-pressed"]))
+                        }), 128 /* KEYED_FRAGMENT */))
+                      ], 8 /* PROPS */, ["aria-label"])
+                    ]),
                     _createElementVNode("div", { class: "session-toolbar" }, [
                       _createElementVNode("div", { class: "session-toolbar-group session-toolbar-primary" }, [
-                        _createElementVNode("div", {
-                          class: "session-source-pills",
-                          role: "radiogroup",
-                          "aria-label": "Session source"
-                        }, [
-                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionSourceOptions, (src) => {
-                            return (_openBlock(), _createElementBlock("button", {
-                              key: src.value,
-                              class: _normalizeClass(['session-source-pill', { active: _ctx.sessionFilterSource === src.value }]),
-                              "data-source": src.value,
-                              onClick: $event => (_ctx.setSessionSource(src.value)),
-                              disabled: _ctx.sessionsLoading,
-                              "aria-pressed": _ctx.sessionFilterSource === src.value,
-                              role: "radio",
-                              type: "button"
-                            }, [
-                              _createElementVNode("span", { class: "session-source-pill-dot" }),
-                              _createElementVNode("span", { class: "session-source-pill-label" }, _toDisplayString(src.label), 1 /* TEXT */)
-                            ], 10 /* CLASS, PROPS */, ["data-source", "onClick", "disabled", "aria-pressed"]))
-                          }), 128 /* KEYED_FRAGMENT */))
-                        ]),
                         _withDirectives(_createElementVNode("select", {
                           class: "session-path-select",
                           "onUpdate:modelValue": $event => ((_ctx.sessionPathFilter) = $event),
@@ -3173,6 +3174,27 @@ return function render(_ctx, _cache) {
                                             _createElementVNode("path", { d: "M2.5 12v1.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V12" })
                                           ]))
                                         ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"]),
+                                        _createElementVNode("button", {
+                                          class: "btn-session-open session-brief-copy",
+                                          onClick: _ctx.copySessionWorkspaceBrief,
+                                          disabled: !_ctx.activeSessionWorkspaceSummary.available,
+                                          title: _ctx.t('sessions.workspace.copy'),
+                                          "aria-label": _ctx.t('sessions.workspace.copy')
+                                        }, [
+                                          (_openBlock(), _createElementBlock("svg", {
+                                            viewBox: "0 0 16 16",
+                                            fill: "none",
+                                            stroke: "currentColor",
+                                            "stroke-width": "1.8",
+                                            "stroke-linecap": "round",
+                                            "stroke-linejoin": "round"
+                                          }, [
+                                            _createElementVNode("path", { d: "M4 2.5h6.5L13 5v8.5H4z" }),
+                                            _createElementVNode("path", { d: "M10.5 2.5V5H13" }),
+                                            _createElementVNode("path", { d: "M6 8h5" }),
+                                            _createElementVNode("path", { d: "M6 10.5h5" })
+                                          ]))
+                                        ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"]),
                                         _createElementVNode("div", { class: "session-link-group" }, [
                                           _createElementVNode("button", {
                                             class: "btn-session-open",
@@ -3270,6 +3292,140 @@ return function render(_ctx, _cache) {
                                                   key: 5,
                                                   class: "session-preview-body"
                                                 }, [
+                                                  (_ctx.activeSessionWorkspaceSummary.available)
+                                                    ? (_openBlock(), _createElementBlock("section", {
+                                                        key: 0,
+                                                        class: "session-workspace",
+                                                        "aria-label": _ctx.t('sessions.workspace.title')
+                                                      }, [
+                                                        _createElementVNode("div", { class: "session-workspace-header" }, [
+                                                          _createElementVNode("div", null, [
+                                                            _createElementVNode("div", { class: "session-workspace-kicker" }, _toDisplayString(_ctx.t('sessions.workspace.kicker')), 1 /* TEXT */),
+                                                            _createElementVNode("h3", { class: "session-workspace-title" }, _toDisplayString(_ctx.t('sessions.workspace.title')), 1 /* TEXT */),
+                                                            _createElementVNode("p", { class: "session-workspace-subtitle" }, _toDisplayString(_ctx.t('sessions.workspace.subtitle', { count: _ctx.activeSessionWorkspaceSummary.messageCount })), 1 /* TEXT */)
+                                                          ]),
+                                                          _createElementVNode("button", {
+                                                            class: "btn-mini",
+                                                            type: "button",
+                                                            onClick: _ctx.copySessionWorkspaceBrief
+                                                          }, _toDisplayString(_ctx.t('sessions.workspace.copy')), 9 /* TEXT, PROPS */, ["onClick"])
+                                                        ]),
+                                                        _createElementVNode("div", { class: "session-workspace-metrics" }, [
+                                                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.activeSessionWorkspaceSummary.metrics, (metric) => {
+                                                            return (_openBlock(), _createElementBlock("div", {
+                                                              key: metric.key,
+                                                              class: "session-workspace-metric"
+                                                            }, [
+                                                              _createElementVNode("span", { class: "session-workspace-metric-value" }, _toDisplayString(metric.value), 1 /* TEXT */),
+                                                              _createElementVNode("span", { class: "session-workspace-metric-label" }, _toDisplayString(metric.label), 1 /* TEXT */)
+                                                            ]))
+                                                          }), 128 /* KEYED_FRAGMENT */))
+                                                        ]),
+                                                        _createElementVNode("div", { class: "session-workspace-grid" }, [
+                                                          _createElementVNode("div", { class: "session-workspace-card session-workspace-card-wide" }, [
+                                                            _createElementVNode("div", { class: "session-workspace-card-title" }, _toDisplayString(_ctx.t('sessions.workspace.signals')), 1 /* TEXT */),
+                                                            (_ctx.activeSessionWorkspaceSummary.signals.length)
+                                                              ? (_openBlock(), _createElementBlock("ul", {
+                                                                  key: 0,
+                                                                  class: "session-workspace-list"
+                                                                }, [
+                                                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.activeSessionWorkspaceSummary.signals, (item, index) => {
+                                                                    return (_openBlock(), _createElementBlock("li", {
+                                                                      key: 'signal-' + index
+                                                                    }, _toDisplayString(item), 1 /* TEXT */))
+                                                                  }), 128 /* KEYED_FRAGMENT */))
+                                                                ]))
+                                                              : (_openBlock(), _createElementBlock("div", {
+                                                                  key: 1,
+                                                                  class: "session-workspace-empty"
+                                                                }, _toDisplayString(_ctx.t('sessions.workspace.empty')), 1 /* TEXT */))
+                                                          ]),
+                                                          _createElementVNode("div", { class: "session-workspace-card" }, [
+                                                            _createElementVNode("div", { class: "session-workspace-card-title" }, _toDisplayString(_ctx.t('sessions.workspace.commands')), 1 /* TEXT */),
+                                                            (_ctx.activeSessionWorkspaceSummary.commands.length)
+                                                              ? (_openBlock(), _createElementBlock("ul", {
+                                                                  key: 0,
+                                                                  class: "session-workspace-list session-workspace-code-list"
+                                                                }, [
+                                                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.activeSessionWorkspaceSummary.commands, (item, index) => {
+                                                                    return (_openBlock(), _createElementBlock("li", {
+                                                                      key: 'command-' + index
+                                                                    }, [
+                                                                      _createElementVNode("code", null, _toDisplayString(item), 1 /* TEXT */)
+                                                                    ]))
+                                                                  }), 128 /* KEYED_FRAGMENT */))
+                                                                ]))
+                                                              : (_openBlock(), _createElementBlock("div", {
+                                                                  key: 1,
+                                                                  class: "session-workspace-empty"
+                                                                }, _toDisplayString(_ctx.t('sessions.workspace.noneCommands')), 1 /* TEXT */))
+                                                          ]),
+                                                          _createElementVNode("div", { class: "session-workspace-card" }, [
+                                                            _createElementVNode("div", { class: "session-workspace-card-title" }, _toDisplayString(_ctx.t('sessions.workspace.files')), 1 /* TEXT */),
+                                                            (_ctx.activeSessionWorkspaceSummary.files.length)
+                                                              ? (_openBlock(), _createElementBlock("ul", {
+                                                                  key: 0,
+                                                                  class: "session-workspace-list session-workspace-code-list"
+                                                                }, [
+                                                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.activeSessionWorkspaceSummary.files, (item, index) => {
+                                                                    return (_openBlock(), _createElementBlock("li", {
+                                                                      key: 'file-' + index
+                                                                    }, [
+                                                                      _createElementVNode("code", null, _toDisplayString(item), 1 /* TEXT */)
+                                                                    ]))
+                                                                  }), 128 /* KEYED_FRAGMENT */))
+                                                                ]))
+                                                              : (_openBlock(), _createElementBlock("div", {
+                                                                  key: 1,
+                                                                  class: "session-workspace-empty"
+                                                                }, _toDisplayString(_ctx.t('sessions.workspace.noneFiles')), 1 /* TEXT */))
+                                                          ]),
+                                                          _createElementVNode("div", { class: "session-workspace-card" }, [
+                                                            _createElementVNode("div", { class: "session-workspace-card-title" }, _toDisplayString(_ctx.t('sessions.workspace.links')), 1 /* TEXT */),
+                                                            (_ctx.activeSessionWorkspaceSummary.links.length)
+                                                              ? (_openBlock(), _createElementBlock("ul", {
+                                                                  key: 0,
+                                                                  class: "session-workspace-list"
+                                                                }, [
+                                                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.activeSessionWorkspaceSummary.links, (item, index) => {
+                                                                    return (_openBlock(), _createElementBlock("li", {
+                                                                      key: 'link-' + index
+                                                                    }, _toDisplayString(item), 1 /* TEXT */))
+                                                                  }), 128 /* KEYED_FRAGMENT */))
+                                                                ]))
+                                                              : (_openBlock(), _createElementBlock("div", {
+                                                                  key: 1,
+                                                                  class: "session-workspace-empty"
+                                                                }, _toDisplayString(_ctx.t('sessions.workspace.noneLinks')), 1 /* TEXT */))
+                                                          ]),
+                                                          _createElementVNode("div", {
+                                                            class: _normalizeClass(["session-workspace-card", { 'session-workspace-card-alert': _ctx.activeSessionWorkspaceSummary.risks.length || _ctx.activeSessionWorkspaceSummary.nextSteps.length }])
+                                                          }, [
+                                                            _createElementVNode("div", { class: "session-workspace-card-title" }, _toDisplayString(_ctx.t('sessions.workspace.risks')), 1 /* TEXT */),
+                                                            (_ctx.activeSessionWorkspaceSummary.risks.length || _ctx.activeSessionWorkspaceSummary.nextSteps.length)
+                                                              ? (_openBlock(), _createElementBlock("ul", {
+                                                                  key: 0,
+                                                                  class: "session-workspace-list"
+                                                                }, [
+                                                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.activeSessionWorkspaceSummary.risks, (item, index) => {
+                                                                    return (_openBlock(), _createElementBlock("li", {
+                                                                      key: 'risk-' + index
+                                                                    }, _toDisplayString(item), 1 /* TEXT */))
+                                                                  }), 128 /* KEYED_FRAGMENT */)),
+                                                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.activeSessionWorkspaceSummary.nextSteps, (item, index) => {
+                                                                    return (_openBlock(), _createElementBlock("li", {
+                                                                      key: 'next-' + index
+                                                                    }, _toDisplayString(item), 1 /* TEXT */))
+                                                                  }), 128 /* KEYED_FRAGMENT */))
+                                                                ]))
+                                                              : (_openBlock(), _createElementBlock("div", {
+                                                                  key: 1,
+                                                                  class: "session-workspace-empty"
+                                                                }, _toDisplayString(_ctx.t('sessions.workspace.noneRisks')), 1 /* TEXT */))
+                                                          ], 2 /* CLASS */)
+                                                        ])
+                                                      ], 8 /* PROPS */, ["aria-label"]))
+                                                    : _createCommentVNode("v-if", true),
                                                   _createElementVNode("div", { class: "session-preview-messages" }, [
                                                     (_ctx.activeSessionDetailClipped)
                                                       ? (_openBlock(), _createElementBlock("div", {
@@ -3277,7 +3433,7 @@ return function render(_ctx, _cache) {
                                                           class: "session-item-sub session-item-wrap"
                                                         }, _toDisplayString(_ctx.t('sessions.preview.clipped', { count: _ctx.activeSessionMessages.length })), 1 /* TEXT */))
                                                       : _createCommentVNode("v-if", true),
-                                                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.activeSessionMessages, (msg, idx, ___, _cached) => {
+                                                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.activeSessionVisibleMessages, (msg, idx, ___, _cached) => {
                                                       const _memo = ([msg.text, msg.timestamp, msg.roleLabel, msg.normalizedRole])
                                                       if (_cached && _cached.key === _ctx.getRecordRenderKey(msg, idx) && _isMemoSame(_cached, _memo)) return _cached
                                                       const _item = (_openBlock(), _createElementBlock("div", {
@@ -3300,7 +3456,21 @@ return function render(_ctx, _cache) {
                                                       ], 10 /* CLASS, PROPS */, ["data-message-key"]))
                                                       _item.memo = _memo
                                                       return _item
-                                                    }, _cache, 2), 128 /* KEYED_FRAGMENT */))
+                                                    }, _cache, 2), 128 /* KEYED_FRAGMENT */)),
+                                                    (_ctx.canLoadMoreSessionMessages)
+                                                      ? (_openBlock(), _createElementBlock("div", {
+                                                          key: 1,
+                                                          class: "session-preview-load-more"
+                                                        }, [
+                                                          _createElementVNode("span", null, _toDisplayString(_ctx.t('sessions.preview.shownCount', { shown: _ctx.activeSessionVisibleMessages.length, total: _ctx.activeSessionMessages.length })), 1 /* TEXT */),
+                                                          _createElementVNode("button", {
+                                                            class: "btn-mini",
+                                                            type: "button",
+                                                            onClick: _ctx.loadMoreSessionMessages,
+                                                            disabled: _ctx.sessionPreviewLoadingMore
+                                                          }, _toDisplayString(_ctx.sessionPreviewLoadingMore ? _ctx.t('sessions.preview.loadingMore') : _ctx.t('sessions.preview.loadMore', { remain: _ctx.sessionPreviewRemainingCount })), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                                        ]))
+                                                      : _createCommentVNode("v-if", true)
                                                   ])
                                                 ]))
                                   ], 40 /* PROPS, NEED_HYDRATION */, ["onScroll"]),
@@ -8905,7 +9075,7 @@ return function render(_ctx, _cache) {
           onClick: _withModifiers($event => (_ctx.showHealthCheckModal = false), ["self"])
         }, [
           _createElementVNode("div", {
-            class: "modal",
+            class: "modal modal-health-check",
             role: "dialog",
             "aria-modal": "true",
             "aria-labelledby": "health-check-modal-title"
@@ -8914,73 +9084,155 @@ return function render(_ctx, _cache) {
               class: "modal-title",
               id: "health-check-modal-title"
             }, _toDisplayString(_ctx.t('config.health.title')), 1 /* TEXT */),
-            (!_ctx.healthCheckResult)
-              ? (_openBlock(), _createElementBlock("div", {
-                  key: 0,
-                  class: "state-message"
-                }, _toDisplayString(_ctx.t('common.notLoaded')), 1 /* TEXT */))
-              : (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
-                  _createElementVNode("div", { class: "form-hint" }, [
-                    _createTextVNode(_toDisplayString(_ctx.healthCheckResult.ok ? _ctx.t('config.health.ok') : _ctx.t('config.health.fail')) + " ", 1 /* TEXT */),
-                    (_ctx.healthCheckResult.issues)
-                      ? (_openBlock(), _createElementBlock("span", { key: 0 }, "（" + _toDisplayString(_ctx.t('config.health.issues', { count: _ctx.healthCheckResult.issues.length })) + "）", 1 /* TEXT */))
+            _createElementVNode("div", { class: "health-check-modal-body" }, [
+              (!_ctx.healthCheckResult)
+                ? (_openBlock(), _createElementBlock("div", {
+                    key: 0,
+                    class: "state-message"
+                  }, _toDisplayString(_ctx.t('common.notLoaded')), 1 /* TEXT */))
+                : (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
+                    _createElementVNode("div", { class: "form-hint" }, [
+                      _createTextVNode(_toDisplayString(_ctx.healthCheckResult.ok ? _ctx.t('config.health.ok') : _ctx.t('config.health.fail')) + " ", 1 /* TEXT */),
+                      (_ctx.healthCheckResult.issues)
+                        ? (_openBlock(), _createElementBlock("span", { key: 0 }, "（" + _toDisplayString(_ctx.t('config.health.issues', { count: _ctx.healthCheckResult.issues.length })) + "）", 1 /* TEXT */))
+                        : _createCommentVNode("v-if", true)
+                    ]),
+                    (_ctx.healthCheckResult.remote && _ctx.healthCheckResult.remote.type === 'remote-health-check')
+                      ? (_openBlock(), _createElementBlock("div", {
+                          key: 0,
+                          class: "form-hint"
+                        }, [
+                          _createTextVNode(_toDisplayString(_ctx.healthCheckResult.remote.endpoint || '') + " ", 1 /* TEXT */),
+                          (_ctx.healthCheckResult.remote.statusCode)
+                            ? (_openBlock(), _createElementBlock("span", { key: 0 }, " · " + _toDisplayString(_ctx.healthCheckResult.remote.statusCode), 1 /* TEXT */))
+                            : _createCommentVNode("v-if", true),
+                          (_ctx.healthCheckResult.remote.message)
+                            ? (_openBlock(), _createElementBlock("span", { key: 1 }, " · " + _toDisplayString(_ctx.healthCheckResult.remote.message), 1 /* TEXT */))
+                            : _createCommentVNode("v-if", true)
+                        ]))
+                      : _createCommentVNode("v-if", true),
+                    (_ctx.healthCheckResult.remote && _ctx.healthCheckResult.remote.type === 'providers-health')
+                      ? (_openBlock(), _createElementBlock("div", {
+                          key: 1,
+                          class: "form-hint"
+                        }, _toDisplayString(_ctx.t('config.health.providersSummary', _ctx.healthCheckResult.remote.summary || { total: 0, green: 0, yellow: 0, red: 0 })), 1 /* TEXT */))
+                      : _createCommentVNode("v-if", true),
+                    (_ctx.getHealthCheckFailedProviderItems().length)
+                      ? (_openBlock(), _createElementBlock("div", {
+                          key: 2,
+                          class: "model-list health-failed-provider-list"
+                        }, [
+                          _createElementVNode("div", { class: "model-item health-failed-provider-header" }, [
+                            _createElementVNode("span", { class: "health-failed-provider-main" }, [
+                              _createElementVNode("input", {
+                                type: "checkbox",
+                                checked: _ctx.areAllHealthCheckFailedProvidersSelected(),
+                                disabled: !_ctx.getSelectableHealthCheckFailedProviderItems().length || _ctx.healthCheckFailedProviderDeleting,
+                                onChange: $event => (_ctx.setAllHealthCheckFailedProviderSelections($event.target.checked)),
+                                "aria-label": _ctx.t('config.health.failedProviders.selectAllAria')
+                              }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "disabled", "onChange", "aria-label"]),
+                              _createElementVNode("span", null, _toDisplayString(_ctx.t('config.health.failedProviders.title')), 1 /* TEXT */)
+                            ]),
+                            _createElementVNode("span", { class: "health-failed-provider-actions" }, [
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-link",
+                                disabled: !_ctx.getSelectableHealthCheckFailedProviderItems().length || _ctx.healthCheckFailedProviderDeleting,
+                                onClick: $event => (_ctx.setAllHealthCheckFailedProviderSelections(true))
+                              }, _toDisplayString(_ctx.t('config.health.failedProviders.selectAll')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]),
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-link",
+                                disabled: !_ctx.hasHealthCheckFailedProviderSelection() || _ctx.healthCheckFailedProviderDeleting,
+                                onClick: $event => (_ctx.setAllHealthCheckFailedProviderSelections(false))
+                              }, _toDisplayString(_ctx.t('config.health.failedProviders.clearSelection')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]),
+                              _createElementVNode("span", { class: "latency error" }, _toDisplayString(_ctx.getHealthCheckFailedProviderItems().length), 1 /* TEXT */)
+                            ])
+                          ]),
+                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.getHealthCheckFailedProviderItems(), (item) => {
+                            return (_openBlock(), _createElementBlock("label", {
+                              key: item.key,
+                              class: _normalizeClass(["model-item health-failed-provider-item", { disabled: !item.deletable }])
+                            }, [
+                              _createElementVNode("span", { class: "health-failed-provider-main" }, [
+                                _createElementVNode("input", {
+                                  type: "checkbox",
+                                  checked: item.selected,
+                                  disabled: !item.deletable || _ctx.healthCheckFailedProviderDeleting,
+                                  onChange: $event => (_ctx.toggleHealthCheckFailedProviderSelection(item, $event.target.checked)),
+                                  "aria-label": _ctx.t('config.health.failedProviders.selectAria', { name: item.name })
+                                }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "disabled", "onChange", "aria-label"]),
+                                _createElementVNode("span", null, [
+                                  _createElementVNode("strong", null, _toDisplayString(item.name), 1 /* TEXT */),
+                                  (item.detail)
+                                    ? (_openBlock(), _createElementBlock("span", {
+                                        key: 0,
+                                        class: "form-hint"
+                                      }, _toDisplayString(item.detail), 1 /* TEXT */))
+                                    : _createCommentVNode("v-if", true),
+                                  (!item.deletable)
+                                    ? (_openBlock(), _createElementBlock("span", {
+                                        key: 1,
+                                        class: "form-hint"
+                                      }, _toDisplayString(item.blockedReason === 'readonly' ? _ctx.t('config.health.failedProviders.writeRequired') : _ctx.t('config.health.failedProviders.notDeletable')), 1 /* TEXT */))
+                                    : _createCommentVNode("v-if", true)
+                                ])
+                              ]),
+                              _createElementVNode("span", { class: "latency error" }, _toDisplayString(item.status), 1 /* TEXT */)
+                            ], 2 /* CLASS */))
+                          }), 128 /* KEYED_FRAGMENT */))
+                        ]))
+                      : _createCommentVNode("v-if", true),
+                    (_ctx.healthCheckResult.remote && _ctx.healthCheckResult.remote.speedTests)
+                      ? (_openBlock(), _createElementBlock("div", {
+                          key: 3,
+                          class: "model-list"
+                        }, [
+                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.healthCheckResult.remote.speedTests, (result, name) => {
+                            return (_openBlock(), _createElementBlock("div", {
+                              key: 'health-speed-' + name,
+                              class: "model-item"
+                            }, [
+                              _createElementVNode("span", null, _toDisplayString(name), 1 /* TEXT */),
+                              (result && result.ok)
+                                ? (_openBlock(), _createElementBlock("span", {
+                                    key: 0,
+                                    class: "latency ok"
+                                  }, _toDisplayString(_ctx.formatLatency(result)), 1 /* TEXT */))
+                                : (_openBlock(), _createElementBlock("span", {
+                                    key: 1,
+                                    class: "latency error"
+                                  }, _toDisplayString((result && result.error) ? result.error : _ctx.t('config.health.fail')), 1 /* TEXT */))
+                            ]))
+                          }), 128 /* KEYED_FRAGMENT */))
+                        ]))
+                      : _createCommentVNode("v-if", true),
+                    (_ctx.healthCheckResult.issues && _ctx.healthCheckResult.issues.length)
+                      ? (_openBlock(), _createElementBlock("div", {
+                          key: 4,
+                          class: "model-list"
+                        }, [
+                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.healthCheckResult.issues, (issue, index) => {
+                            return (_openBlock(), _createElementBlock("div", {
+                              key: issue.code || ('health-issue-' + index),
+                              class: "model-item"
+                            }, [
+                              _createElementVNode("span", null, _toDisplayString(issue.message || issue.code || ''), 1 /* TEXT */)
+                            ]))
+                          }), 128 /* KEYED_FRAGMENT */))
+                        ]))
                       : _createCommentVNode("v-if", true)
-                  ]),
-                  (_ctx.healthCheckResult.remote && _ctx.healthCheckResult.remote.type === 'remote-health-check')
-                    ? (_openBlock(), _createElementBlock("div", {
-                        key: 0,
-                        class: "form-hint"
-                      }, [
-                        _createTextVNode(_toDisplayString(_ctx.healthCheckResult.remote.endpoint || '') + " ", 1 /* TEXT */),
-                        (_ctx.healthCheckResult.remote.statusCode)
-                          ? (_openBlock(), _createElementBlock("span", { key: 0 }, " · " + _toDisplayString(_ctx.healthCheckResult.remote.statusCode), 1 /* TEXT */))
-                          : _createCommentVNode("v-if", true),
-                        (_ctx.healthCheckResult.remote.message)
-                          ? (_openBlock(), _createElementBlock("span", { key: 1 }, " · " + _toDisplayString(_ctx.healthCheckResult.remote.message), 1 /* TEXT */))
-                          : _createCommentVNode("v-if", true)
-                      ]))
-                    : _createCommentVNode("v-if", true),
-                  (_ctx.healthCheckResult.remote && _ctx.healthCheckResult.remote.speedTests)
-                    ? (_openBlock(), _createElementBlock("div", {
-                        key: 1,
-                        class: "model-list"
-                      }, [
-                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.healthCheckResult.remote.speedTests, (result, name) => {
-                          return (_openBlock(), _createElementBlock("div", {
-                            key: 'health-speed-' + name,
-                            class: "model-item"
-                          }, [
-                            _createElementVNode("span", null, _toDisplayString(name), 1 /* TEXT */),
-                            (result && result.ok)
-                              ? (_openBlock(), _createElementBlock("span", {
-                                  key: 0,
-                                  class: "latency ok"
-                                }, _toDisplayString(_ctx.formatLatency(result)), 1 /* TEXT */))
-                              : (_openBlock(), _createElementBlock("span", {
-                                  key: 1,
-                                  class: "latency error"
-                                }, _toDisplayString((result && result.error) ? result.error : _ctx.t('config.health.fail')), 1 /* TEXT */))
-                          ]))
-                        }), 128 /* KEYED_FRAGMENT */))
-                      ]))
-                    : _createCommentVNode("v-if", true),
-                  (_ctx.healthCheckResult.issues && _ctx.healthCheckResult.issues.length)
-                    ? (_openBlock(), _createElementBlock("div", {
-                        key: 2,
-                        class: "model-list"
-                      }, [
-                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.healthCheckResult.issues, (issue, index) => {
-                          return (_openBlock(), _createElementBlock("div", {
-                            key: issue.code || ('health-issue-' + index),
-                            class: "model-item"
-                          }, [
-                            _createElementVNode("span", null, _toDisplayString(issue.message || issue.code || ''), 1 /* TEXT */)
-                          ]))
-                        }), 128 /* KEYED_FRAGMENT */))
-                      ]))
-                    : _createCommentVNode("v-if", true)
-                ], 64 /* STABLE_FRAGMENT */)),
-            _createElementVNode("div", { class: "btn-group" }, [
+                  ], 64 /* STABLE_FRAGMENT */))
+            ]),
+            _createElementVNode("div", { class: "btn-group health-check-modal-actions" }, [
+              (_ctx.getHealthCheckFailedProviderItems().length)
+                ? (_openBlock(), _createElementBlock("button", {
+                    key: 0,
+                    class: "btn btn-confirm btn-danger",
+                    disabled: _ctx.healthCheckFailedProviderDeleting || !_ctx.hasHealthCheckFailedProviderSelection(),
+                    onClick: $event => (_ctx.deleteSelectedHealthCheckFailedProviders())
+                  }, _toDisplayString(_ctx.healthCheckFailedProviderDeleting ? _ctx.t('config.health.failedProviders.deleting') : _ctx.t('config.health.failedProviders.deleteSelected')), 9 /* TEXT, PROPS */, ["disabled", "onClick"]))
+                : _createCommentVNode("v-if", true),
               _createElementVNode("button", {
                 class: "btn btn-confirm",
                 onClick: $event => (_ctx.showHealthCheckModal = false)
