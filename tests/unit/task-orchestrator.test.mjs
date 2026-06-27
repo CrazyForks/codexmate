@@ -58,10 +58,27 @@ test('buildTaskPlan can map workflow ids onto sequential workflow nodes', () => 
             { id: 'safe-provider-switch', name: '安全切换', readOnly: false }
         ]
     });
+    assert.strictEqual(plan.engine, 'workflow');
     assert.strictEqual(plan.nodes.length, 2);
     assert.strictEqual(plan.nodes[0].kind, 'workflow');
     assert.deepStrictEqual(plan.nodes[1].dependsOn, [plan.nodes[0].id]);
     assert.strictEqual(plan.nodes[1].write, true);
+});
+
+test('buildTaskPlan keeps workflowIds requests in workflow mode without explicit engine', () => {
+    const plan = buildTaskPlan({
+        target: '诊断并整理 provider 配置',
+        workflowIds: ['diagnose-config'],
+        followUps: ['总结风险']
+    }, {
+        workflowCatalog: [
+            { id: 'diagnose-config', name: '诊断配置', readOnly: true }
+        ]
+    });
+    assert.strictEqual(plan.engine, 'workflow');
+    assert.strictEqual(plan.nodes.length, 1);
+    assert.strictEqual(plan.nodes[0].kind, 'workflow');
+    assert.deepStrictEqual(plan.nodes[0].input.followUps, ['总结风险']);
 });
 
 test('buildTaskPlan keeps workflow follow-ups inside the final workflow node payload', () => {

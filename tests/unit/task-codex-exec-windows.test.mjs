@@ -1,4 +1,6 @@
 import assert from 'assert';
+import http from 'node:http';
+import https from 'node:https';
 import { readProjectFile } from './helpers/web-ui-source.mjs';
 
 const cliSource = readProjectFile('cli.js');
@@ -45,6 +47,41 @@ test('resolveSpawnCommand keeps bare command names on windows', () => {
     });
 
     assert.strictEqual(resolveSpawnCommand('codex'), 'codex');
+});
+
+test('postOpenAiChatCompletion fails fast on oversized responses', async () => {
+    const source = extractBlockBySignature(cliSource, 'function postOpenAiChatCompletion(requestConfig, body, options = {}) {');
+    const postOpenAiChatCompletion = instantiateFunction(source, 'postOpenAiChatCompletion', {
+        URL,
+        http,
+        https,
+        HTTP_KEEP_ALIVE_AGENT: false,
+        HTTPS_KEEP_ALIVE_AGENT: false,
+        TASK_OPENAI_CHAT_MAX_RESPONSE_BYTES: 8,
+        TASK_OPENAI_CHAT_TIMEOUT_MS: 1000,
+        Buffer,
+        truncateTaskText(text, limit) {
+            return String(text || '').slice(0, limit || 1000);
+        }
+    });
+    const server = http.createServer((req, res) => {
+        req.resume();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ choices: [{ message: { content: 'x'.repeat(64) } }] }));
+    });
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    try {
+        const { port } = server.address();
+        const result = await postOpenAiChatCompletion({
+            endpointUrl: `http://127.0.0.1:${port}/v1/chat/completions`,
+            extraHeaders: {}
+        }, { model: 'mock', messages: [] });
+        assert.strictEqual(result.ok, false);
+        assert.strictEqual(result.status, 200);
+        assert.strictEqual(result.error, 'OpenAI Chat response too large');
+    } finally {
+        await new Promise((resolve) => server.close(resolve));
+    }
 });
 
 test('runOpenAiChatTaskNode uses configured OpenAI Chat provider without spawning codex', async () => {

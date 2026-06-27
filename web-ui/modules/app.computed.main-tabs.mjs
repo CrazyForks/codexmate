@@ -196,7 +196,7 @@ export function createMainTabsComputed() {
                 ? this.taskOrchestration.queue
                 : [];
             return queue.filter((item) => {
-                const status = String(item && item.status || '').trim().toLowerCase();
+                const status = String((item && (item.status || item.runStatus)) || '').trim().toLowerCase();
                 return status === 'queued' || status === 'running';
             });
         },

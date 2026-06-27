@@ -1274,6 +1274,7 @@ test('taskOrchestrationActiveQueue hides completed and failed queue history from
     const computed = createMainTabsComputed();
     const queued = { taskId: 'task-queued', status: 'queued' };
     const running = { taskId: 'task-running', status: 'RUNNING' };
+    const runStatusOnly = { taskId: 'task-run-status-only', runStatus: 'running' };
     const context = {
         taskOrchestration: {
             queue: [
@@ -1281,6 +1282,7 @@ test('taskOrchestrationActiveQueue hides completed and failed queue history from
                 queued,
                 { taskId: 'task-failed', status: 'failed' },
                 running,
+                runStatusOnly,
                 { taskId: 'task-cancelled', status: 'cancelled' }
             ]
         }
@@ -1288,7 +1290,7 @@ test('taskOrchestrationActiveQueue hides completed and failed queue history from
 
     const activeQueue = computed.taskOrchestrationActiveQueue.call(context);
 
-    assert.deepStrictEqual(activeQueue, [queued, running]);
+    assert.deepStrictEqual(activeQueue, [queued, running, runStatusOnly]);
 });
 
 test('startTaskQueueRunner surfaces already-running queue state distinctly', async () => {

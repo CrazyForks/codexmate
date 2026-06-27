@@ -16174,12 +16174,23 @@ function postOpenAiChatCompletion(requestConfig, body, options = {}) {
             let raw = '';
             let receivedBytes = 0;
             res.on('data', (chunk) => {
+                if (settled) return;
                 receivedBytes += chunk.length || 0;
                 if (receivedBytes > TASK_OPENAI_CHAT_MAX_RESPONSE_BYTES) {
-                    res.destroy(new Error('response too large'));
+                    finish({ ok: false, status, error: 'OpenAI Chat response too large', payload: null, body: raw });
+                    res.destroy();
                     return;
                 }
                 raw += chunk;
+            });
+            res.on('error', (error) => {
+                finish({
+                    ok: false,
+                    status,
+                    error: error && error.message ? error.message : 'OpenAI Chat request failed',
+                    payload: null,
+                    body: raw
+                });
             });
             res.on('end', () => {
                 if (settled) return;
