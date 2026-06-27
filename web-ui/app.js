@@ -464,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     notes: '',
                     followUpsText: '',
                     workflowIdsText: '',
-                    selectedEngine: 'codex',
+                    selectedEngine: 'openai-chat',
                     runMode: 'write',
                     concurrency: 2,
                     autoFixRounds: 1,

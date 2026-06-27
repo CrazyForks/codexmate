@@ -46,8 +46,8 @@
                                     <summary class="task-advanced-summary">{{ t('orchestration.templates.title') }}</summary>
                                     <div class="task-template-block">
                                         <div class="task-template-chip-group">
-                                            <button type="button" class="task-template-chip" @click="taskOrchestration.target = t('orchestration.templates.reviewFix.target'); taskOrchestration.selectedEngine = 'codex'; taskOrchestration.workflowIdsText = ''; taskOrchestration.notes = t('orchestration.templates.reviewFix.notes'); taskOrchestration.followUpsText = t('orchestration.templates.reviewFix.followUps')">{{ t('orchestration.templates.reviewFix.label') }}</button>
-                                            <button type="button" class="task-template-chip" @click="taskOrchestration.target = t('orchestration.templates.planOnly.target'); taskOrchestration.selectedEngine = 'codex'; taskOrchestration.workflowIdsText = ''; taskOrchestration.notes = t('orchestration.templates.planOnly.notes'); taskOrchestration.followUpsText = ''">{{ t('orchestration.templates.planOnly.label') }}</button>
+                                            <button type="button" class="task-template-chip" @click="taskOrchestration.target = t('orchestration.templates.reviewFix.target'); taskOrchestration.selectedEngine = 'openai-chat'; taskOrchestration.workflowIdsText = ''; taskOrchestration.notes = t('orchestration.templates.reviewFix.notes'); taskOrchestration.followUpsText = t('orchestration.templates.reviewFix.followUps')">{{ t('orchestration.templates.reviewFix.label') }}</button>
+                                            <button type="button" class="task-template-chip" @click="taskOrchestration.target = t('orchestration.templates.planOnly.target'); taskOrchestration.selectedEngine = 'openai-chat'; taskOrchestration.workflowIdsText = ''; taskOrchestration.notes = t('orchestration.templates.planOnly.notes'); taskOrchestration.followUpsText = ''">{{ t('orchestration.templates.planOnly.label') }}</button>
                                             <button type="button" class="task-template-chip" @click="taskOrchestration.target = t('orchestration.templates.workflowBatch.target'); taskOrchestration.selectedEngine = 'workflow'; taskOrchestration.workflowIdsText = t('orchestration.templates.workflowBatch.workflowIds'); taskOrchestration.notes = t('orchestration.templates.workflowBatch.notes'); taskOrchestration.followUpsText = ''">{{ t('orchestration.templates.workflowBatch.label') }}</button>
                                         </div>
                                     </div>
@@ -67,7 +67,7 @@
                                         <div class="task-readiness-copy task-draft-inline-copy">{{ taskOrchestrationDraftReadiness.summary }}</div>
                                     </div>
                                     <div class="task-config-strip">
-                                        <div class="task-config-pill">{{ taskOrchestration.selectedEngine === 'workflow' ? t('orchestration.engine.workflow') : t('orchestration.engine.codex') }}</div>
+                                        <div class="task-config-pill">{{ taskOrchestration.selectedEngine === 'workflow' ? t('orchestration.engine.workflow') : t('orchestration.engine.openaiChat') }}</div>
                                         <div class="task-config-pill">{{ taskOrchestration.runMode === 'dry-run' ? t('orchestration.runMode.dryRun') : (taskOrchestration.runMode === 'read' ? t('orchestration.runMode.readOnly') : t('orchestration.runMode.write')) }}</div>
                                         <div v-if="taskOrchestration.title.trim()" class="task-config-pill">{{ t('orchestration.pills.hasTitle') }}</div>
                                         <div v-if="taskOrchestration.selectedEngine === 'workflow' && taskOrchestrationDraftMetrics.workflowCount > 0" class="task-config-pill">{{ t('orchestration.pills.workflowCount', { count: taskOrchestrationDraftMetrics.workflowCount }) }}</div>
@@ -89,7 +89,7 @@
                                     <label class="selector-field">
                                         <span class="selector-label">{{ t('orchestration.fields.engine') }}</span>
                                         <select v-model="taskOrchestration.selectedEngine" class="provider-fast-switch-select" disabled>
-                                            <option value="codex">{{ t('orchestration.engine.codex') }}</option>
+                                            <option value="openai-chat">{{ t('orchestration.engine.openaiChat') }}</option>
                                             <option value="workflow">{{ t('orchestration.engine.workflow') }}</option>
                                         </select>
                                     </label>
@@ -176,7 +176,7 @@
                     </div>
 
                     <section
-                        v-if="!(taskOrchestration.plan || taskOrchestration.planIssues.length || taskOrchestration.planWarnings.length || taskOrchestration.lastError || taskOrchestration.queue.length || taskOrchestration.runs.length || taskOrchestration.selectedRunId || taskOrchestration.selectedRunError)"
+                        v-if="!(taskOrchestration.plan || taskOrchestration.planIssues.length || taskOrchestration.planWarnings.length || taskOrchestration.lastError || taskOrchestrationActiveQueue.length || taskOrchestration.runs.length || taskOrchestration.selectedRunId || taskOrchestration.selectedRunError)"
                         class="selector-section task-stage-card">
                         <div class="task-stage-empty">
                             <div>
@@ -251,7 +251,7 @@
                         </section>
 
                         <section
-                            v-if="taskOrchestration.queue.length || taskOrchestration.runs.length || taskOrchestration.selectedRunId || taskOrchestration.selectedRunError"
+                            v-if="taskOrchestrationActiveQueue.length || taskOrchestration.runs.length || taskOrchestration.selectedRunId || taskOrchestration.selectedRunError"
                             class="selector-section task-workbench-card">
                             <div class="selector-header task-section-header">
                                 <div>
@@ -262,30 +262,30 @@
                                     <button type="button" class="btn-tool btn-tool-compact" @click="loadTaskOrchestrationOverview({ forceRefresh: true, includeDetail: true })" :disabled="taskOrchestration.loading">
                                         {{ taskOrchestration.loading ? t('common.refreshing') : t('common.refresh') }}
                                     </button>
-                                    <button v-if="taskOrchestration.queue.length" type="button" class="btn-tool btn-tool-compact" @click="startTaskQueueRunner()" :disabled="taskOrchestration.queueStarting">
+                                    <button v-if="taskOrchestrationActiveQueue.length" type="button" class="btn-tool btn-tool-compact" @click="startTaskQueueRunner()" :disabled="taskOrchestration.queueStarting">
                                         {{ taskOrchestration.queueStarting ? t('orchestration.queue.starting') : t('orchestration.queue.start') }}
                                     </button>
                                 </div>
                             </div>
 
                             <div
-                                v-if="(taskOrchestration.queue.length ? 1 : 0) + (taskOrchestration.runs.length ? 1 : 0) + ((taskOrchestration.selectedRunId || taskOrchestration.selectedRunError) ? 1 : 0) > 1"
+                                v-if="(taskOrchestrationActiveQueue.length ? 1 : 0) + (taskOrchestration.runs.length ? 1 : 0) + ((taskOrchestration.selectedRunId || taskOrchestration.selectedRunError) ? 1 : 0) > 1"
                                 class="task-workbench-tabs"
                                 role="group"
                                 :aria-label="t('orchestration.workbench.tabs.aria')">
-                                <button v-if="taskOrchestration.queue.length" type="button" class="task-workbench-tab" :class="{ active: taskOrchestration.workspaceTab === 'queue' }" @click="taskOrchestration.workspaceTab = 'queue'">{{ t('orchestration.workbench.tabs.queue', { count: taskOrchestration.queue.length }) }}</button>
+                                <button v-if="taskOrchestrationActiveQueue.length" type="button" class="task-workbench-tab" :class="{ active: taskOrchestration.workspaceTab === 'queue' }" @click="taskOrchestration.workspaceTab = 'queue'">{{ t('orchestration.workbench.tabs.queue', { count: taskOrchestrationActiveQueue.length }) }}</button>
                                 <button v-if="taskOrchestration.runs.length" type="button" class="task-workbench-tab" :class="{ active: taskOrchestration.workspaceTab === 'runs' }" @click="taskOrchestration.workspaceTab = 'runs'">{{ t('orchestration.workbench.tabs.runs', { count: taskOrchestration.runs.length }) }}</button>
                                 <button v-if="taskOrchestration.selectedRunId || taskOrchestration.selectedRunError" type="button" class="task-workbench-tab" :class="{ active: taskOrchestration.workspaceTab === 'detail' }" @click="taskOrchestration.workspaceTab = 'detail'">{{ t('orchestration.workbench.tabs.detail') }}</button>
                             </div>
 
-                            <div v-if="taskOrchestration.workspaceTab === 'queue' || (!taskOrchestration.runs.length && !taskOrchestration.selectedRunId && !taskOrchestration.selectedRunError)" class="task-workbench-panel">
-                                <div v-if="!taskOrchestration.queue.length" class="task-empty-state">
+                            <div v-if="(taskOrchestrationActiveQueue.length && taskOrchestration.workspaceTab === 'queue') || (!taskOrchestration.runs.length && !taskOrchestration.selectedRunId && !taskOrchestration.selectedRunError)" class="task-workbench-panel">
+                                <div v-if="!taskOrchestrationActiveQueue.length" class="task-empty-state">
                                     <div class="task-empty-title">{{ t('orchestration.queue.empty.title') }}</div>
                                     <div class="task-empty-copy">{{ t('orchestration.queue.empty.subtitle') }}</div>
                                 </div>
                                 <div v-else class="task-runtime-list">
                                     <div
-                                        v-for="item in taskOrchestration.queue"
+                                        v-for="item in taskOrchestrationActiveQueue"
                                         :key="item.taskId"
                                         :class="['task-runtime-item', { active: item.lastRunId && taskOrchestration.selectedRunId === item.lastRunId, clickable: !!item.lastRunId }]"
                                         :role="item.lastRunId ? 'button' : null"
@@ -301,13 +301,13 @@
                                         </div>
                                         <div class="task-runtime-item-actions">
                                             <span :class="['pill', taskRunStatusTone(item.status)]">{{ item.status }}</span>
-                                            <button type="button" class="btn-mini" @click.stop="cancelTaskRunFromUi(item.taskId)" :disabled="item.status !== 'queued' && item.status !== 'running'">{{ t('common.cancel') }}</button>
+                                            <button v-if="isTaskRunActive(item.status)" type="button" class="btn-mini" @click.stop="cancelTaskRunFromUi(item.taskId)">{{ t('common.cancel') }}</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div v-else-if="taskOrchestration.workspaceTab === 'runs' || (!taskOrchestration.queue.length && taskOrchestration.runs.length && !taskOrchestration.selectedRunId && !taskOrchestration.selectedRunError)" class="task-workbench-panel">
+                            <div v-else-if="taskOrchestration.workspaceTab === 'runs' || (!taskOrchestrationActiveQueue.length && taskOrchestration.runs.length && !taskOrchestration.selectedRunId && !taskOrchestration.selectedRunError)" class="task-workbench-panel">
                                 <div v-if="!taskOrchestration.runs.length" class="task-empty-state">
                                     <div class="task-empty-title">{{ t('orchestration.runs.empty.title') }}</div>
                                     <div class="task-empty-copy">{{ t('orchestration.runs.empty.subtitle') }}</div>
@@ -339,7 +339,7 @@
                                     <button type="button" class="btn-tool btn-tool-compact" @click="retryTaskRunFromUi(taskOrchestration.selectedRunId)" :disabled="!taskOrchestration.selectedRunId || taskOrchestration.retrying">
                                         {{ taskOrchestration.retrying ? t('orchestration.detail.retrying') : t('orchestration.detail.retry') }}
                                     </button>
-                                    <button type="button" class="btn-tool btn-tool-compact" @click="cancelTaskRunFromUi(taskOrchestration.selectedRunId)" :disabled="!taskOrchestrationSelectedRun || !taskOrchestrationSelectedRun.run || !isTaskRunActive(taskOrchestrationSelectedRun.run.status)">
+                                    <button v-if="taskOrchestrationSelectedRun && taskOrchestrationSelectedRun.run && isTaskRunActive(taskOrchestrationSelectedRun.run.status)" type="button" class="btn-tool btn-tool-compact" @click="cancelTaskRunFromUi(taskOrchestration.selectedRunId)">
                                         {{ t('common.cancel') }}
                                     </button>
                                 </div>

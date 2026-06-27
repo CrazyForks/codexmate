@@ -30,21 +30,21 @@ test('computePlanWaves groups dependencies into waves', () => {
     ]);
 });
 
-test('buildTaskPlan generates codex orchestration nodes and follow-ups', () => {
+test('buildTaskPlan generates OpenAI Chat orchestration nodes and follow-ups', () => {
     const plan = buildTaskPlan({
         target: '实现任务编排 Tab\n- 新增前端面板\n- 扩展 CLI',
         allowWrite: true,
         concurrency: 3,
         followUps: ['继续处理 review 评论']
     });
-    assert.strictEqual(plan.engine, 'codex');
+    assert.strictEqual(plan.engine, 'openai-chat');
     assert.strictEqual(plan.allowWrite, true);
     assert.strictEqual(plan.concurrency, 3);
     assert.ok(Array.isArray(plan.nodes));
-    assert.ok(plan.nodes.some((node) => node.kind === 'codex'));
+    assert.ok(plan.nodes.some((node) => node.kind === 'openai-chat'));
     assert.ok(plan.nodes.some((node) => node.title.includes('验证')));
     assert.strictEqual(plan.followUps.length, 1);
-    assert.strictEqual(plan.nodes[plan.nodes.length - 1].kind, 'codex');
+    assert.strictEqual(plan.nodes[plan.nodes.length - 1].kind, 'openai-chat');
 });
 
 test('buildTaskPlan can map workflow ids onto sequential workflow nodes', () => {
@@ -107,8 +107,8 @@ test('validateTaskPlan rejects unknown workflow ids instead of silently falling 
 test('validateTaskPlan rejects dependency cycles', () => {
     const result = validateTaskPlan({
         nodes: [
-            { id: 'a', kind: 'codex', prompt: 'a', dependsOn: ['b'] },
-            { id: 'b', kind: 'codex', prompt: 'b', dependsOn: ['a'] }
+            { id: 'a', kind: 'openai-chat', prompt: 'a', dependsOn: ['b'] },
+            { id: 'b', kind: 'openai-chat', prompt: 'b', dependsOn: ['a'] }
         ]
     });
     assert.strictEqual(result.ok, false);
@@ -120,10 +120,10 @@ test('executeTaskPlan respects dependency blocking and concurrency', async () =>
     const run = await executeTaskPlan({
         concurrency: 2,
         nodes: [
-            { id: 'inspect', kind: 'codex', prompt: 'inspect', dependsOn: [], write: false },
-            { id: 'work-a', kind: 'codex', prompt: 'work-a', dependsOn: ['inspect'], write: false },
-            { id: 'work-b', kind: 'codex', prompt: 'work-b', dependsOn: ['inspect'], write: false },
-            { id: 'verify', kind: 'codex', prompt: 'verify', dependsOn: ['work-a', 'work-b'], write: false }
+            { id: 'inspect', kind: 'openai-chat', prompt: 'inspect', dependsOn: [], write: false },
+            { id: 'work-a', kind: 'openai-chat', prompt: 'work-a', dependsOn: ['inspect'], write: false },
+            { id: 'work-b', kind: 'openai-chat', prompt: 'work-b', dependsOn: ['inspect'], write: false },
+            { id: 'verify', kind: 'openai-chat', prompt: 'verify', dependsOn: ['work-a', 'work-b'], write: false }
         ]
     }, {
         concurrency: 2,
@@ -151,7 +151,7 @@ test('executeTaskPlan retries failed nodes within auto-fix rounds', async () => 
     const attempts = new Map();
     const run = await executeTaskPlan({
         nodes: [
-            { id: 'work', kind: 'codex', prompt: 'work', dependsOn: [], write: false, autoFixRounds: 1 }
+            { id: 'work', kind: 'openai-chat', prompt: 'work', dependsOn: [], write: false, autoFixRounds: 1 }
         ]
     }, {
         async executeNode(node) {
@@ -178,8 +178,8 @@ test('executeTaskPlan retries failed nodes within auto-fix rounds', async () => 
 test('executeTaskPlan marks downstream nodes blocked when dependency fails', async () => {
     const run = await executeTaskPlan({
         nodes: [
-            { id: 'fail', kind: 'codex', prompt: 'fail', dependsOn: [], write: false },
-            { id: 'after', kind: 'codex', prompt: 'after', dependsOn: ['fail'], write: false }
+            { id: 'fail', kind: 'openai-chat', prompt: 'fail', dependsOn: [], write: false },
+            { id: 'after', kind: 'openai-chat', prompt: 'after', dependsOn: ['fail'], write: false }
         ]
     }, {
         async executeNode(node) {
@@ -202,7 +202,7 @@ test('executeTaskPlan marks downstream nodes blocked when dependency fails', asy
 test('executeTaskPlan keeps payload logs without duplicating them', async () => {
     const run = await executeTaskPlan({
         nodes: [
-            { id: 'work', kind: 'codex', prompt: 'work', dependsOn: [], write: false }
+            { id: 'work', kind: 'openai-chat', prompt: 'work', dependsOn: [], write: false }
         ]
     }, {
         async executeNode() {

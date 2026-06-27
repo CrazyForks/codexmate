@@ -105,7 +105,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /taskOrchestration.workspaceTab === 'queue'/);
     assert.match(orchestrationPanel, /taskOrchestration.workspaceTab === 'runs'/);
     assert.match(orchestrationPanel, /taskOrchestration.workspaceTab === 'detail'/);
-    assert.match(orchestrationPanel, /taskOrchestration\.queue\.length \|\| taskOrchestration\.runs\.length \|\| taskOrchestration\.selectedRunId \|\| taskOrchestration\.selectedRunError/);
+    assert.match(orchestrationPanel, /taskOrchestrationActiveQueue\.length \|\| taskOrchestration\.runs\.length \|\| taskOrchestration\.selectedRunId \|\| taskOrchestration\.selectedRunError/);
     assert.match(orchestrationPanel, /taskOrchestration\.plan \|\| taskOrchestration\.planIssues\.length \|\| taskOrchestration\.planWarnings\.length \|\| taskOrchestration\.lastError/);
     assert.match(orchestrationPanel, /class="selector-section task-stage-card"/);
     assert.match(orchestrationPanel, /t\('orchestration\.stage\.title'\)/);

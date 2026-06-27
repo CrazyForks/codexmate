@@ -47,77 +47,58 @@ test('resolveSpawnCommand keeps bare command names on windows', () => {
     assert.strictEqual(resolveSpawnCommand('codex'), 'codex');
 });
 
-test('runCodexExecTaskNode spawns bare codex command through the windows shell', async () => {
-    const source = extractBlockBySignature(cliSource, 'async function runCodexExecTaskNode(node, context = {}) {');
-    const spawnCalls = [];
-    const runCodexExecTaskNode = instantiateFunction(source, 'runCodexExecTaskNode', {
-        process: { platform: 'win32' },
-        resolveSpawnCommand() {
-            return 'codex';
+test('runOpenAiChatTaskNode uses configured OpenAI Chat provider without spawning codex', async () => {
+    const source = extractBlockBySignature(cliSource, 'async function runOpenAiChatTaskNode(node, context = {}) {');
+    const requests = [];
+    const runOpenAiChatTaskNode = instantiateFunction(source, 'runOpenAiChatTaskNode', {
+        resolveTaskOpenAiChatConfig() {
+            return {
+                providerName: 'mock-openai',
+                model: 'deepseek-v4-pro',
+                endpointUrl: 'http://127.0.0.1:18183/v1/chat/completions',
+                apiKey: 'sk-unit-secret',
+                extraHeaders: {}
+            };
         },
-        commandExists(command, args) {
-            assert.strictEqual(command, 'codex');
-            assert.strictEqual(args, '--version');
-            return true;
+        postOpenAiChatCompletion(config, body) {
+            requests.push({ config, body });
+            return Promise.resolve({
+                ok: true,
+                status: 200,
+                payload: {
+                    choices: [{ message: { content: 'mock-openai-chat-ok' } }]
+                }
+            });
+        },
+        extractModelResponseText(payload) {
+            return payload.choices[0].message.content;
+        },
+        truncateTaskText(text, limit) {
+            return String(text || '').slice(0, limit || 1000);
         },
         toIsoTime() {
-            return '2026-04-13T03:09:00.000Z';
+            return '2026-06-27T15:30:00.000Z';
         },
-        truncateTaskText(text) {
-            return String(text || '');
-        },
-        ensureDir() {},
-        TASK_RUN_DETAILS_DIR: '/tmp/task-runs',
-        path: {
-            join: (...parts) => parts.join('/'),
-            basename(value) {
-                const parts = String(value || '').split(/[\\/]/g);
-                return parts[parts.length - 1] || '';
-            }
-        },
-        fs: {
-            mkdtempSync() {
-                return '/tmp/task-runs/tmp/codex-123';
-            },
-            rmSync() {}
-        },
-        readCodexLastMessageFile() {
-            return 'done';
-        },
-        findCodexSessionId() {
-            return '';
-        },
-        spawn(command, args, options) {
-            spawnCalls.push({ command, args, options });
-            return {
-                stdout: { on() {} },
-                stderr: { on() {} },
-                on(event, handler) {
-                    if (event === 'close') {
-                        handler(0, '');
-                    }
-                },
-                kill() {}
-            };
-        }
+        Date
     });
 
-    const result = await runCodexExecTaskNode({
+    const result = await runOpenAiChatTaskNode({
         id: 'analysis-01',
-        prompt: 'inspect the bug',
+        prompt: 'inspect the orchestration chain',
         write: false
     }, {
-        cwd: 'C:/repo'
+        cwd: 'C:/repo',
+        dependencyResults: [{ id: 'plan-01', summary: 'dependency done' }]
     });
 
     assert.strictEqual(result.success, true);
-    assert.strictEqual(spawnCalls.length, 1);
-    assert.strictEqual(spawnCalls[0].command, 'codex');
-    assert.strictEqual(spawnCalls[0].options.shell, true);
-    assert.deepStrictEqual(spawnCalls[0].args.slice(0, 7), [
-        '-a', 'never',
-        '-s', 'read-only',
-        '-C', 'C:/repo',
-        'exec'
-    ]);
+    assert.strictEqual(result.output.provider, 'mock-openai');
+    assert.strictEqual(result.output.model, 'deepseek-v4-pro');
+    assert.strictEqual(result.output.text, 'mock-openai-chat-ok');
+    assert.strictEqual(requests.length, 1);
+    assert.strictEqual(requests[0].body.model, 'deepseek-v4-pro');
+    assert.strictEqual(requests[0].body.messages[0].role, 'system');
+    assert.strictEqual(requests[0].body.messages[1].role, 'user');
+    assert.match(requests[0].body.messages[1].content, /dependency done/);
+    assert.ok(!JSON.stringify(result).includes('sk-unit-secret'));
 });

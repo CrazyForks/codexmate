@@ -1270,6 +1270,27 @@ test('taskOrchestrationQueueStats counts queue statuses in one pass without chan
     });
 });
 
+test('taskOrchestrationActiveQueue hides completed and failed queue history from workbench queue tab', () => {
+    const computed = createMainTabsComputed();
+    const queued = { taskId: 'task-queued', status: 'queued' };
+    const running = { taskId: 'task-running', status: 'RUNNING' };
+    const context = {
+        taskOrchestration: {
+            queue: [
+                { taskId: 'task-completed', status: 'completed' },
+                queued,
+                { taskId: 'task-failed', status: 'failed' },
+                running,
+                { taskId: 'task-cancelled', status: 'cancelled' }
+            ]
+        }
+    };
+
+    const activeQueue = computed.taskOrchestrationActiveQueue.call(context);
+
+    assert.deepStrictEqual(activeQueue, [queued, running]);
+});
+
 test('startTaskQueueRunner surfaces already-running queue state distinctly', async () => {
     const api = async (name) => {
         if (name === 'task-queue-start') {

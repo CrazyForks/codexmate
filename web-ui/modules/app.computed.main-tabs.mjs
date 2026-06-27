@@ -12,7 +12,7 @@ function readTaskOrchestrationDraftMetrics(taskOrchestration) {
     const title = String(state.title || '').trim();
     const workflowIds = normalizeTaskDraftLines(state.workflowIdsText);
     const followUps = normalizeTaskDraftLines(state.followUpsText);
-    const engine = String(state.selectedEngine || 'codex').trim().toLowerCase() === 'workflow' ? 'workflow' : 'codex';
+    const engine = String(state.selectedEngine || 'openai-chat').trim().toLowerCase() === 'workflow' ? 'workflow' : 'openai-chat';
     const runMode = String(state.runMode || 'write').trim().toLowerCase();
     const allowWrite = runMode === 'write';
     const dryRun = runMode === 'dry-run';
@@ -66,7 +66,7 @@ function createTaskDraftChecklist(metrics, t = null) {
             done: workflowReady,
             detail: metrics.engine === 'workflow'
                 ? (metrics.workflowCount > 0 ? translateTaskText(t, 'orchestration.readiness.workflow.done', `已选 ${metrics.workflowCount} 个 Workflow`, { count: metrics.workflowCount }) : translateTaskText(t, 'orchestration.readiness.workflow.missing', '还没选 Workflow ID'))
-                : translateTaskText(t, 'orchestration.readiness.engine.codex', '使用 Codex 规划节点')
+                : translateTaskText(t, 'orchestration.readiness.engine.openaiChat', '使用 OpenAI Chat-compatible 节点')
         },
         {
             key: 'scope',
@@ -190,6 +190,15 @@ export function createMainTabsComputed() {
             const run = detail && detail.run && typeof detail.run === 'object' ? detail.run : {};
             if (detail && Array.isArray(detail.nodes)) return detail.nodes;
             return Array.isArray(run.nodes) ? run.nodes : [];
+        },
+        taskOrchestrationActiveQueue() {
+            const queue = this.taskOrchestration && Array.isArray(this.taskOrchestration.queue)
+                ? this.taskOrchestration.queue
+                : [];
+            return queue.filter((item) => {
+                const status = String(item && item.status || '').trim().toLowerCase();
+                return status === 'queued' || status === 'running';
+            });
         },
         taskOrchestrationQueueStats() {
             const queue = this.taskOrchestration && Array.isArray(this.taskOrchestration.queue)

@@ -1,4 +1,155 @@
+const { spawn } = require('child_process');
 const { assert, runSync, fs, path } = require('./helpers');
+
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function startOpenAiChatMock(tmpHome) {
+    const scriptPath = path.join(tmpHome, 'task-openai-chat-mock.cjs');
+    const portFile = path.join(tmpHome, 'task-openai-chat-mock.port');
+    const requestsFile = path.join(tmpHome, 'task-openai-chat-requests.jsonl');
+    fs.writeFileSync(scriptPath, `
+const http = require('http');
+const fs = require('fs');
+const portFile = process.argv[2];
+const requestsFile = process.argv[3];
+let requestCount = 0;
+const server = http.createServer((req, res) => {
+  const requestPath = String(req.url || '').split('?')[0];
+  let rawBody = '';
+  req.setEncoding('utf-8');
+  req.on('data', chunk => { rawBody += chunk; });
+  req.on('end', () => {
+    let parsedBody = null;
+    try { parsedBody = rawBody ? JSON.parse(rawBody) : null; } catch (_) {}
+    requestCount += 1;
+    fs.appendFileSync(requestsFile, JSON.stringify({
+      n: requestCount,
+      method: req.method,
+      path: requestPath,
+      authorization: req.headers.authorization || '',
+      body: parsedBody
+    }) + '\\n');
+    if (req.method === 'GET' && requestPath === '/v1/models') {
+      const body = JSON.stringify({ object: 'list', data: [
+        { id: 'deepseek-v4-pro', object: 'model' },
+        { id: 'deepseek-v4-flash', object: 'model' }
+      ] });
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(body, 'utf-8') });
+      res.end(body, 'utf-8');
+      return;
+    }
+    if (req.method === 'POST' && requestPath === '/v1/chat/completions') {
+      const model = parsedBody && parsedBody.model ? parsedBody.model : 'unknown-model';
+      const body = JSON.stringify({
+        id: 'chatcmpl-task-e2e-' + requestCount,
+        object: 'chat.completion',
+        choices: [{ index: 0, message: { role: 'assistant', content: 'openai-chat-e2e-ok model=' + model + ' request=' + requestCount }, finish_reason: 'stop' }],
+        usage: { prompt_tokens: 10, completion_tokens: 8, total_tokens: 18 }
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(body, 'utf-8') });
+      res.end(body, 'utf-8');
+      return;
+    }
+    const body = JSON.stringify({ error: { message: 'not found ' + req.method + ' ' + requestPath } });
+    res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(body, 'utf-8') });
+    res.end(body, 'utf-8');
+  });
+});
+server.listen(0, '127.0.0.1', () => {
+  fs.writeFileSync(portFile, String(server.address().port), 'utf-8');
+});
+process.on('SIGTERM', () => server.close(() => process.exit(0)));
+process.on('SIGINT', () => server.close(() => process.exit(0)));
+`, 'utf-8');
+
+    const child = spawn(process.execPath, [scriptPath, portFile, requestsFile], {
+        stdio: ['ignore', 'ignore', 'pipe']
+    });
+    let stderr = '';
+    child.stderr.on('data', chunk => { stderr += chunk.toString(); });
+    for (let i = 0; i < 80; i += 1) {
+        if (fs.existsSync(portFile)) {
+            const port = Number(fs.readFileSync(portFile, 'utf-8').trim());
+            if (Number.isFinite(port) && port > 0) {
+                return {
+                    port,
+                    process: child,
+                    readRequests() {
+                        if (!fs.existsSync(requestsFile)) return [];
+                        return fs.readFileSync(requestsFile, 'utf-8')
+                            .split(/\r?\n/g)
+                            .filter(Boolean)
+                            .map(line => JSON.parse(line));
+                    },
+                    close() {
+                        return new Promise((resolve) => {
+                            if (child.exitCode !== null || child.signalCode) return resolve();
+                            const timer = setTimeout(() => {
+                                try { child.kill('SIGKILL'); } catch (_) {}
+                                resolve();
+                            }, 2000);
+                            child.once('exit', () => {
+                                clearTimeout(timer);
+                                resolve();
+                            });
+                            try { child.kill('SIGTERM'); } catch (_) { resolve(); }
+                        });
+                    }
+                };
+            }
+        }
+        if (child.exitCode !== null) {
+            throw new Error(`OpenAI Chat mock exited early: ${stderr}`);
+        }
+        await sleep(100);
+    }
+    try { child.kill('SIGKILL'); } catch (_) {}
+    throw new Error(`OpenAI Chat mock did not start: ${stderr}`);
+}
+
+function writeOpenAiChatConfig(tmpHome, baseUrl) {
+    const configDir = path.join(tmpHome, '.codex');
+    fs.mkdirSync(configDir, { recursive: true });
+    fs.writeFileSync(path.join(configDir, 'codexmate-init.json'), JSON.stringify({ version: 1, mode: 'task-openai-chat-e2e' }), 'utf-8');
+    fs.writeFileSync(path.join(configDir, 'config.toml'), [
+        'model = "deepseek-v4-pro"',
+        'model_provider = "local-openai-chat"',
+        '',
+        '[model_providers.local-openai-chat]',
+        'name = "Local OpenAI Chat"',
+        `base_url = "${baseUrl}/v1"`,
+        'wire_api = "chat_completions"',
+        'preferred_auth_method = "sk-task-e2e-secret"',
+        'models = ["deepseek-v4-pro", "deepseek-v4-flash"]',
+        ''
+    ].join('\n'), 'utf-8');
+}
+
+function assertOpenAiRunPayload(payload, label) {
+    assert(payload && payload.run && payload.run.status === 'success', `${label} should succeed`);
+    const nodes = Array.isArray(payload.run.nodes) ? payload.run.nodes : [];
+    assert(nodes.length > 0, `${label} should include nodes`);
+    assert(nodes.every(node => node.kind === 'openai-chat'), `${label} should use OpenAI Chat nodes`);
+    assert(nodes.every(node => node.status === 'success'), `${label} nodes should all succeed`);
+    assert(nodes.some(node => node.output && node.output.provider === 'local-openai-chat'), `${label} should record provider`);
+    assert(JSON.stringify(payload).indexOf('sk-task-e2e-secret') === -1, `${label} must not leak api key`);
+}
+
+function assertOpenAiRequests(mock, minCount, label) {
+    const chatRequests = mock.readRequests().filter(item => item.path === '/v1/chat/completions');
+    assert(chatRequests.length >= minCount, `${label} should call /v1/chat/completions at least ${minCount} times, got ${chatRequests.length}`);
+    for (const item of chatRequests) {
+        assert(item.method === 'POST', `${label} chat request should be POST`);
+        assert(item.authorization === 'Bearer sk-task-e2e-secret', `${label} should pass bearer auth`);
+        assert(item.body && item.body.model === 'deepseek-v4-pro', `${label} should pass selected model`);
+        assert(Array.isArray(item.body.messages) && item.body.messages.length >= 2, `${label} should send chat messages`);
+        assert(item.body.messages.some(message => message.role === 'system'), `${label} should include system prompt`);
+        assert(item.body.messages.some(message => message.role === 'user'), `${label} should include user prompt`);
+    }
+}
 
 function parseJsonOutput(rawText) {
     const text = String(rawText || '').trim();
@@ -35,6 +186,8 @@ module.exports = async function testTaskOrchestration(ctx) {
     assert(planPayload.ok === true, 'task plan should validate');
     assert(planPayload.plan && Array.isArray(planPayload.plan.nodes), 'task plan should include nodes');
     assert(planPayload.plan.nodes.length >= 2, 'task plan should include multiple nodes');
+    assert(planPayload.plan.engine === 'openai-chat', 'default task plan should use OpenAI Chat engine');
+    assert(planPayload.plan.nodes.every((node) => node.kind === 'openai-chat'), 'default task plan nodes should be OpenAI Chat nodes');
 
     const invalidWorkflowPlanResult = runSync(node, [
         cliPath,
@@ -170,6 +323,126 @@ module.exports = async function testTaskOrchestration(ctx) {
 
     const apiRunDetail = await api('task-run-detail', { runId: apiQueueStart.detail.runId });
     assert(apiRunDetail && apiRunDetail.runId === apiQueueStart.detail.runId, 'task-run-detail API should return detail');
+
+    const openAiMock = await startOpenAiChatMock(tmpHome);
+    try {
+        writeOpenAiChatConfig(tmpHome, `http://127.0.0.1:${openAiMock.port}`);
+
+        const openAiPlanResult = runSync(node, [
+            cliPath,
+            'task',
+            'plan',
+            '--target',
+            'OpenAI Chat provider 端到端模拟',
+            '--follow-up',
+            '输出风险说明',
+            '--engine',
+            'openai-chat',
+            '--json'
+        ], { env });
+        assert(openAiPlanResult.status === 0, `OpenAI Chat task plan failed: ${openAiPlanResult.stderr || openAiPlanResult.stdout}`);
+        const openAiPlanPayload = parseJsonOutput(openAiPlanResult.stdout);
+        assert(openAiPlanPayload.ok === true, 'OpenAI Chat task plan should validate');
+        assert(openAiPlanPayload.plan && openAiPlanPayload.plan.engine === 'openai-chat', 'OpenAI Chat plan should keep engine');
+        assert(openAiPlanPayload.plan.nodes.every((node) => node.kind === 'openai-chat'), 'OpenAI Chat plan should produce OpenAI Chat nodes');
+
+        const openAiRunResult = runSync(node, [
+            cliPath,
+            'task',
+            'run',
+            '--target',
+            'OpenAI Chat provider CLI 运行链路',
+            '--follow-up',
+            '输出验证摘要',
+            '--engine',
+            'openai-chat',
+            '--concurrency',
+            '2',
+            '--json'
+        ], { env });
+        assert(openAiRunResult.status === 0, `OpenAI Chat task run failed: ${openAiRunResult.stderr || openAiRunResult.stdout}`);
+        const openAiRunPayload = parseJsonOutput(openAiRunResult.stdout);
+        assertOpenAiRunPayload(openAiRunPayload, 'OpenAI Chat CLI run');
+
+        const openAiLogsResult = runSync(node, [
+            cliPath,
+            'task',
+            'logs',
+            openAiRunPayload.runId,
+            '--json'
+        ], { env });
+        assert(openAiLogsResult.status === 0, `OpenAI Chat task logs failed: ${openAiLogsResult.stderr || openAiLogsResult.stdout}`);
+        const openAiLogsPayload = parseJsonOutput(openAiLogsResult.stdout);
+        assert(String(openAiLogsPayload.logs || '').includes('OpenAI Chat request provider=local-openai-chat'), 'OpenAI Chat logs should include provider request');
+
+        const openAiQueueAddResult = runSync(node, [
+            cliPath,
+            'task',
+            'queue',
+            'add',
+            '--target',
+            'OpenAI Chat provider CLI 队列链路',
+            '--engine',
+            'openai-chat',
+            '--json'
+        ], { env });
+        assert(openAiQueueAddResult.status === 0, `OpenAI Chat queue add failed: ${openAiQueueAddResult.stderr || openAiQueueAddResult.stdout}`);
+        const openAiQueueAddPayload = parseJsonOutput(openAiQueueAddResult.stdout);
+        assert(openAiQueueAddPayload.ok === true && openAiQueueAddPayload.task && openAiQueueAddPayload.task.engine === 'openai-chat', 'OpenAI Chat queue add should persist engine');
+
+        const openAiQueueStartResult = runSync(node, [
+            cliPath,
+            'task',
+            'queue',
+            'start',
+            openAiQueueAddPayload.task.taskId,
+            '--json'
+        ], { env });
+        assert(openAiQueueStartResult.status === 0, `OpenAI Chat queue start failed: ${openAiQueueStartResult.stderr || openAiQueueStartResult.stdout}`);
+        const openAiQueueStartPayload = parseJsonOutput(openAiQueueStartResult.stdout);
+        assert(openAiQueueStartPayload.ok === true, 'OpenAI Chat queue start should succeed');
+        assertOpenAiRunPayload(openAiQueueStartPayload.detail, 'OpenAI Chat CLI queue start');
+
+        const apiOpenAiPlan = await api('task-plan', {
+            target: 'OpenAI Chat Web API 计划链路',
+            engine: 'openai-chat',
+            followUps: ['输出结论']
+        });
+        assert(apiOpenAiPlan.ok === true, 'OpenAI Chat task-plan API should validate');
+        assert(apiOpenAiPlan.plan && apiOpenAiPlan.plan.engine === 'openai-chat', 'OpenAI Chat task-plan API should keep engine');
+        assert(apiOpenAiPlan.plan.nodes.every((node) => node.kind === 'openai-chat'), 'OpenAI Chat task-plan API should produce OpenAI Chat nodes');
+
+        const apiOpenAiRun = await api('task-run', {
+            target: 'OpenAI Chat Web API 同步运行链路',
+            engine: 'openai-chat',
+            concurrency: 1
+        }, 15000);
+        assertOpenAiRunPayload(apiOpenAiRun, 'OpenAI Chat API run');
+
+        const apiOpenAiDetail = await api('task-run-detail', { runId: apiOpenAiRun.runId });
+        assert(apiOpenAiDetail && apiOpenAiDetail.run && apiOpenAiDetail.run.status === 'success', 'OpenAI Chat task-run-detail API should return run detail');
+        assert(apiOpenAiDetail.run.nodes.every((node) => node.kind === 'openai-chat'), 'OpenAI Chat task-run-detail API should expose OpenAI Chat nodes');
+
+        const apiOpenAiQueueAdd = await api('task-queue-add', {
+            target: 'OpenAI Chat Web API 队列链路',
+            engine: 'openai-chat'
+        });
+        assert(apiOpenAiQueueAdd.ok === true && apiOpenAiQueueAdd.task && apiOpenAiQueueAdd.task.engine === 'openai-chat', 'OpenAI Chat task-queue-add API should persist engine');
+        const apiOpenAiQueueStart = await api('task-queue-start', {
+            taskId: apiOpenAiQueueAdd.task.taskId,
+            detach: false
+        }, 15000);
+        assert(apiOpenAiQueueStart.ok === true, 'OpenAI Chat task-queue-start API should succeed');
+        assertOpenAiRunPayload(apiOpenAiQueueStart.detail, 'OpenAI Chat API queue start');
+
+        const apiOpenAiOverview = await api('task-overview');
+        assert(Array.isArray(apiOpenAiOverview.runs), 'OpenAI Chat task-overview API should return runs after execution');
+        assert(apiOpenAiOverview.runs.some((item) => item.runId === apiOpenAiRun.runId), 'OpenAI Chat task-overview API should include API run');
+
+        assertOpenAiRequests(openAiMock, 6, 'OpenAI Chat full chain');
+    } finally {
+        await openAiMock.close();
+    }
 
     const missingQueueStartResult = runSync(node, [
         cliPath,

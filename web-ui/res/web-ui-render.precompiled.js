@@ -2939,7 +2939,7 @@ return function render(_ctx, _cache) {
                               }, [
                                 (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.visibleSessionsList, (session, __, ___, _cached) => {
                                   const _memo = ([_ctx.activeSessionExportKey === _ctx.getSessionExportKey(session), session.messageCount, session.updatedAt, session.title, session.sourceLabel, session.cwd, _ctx.isSessionPinned(session), _ctx.sessionsLoading, session.match && session.match.count])
-                                  if (_cached && _cached.key === session.source + '-' + session.sessionId + '-' + session.filePath && _isMemoSame(_cached, _memo)) return _cached
+                                  if (_cached && _cached.el && _cached.key === session.source + '-' + session.sessionId + '-' + session.filePath && _isMemoSame(_cached, _memo)) return _cached
                                   const _item = (_openBlock(), _createElementBlock("div", {
                                     key: session.source + '-' + session.sessionId + '-' + session.filePath,
                                     class: _normalizeClass([
@@ -3435,7 +3435,7 @@ return function render(_ctx, _cache) {
                                                       : _createCommentVNode("v-if", true),
                                                     (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.activeSessionVisibleMessages, (msg, idx, ___, _cached) => {
                                                       const _memo = ([msg.text, msg.timestamp, msg.roleLabel, msg.normalizedRole])
-                                                      if (_cached && _cached.key === _ctx.getRecordRenderKey(msg, idx) && _isMemoSame(_cached, _memo)) return _cached
+                                                      if (_cached && _cached.el && _cached.key === _ctx.getRecordRenderKey(msg, idx) && _isMemoSame(_cached, _memo)) return _cached
                                                       const _item = (_openBlock(), _createElementBlock("div", {
                                                         key: _ctx.getRecordRenderKey(msg, idx),
                                                         "data-message-key": _ctx.getRecordRenderKey(msg, idx),
@@ -3486,7 +3486,7 @@ return function render(_ctx, _cache) {
                                               _createElementVNode("div", { class: "session-timeline-track" }),
                                               (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionTimelineNodes, (node, __, ___, _cached) => {
                                                 const _memo = ([_ctx.sessionTimelineActiveKey === node.key, node.safePercent, node.title])
-                                                if (_cached && _cached.key === 'timeline-' + node.key && _isMemoSame(_cached, _memo)) return _cached
+                                                if (_cached && _cached.el && _cached.key === 'timeline-' + node.key && _isMemoSame(_cached, _memo)) return _cached
                                                 const _item = (_openBlock(), _createElementBlock("button", {
                                                   key: 'timeline-' + node.key,
                                                   type: "button",
@@ -3518,7 +3518,7 @@ return function render(_ctx, _cache) {
                                               ]),
                                               (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sessionTimelineNodes, (node, __, ___, _cached) => {
                                                 const _memo = ([_ctx.sessionTimelineActiveKey === node.key, node.safePercent, node.title])
-                                                if (_cached && _cached.key === 'timeline-bar-' + node.key && _isMemoSame(_cached, _memo)) return _cached
+                                                if (_cached && _cached.el && _cached.key === 'timeline-bar-' + node.key && _isMemoSame(_cached, _memo)) return _cached
                                                 const _item = (_openBlock(), _createElementBlock("button", {
                                                   key: 'timeline-bar-' + node.key,
                                                   type: "button",
@@ -4070,12 +4070,12 @@ return function render(_ctx, _cache) {
                                 _createElementVNode("button", {
                                   type: "button",
                                   class: "task-template-chip",
-                                  onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.reviewFix.target'); _ctx.taskOrchestration.selectedEngine = 'codex'; _ctx.taskOrchestration.workflowIdsText = ''; _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.reviewFix.notes'); _ctx.taskOrchestration.followUpsText = _ctx.t('orchestration.templates.reviewFix.followUps')}
+                                  onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.reviewFix.target'); _ctx.taskOrchestration.selectedEngine = 'openai-chat'; _ctx.taskOrchestration.workflowIdsText = ''; _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.reviewFix.notes'); _ctx.taskOrchestration.followUpsText = _ctx.t('orchestration.templates.reviewFix.followUps')}
                                 }, _toDisplayString(_ctx.t('orchestration.templates.reviewFix.label')), 9 /* TEXT, PROPS */, ["onClick"]),
                                 _createElementVNode("button", {
                                   type: "button",
                                   class: "task-template-chip",
-                                  onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.planOnly.target'); _ctx.taskOrchestration.selectedEngine = 'codex'; _ctx.taskOrchestration.workflowIdsText = ''; _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.planOnly.notes'); _ctx.taskOrchestration.followUpsText = ''}
+                                  onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.planOnly.target'); _ctx.taskOrchestration.selectedEngine = 'openai-chat'; _ctx.taskOrchestration.workflowIdsText = ''; _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.planOnly.notes'); _ctx.taskOrchestration.followUpsText = ''}
                                 }, _toDisplayString(_ctx.t('orchestration.templates.planOnly.label')), 9 /* TEXT, PROPS */, ["onClick"]),
                                 _createElementVNode("button", {
                                   type: "button",
@@ -4108,7 +4108,7 @@ return function render(_ctx, _cache) {
                           _createElementVNode("div", { class: "task-readiness-copy task-draft-inline-copy" }, _toDisplayString(_ctx.taskOrchestrationDraftReadiness.summary), 1 /* TEXT */)
                         ]),
                         _createElementVNode("div", { class: "task-config-strip" }, [
-                          _createElementVNode("div", { class: "task-config-pill" }, _toDisplayString(_ctx.taskOrchestration.selectedEngine === 'workflow' ? _ctx.t('orchestration.engine.workflow') : _ctx.t('orchestration.engine.codex')), 1 /* TEXT */),
+                          _createElementVNode("div", { class: "task-config-pill" }, _toDisplayString(_ctx.taskOrchestration.selectedEngine === 'workflow' ? _ctx.t('orchestration.engine.workflow') : _ctx.t('orchestration.engine.openaiChat')), 1 /* TEXT */),
                           _createElementVNode("div", { class: "task-config-pill" }, _toDisplayString(_ctx.taskOrchestration.runMode === 'dry-run' ? _ctx.t('orchestration.runMode.dryRun') : (_ctx.taskOrchestration.runMode === 'read' ? _ctx.t('orchestration.runMode.readOnly') : _ctx.t('orchestration.runMode.write'))), 1 /* TEXT */),
                           (_ctx.taskOrchestration.title.trim())
                             ? (_openBlock(), _createElementBlock("div", {
@@ -4147,7 +4147,7 @@ return function render(_ctx, _cache) {
                             class: "provider-fast-switch-select",
                             disabled: ""
                           }, [
-                            _createElementVNode("option", { value: "codex" }, _toDisplayString(_ctx.t('orchestration.engine.codex')), 1 /* TEXT */),
+                            _createElementVNode("option", { value: "openai-chat" }, _toDisplayString(_ctx.t('orchestration.engine.openaiChat')), 1 /* TEXT */),
                             _createElementVNode("option", { value: "workflow" }, _toDisplayString(_ctx.t('orchestration.engine.workflow')), 1 /* TEXT */)
                           ], 8 /* PROPS */, ["onUpdate:modelValue"]), [
                             [_vModelSelect, _ctx.taskOrchestration.selectedEngine]
@@ -4305,7 +4305,7 @@ return function render(_ctx, _cache) {
                     ])
                   ])
                 ]),
-                (!(_ctx.taskOrchestration.plan || _ctx.taskOrchestration.planIssues.length || _ctx.taskOrchestration.planWarnings.length || _ctx.taskOrchestration.lastError || _ctx.taskOrchestration.queue.length || _ctx.taskOrchestration.runs.length || _ctx.taskOrchestration.selectedRunId || _ctx.taskOrchestration.selectedRunError))
+                (!(_ctx.taskOrchestration.plan || _ctx.taskOrchestration.planIssues.length || _ctx.taskOrchestration.planWarnings.length || _ctx.taskOrchestration.lastError || _ctx.taskOrchestrationActiveQueue.length || _ctx.taskOrchestration.runs.length || _ctx.taskOrchestration.selectedRunId || _ctx.taskOrchestration.selectedRunError))
                   ? (_openBlock(), _createElementBlock("section", {
                       key: 0,
                       class: "selector-section task-stage-card"
@@ -4424,7 +4424,7 @@ return function render(_ctx, _cache) {
                               : _createCommentVNode("v-if", true)
                           ]))
                         : _createCommentVNode("v-if", true),
-                      (_ctx.taskOrchestration.queue.length || _ctx.taskOrchestration.runs.length || _ctx.taskOrchestration.selectedRunId || _ctx.taskOrchestration.selectedRunError)
+                      (_ctx.taskOrchestrationActiveQueue.length || _ctx.taskOrchestration.runs.length || _ctx.taskOrchestration.selectedRunId || _ctx.taskOrchestration.selectedRunError)
                         ? (_openBlock(), _createElementBlock("section", {
                             key: 1,
                             class: "selector-section task-workbench-card"
@@ -4441,7 +4441,7 @@ return function render(_ctx, _cache) {
                                   onClick: $event => (_ctx.loadTaskOrchestrationOverview({ forceRefresh: true, includeDetail: true })),
                                   disabled: _ctx.taskOrchestration.loading
                                 }, _toDisplayString(_ctx.taskOrchestration.loading ? _ctx.t('common.refreshing') : _ctx.t('common.refresh')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                                (_ctx.taskOrchestration.queue.length)
+                                (_ctx.taskOrchestrationActiveQueue.length)
                                   ? (_openBlock(), _createElementBlock("button", {
                                       key: 0,
                                       type: "button",
@@ -4452,20 +4452,20 @@ return function render(_ctx, _cache) {
                                   : _createCommentVNode("v-if", true)
                               ])
                             ]),
-                            ((_ctx.taskOrchestration.queue.length ? 1 : 0) + (_ctx.taskOrchestration.runs.length ? 1 : 0) + ((_ctx.taskOrchestration.selectedRunId || _ctx.taskOrchestration.selectedRunError) ? 1 : 0) > 1)
+                            ((_ctx.taskOrchestrationActiveQueue.length ? 1 : 0) + (_ctx.taskOrchestration.runs.length ? 1 : 0) + ((_ctx.taskOrchestration.selectedRunId || _ctx.taskOrchestration.selectedRunError) ? 1 : 0) > 1)
                               ? (_openBlock(), _createElementBlock("div", {
                                   key: 0,
                                   class: "task-workbench-tabs",
                                   role: "group",
                                   "aria-label": _ctx.t('orchestration.workbench.tabs.aria')
                                 }, [
-                                  (_ctx.taskOrchestration.queue.length)
+                                  (_ctx.taskOrchestrationActiveQueue.length)
                                     ? (_openBlock(), _createElementBlock("button", {
                                         key: 0,
                                         type: "button",
                                         class: _normalizeClass(["task-workbench-tab", { active: _ctx.taskOrchestration.workspaceTab === 'queue' }]),
                                         onClick: $event => (_ctx.taskOrchestration.workspaceTab = 'queue')
-                                      }, _toDisplayString(_ctx.t('orchestration.workbench.tabs.queue', { count: _ctx.taskOrchestration.queue.length })), 11 /* TEXT, CLASS, PROPS */, ["onClick"]))
+                                      }, _toDisplayString(_ctx.t('orchestration.workbench.tabs.queue', { count: _ctx.taskOrchestrationActiveQueue.length })), 11 /* TEXT, CLASS, PROPS */, ["onClick"]))
                                     : _createCommentVNode("v-if", true),
                                   (_ctx.taskOrchestration.runs.length)
                                     ? (_openBlock(), _createElementBlock("button", {
@@ -4485,12 +4485,12 @@ return function render(_ctx, _cache) {
                                     : _createCommentVNode("v-if", true)
                                 ], 8 /* PROPS */, ["aria-label"]))
                               : _createCommentVNode("v-if", true),
-                            (_ctx.taskOrchestration.workspaceTab === 'queue' || (!_ctx.taskOrchestration.runs.length && !_ctx.taskOrchestration.selectedRunId && !_ctx.taskOrchestration.selectedRunError))
+                            ((_ctx.taskOrchestrationActiveQueue.length && _ctx.taskOrchestration.workspaceTab === 'queue') || (!_ctx.taskOrchestration.runs.length && !_ctx.taskOrchestration.selectedRunId && !_ctx.taskOrchestration.selectedRunError))
                               ? (_openBlock(), _createElementBlock("div", {
                                   key: 1,
                                   class: "task-workbench-panel"
                                 }, [
-                                  (!_ctx.taskOrchestration.queue.length)
+                                  (!_ctx.taskOrchestrationActiveQueue.length)
                                     ? (_openBlock(), _createElementBlock("div", {
                                         key: 0,
                                         class: "task-empty-state"
@@ -4502,7 +4502,7 @@ return function render(_ctx, _cache) {
                                         key: 1,
                                         class: "task-runtime-list"
                                       }, [
-                                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.taskOrchestration.queue, (item) => {
+                                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.taskOrchestrationActiveQueue, (item) => {
                                           return (_openBlock(), _createElementBlock("div", {
                                             key: item.taskId,
                                             class: _normalizeClass(['task-runtime-item', { active: item.lastRunId && _ctx.taskOrchestration.selectedRunId === item.lastRunId, clickable: !!item.lastRunId }]),
@@ -4529,18 +4529,20 @@ return function render(_ctx, _cache) {
                                               _createElementVNode("span", {
                                                 class: _normalizeClass(['pill', _ctx.taskRunStatusTone(item.status)])
                                               }, _toDisplayString(item.status), 3 /* TEXT, CLASS */),
-                                              _createElementVNode("button", {
-                                                type: "button",
-                                                class: "btn-mini",
-                                                onClick: _withModifiers($event => (_ctx.cancelTaskRunFromUi(item.taskId)), ["stop"]),
-                                                disabled: item.status !== 'queued' && item.status !== 'running'
-                                              }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                              (_ctx.isTaskRunActive(item.status))
+                                                ? (_openBlock(), _createElementBlock("button", {
+                                                    key: 0,
+                                                    type: "button",
+                                                    class: "btn-mini",
+                                                    onClick: _withModifiers($event => (_ctx.cancelTaskRunFromUi(item.taskId)), ["stop"])
+                                                  }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick"]))
+                                                : _createCommentVNode("v-if", true)
                                             ])
                                           ], 42 /* CLASS, PROPS, NEED_HYDRATION */, ["role", "tabindex", "aria-disabled", "onClick", "onKeydown"]))
                                         }), 128 /* KEYED_FRAGMENT */))
                                       ]))
                                 ]))
-                              : (_ctx.taskOrchestration.workspaceTab === 'runs' || (!_ctx.taskOrchestration.queue.length && _ctx.taskOrchestration.runs.length && !_ctx.taskOrchestration.selectedRunId && !_ctx.taskOrchestration.selectedRunError))
+                              : (_ctx.taskOrchestration.workspaceTab === 'runs' || (!_ctx.taskOrchestrationActiveQueue.length && _ctx.taskOrchestration.runs.length && !_ctx.taskOrchestration.selectedRunId && !_ctx.taskOrchestration.selectedRunError))
                                 ? (_openBlock(), _createElementBlock("div", {
                                     key: 2,
                                     class: "task-workbench-panel"
@@ -4600,12 +4602,14 @@ return function render(_ctx, _cache) {
                                         onClick: $event => (_ctx.retryTaskRunFromUi(_ctx.taskOrchestration.selectedRunId)),
                                         disabled: !_ctx.taskOrchestration.selectedRunId || _ctx.taskOrchestration.retrying
                                       }, _toDisplayString(_ctx.taskOrchestration.retrying ? _ctx.t('orchestration.detail.retrying') : _ctx.t('orchestration.detail.retry')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                                      _createElementVNode("button", {
-                                        type: "button",
-                                        class: "btn-tool btn-tool-compact",
-                                        onClick: $event => (_ctx.cancelTaskRunFromUi(_ctx.taskOrchestration.selectedRunId)),
-                                        disabled: !_ctx.taskOrchestrationSelectedRun || !_ctx.taskOrchestrationSelectedRun.run || !_ctx.isTaskRunActive(_ctx.taskOrchestrationSelectedRun.run.status)
-                                      }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                      (_ctx.taskOrchestrationSelectedRun && _ctx.taskOrchestrationSelectedRun.run && _ctx.isTaskRunActive(_ctx.taskOrchestrationSelectedRun.run.status))
+                                        ? (_openBlock(), _createElementBlock("button", {
+                                            key: 0,
+                                            type: "button",
+                                            class: "btn-tool btn-tool-compact",
+                                            onClick: $event => (_ctx.cancelTaskRunFromUi(_ctx.taskOrchestration.selectedRunId))
+                                          }, _toDisplayString(_ctx.t('common.cancel')), 9 /* TEXT, PROPS */, ["onClick"]))
+                                        : _createCommentVNode("v-if", true)
                                     ]),
                                     (_ctx.taskOrchestration.selectedRunError)
                                       ? (_openBlock(), _createElementBlock("div", {

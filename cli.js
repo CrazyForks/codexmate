@@ -258,6 +258,8 @@ const TASK_RUNS_FILE = path.join(CONFIG_DIR, 'codexmate-task-runs.jsonl');
 const TASK_RUN_DETAILS_DIR = path.join(CONFIG_DIR, 'codexmate-task-runs');
 const TASK_QUEUE_WORKER_FILE = path.join(CONFIG_DIR, 'codexmate-task-queue-worker.json');
 const TASK_ARTIFACTS_DIR = path.join(CONFIG_DIR, 'codexmate-task-artifacts');
+const TASK_OPENAI_CHAT_TIMEOUT_MS = 180000;
+const TASK_OPENAI_CHAT_MAX_RESPONSE_BYTES = 4 * 1024 * 1024;
 const AUTOMATION_CONFIG_FILE = path.join(CONFIG_DIR, 'codexmate-automation.json');
 const DEFAULT_CLAUDE_MODEL = 'glm-4.7';
 const DEFAULT_MODEL_CONTEXT_WINDOW = 190000;
@@ -13859,7 +13861,7 @@ function printTaskHelp() {
     console.log('  --allow-write           允许写入工作区');
     console.log('  --dry-run               仅计划/预演，不执行写入');
     console.log('  --plan-only             仅输出计划，不执行');
-    console.log('  --engine <codex|workflow>  选择编排引擎');
+    console.log('  --engine <openai-chat|workflow>  选择编排引擎');
     console.log('  --concurrency <N>       并发度');
     console.log('  --auto-fix-rounds <N>   自动修复回合数');
     console.log('  --limit <N>             runs/queue list 数量');
@@ -13882,7 +13884,7 @@ function parseTaskCliOptions(args = []) {
         allowWrite: false,
         dryRun: false,
         planOnly: false,
-        engine: 'codex',
+        engine: 'openai-chat',
         concurrency: 2,
         autoFixRounds: 1,
         limit: 20,
@@ -14086,7 +14088,7 @@ function buildTaskCliPayload(options = {}, rest = []) {
     if (explicit.followUps && Array.isArray(options.followUps)) payload.followUps = options.followUps.slice();
     if (explicit.allowWrite) payload.allowWrite = options.allowWrite === true;
     if (explicit.dryRun) payload.dryRun = options.dryRun === true;
-    if (explicit.engine) payload.engine = options.engine || 'codex';
+    if (explicit.engine) payload.engine = options.engine || 'openai-chat';
     if (explicit.concurrency) payload.concurrency = options.concurrency;
     if (explicit.autoFixRounds) payload.autoFixRounds = options.autoFixRounds;
     if (explicit.taskId && options.taskId) payload.taskId = options.taskId;
@@ -14102,7 +14104,7 @@ function buildTaskCliPayload(options = {}, rest = []) {
 
 function printTaskPlanSummary(plan, warnings = []) {
     console.log(`\n任务计划: ${plan.title || '(untitled)'}`);
-    console.log(`  engine: ${plan.engine || 'codex'}`);
+    console.log(`  engine: ${plan.engine || 'openai-chat'}`);
     console.log(`  allowWrite: ${plan.allowWrite === true ? 'yes' : 'no'}`);
     console.log(`  dryRun: ${plan.dryRun === true ? 'yes' : 'no'}`);
     console.log(`  concurrency: ${plan.concurrency || 1}`);
@@ -15568,8 +15570,10 @@ function validateTaskRunId(value) {
 }
 
 function normalizeTaskEngine(value) {
-    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    return normalized === 'workflow' ? 'workflow' : 'codex';
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase().replace(/[\s_/]+/g, '-') : '';
+    if (normalized === 'workflow') return 'workflow';
+    // Legacy task plans used `codex`; new task execution uses the configured OpenAI Chat-compatible provider.
+    return 'openai-chat';
 }
 
 function normalizeTaskFollowUps(input = []) {
@@ -16058,20 +16062,171 @@ function readCodexLastMessageFile(filePath) {
     }
 }
 
-async function runCodexExecTaskNode(node, context = {}) {
-    const codexPath = resolveSpawnCommand('codex');
-    const codexProbeCommand = process.platform === 'win32' ? 'codex' : codexPath;
-    if (!commandExists(codexProbeCommand, '--version')) {
+function buildOpenAiChatEndpointUrl(baseUrl) {
+    const trimmed = normalizeBaseUrl(baseUrl);
+    if (!trimmed) return '';
+    if (/\/v1\/chat\/completions$/i.test(trimmed) || /\/chat\/completions$/i.test(trimmed)) {
+        return trimmed;
+    }
+    return joinApiUrl(trimmed, 'chat/completions');
+}
+
+function pickTaskProviderModel(providerName, provider, config) {
+    const currentModels = readCurrentModels();
+    const savedModel = currentModels && typeof currentModels[providerName] === 'string'
+        ? currentModels[providerName].trim()
+        : '';
+    const activeProvider = typeof config.model_provider === 'string' ? config.model_provider.trim() : '';
+    const activeModel = typeof config.model === 'string' ? config.model.trim() : '';
+    const providerModels = Array.isArray(provider && provider.models) ? provider.models : [];
+    const firstProviderModel = providerModels
+        .map((item) => {
+            if (typeof item === 'string') return item.trim();
+            if (item && typeof item === 'object') return String(item.id || item.name || item.model || '').trim();
+            return '';
+        })
+        .find(Boolean) || '';
+    return savedModel || (activeProvider === providerName ? activeModel : '') || firstProviderModel;
+}
+
+function resolveTaskOpenAiChatConfig() {
+    const configResult = readConfigOrVirtualDefault();
+    const config = configResult && configResult.config && typeof configResult.config === 'object' ? configResult.config : {};
+    const providerName = typeof config.model_provider === 'string' ? config.model_provider.trim() : '';
+    if (!providerName) {
+        return { error: '未设置当前 OpenAI Chat 提供商' };
+    }
+    const providers = config.model_providers && typeof config.model_providers === 'object' ? config.model_providers : {};
+    const provider = providers[providerName];
+    if (!provider || typeof provider !== 'object') {
+        return { error: `OpenAI Chat 提供商不存在: ${providerName}` };
+    }
+
+    const bridgeType = typeof provider.codexmate_bridge === 'string' ? provider.codexmate_bridge.trim() : '';
+    const isOpenaiBridgeProvider = bridgeType === 'openai'
+        || (typeof provider.base_url === 'string' && provider.base_url.includes('/bridge/openai/'));
+    let baseUrl = typeof provider.base_url === 'string' ? provider.base_url.trim() : '';
+    let apiKey = typeof provider.preferred_auth_method === 'string' ? provider.preferred_auth_method.trim() : '';
+    let extraHeaders = {};
+    if (isOpenaiBridgeProvider) {
+        const upstream = resolveOpenaiBridgeUpstream(OPENAI_BRIDGE_SETTINGS_FILE, providerName);
+        if (upstream && !upstream.error) {
+            baseUrl = upstream.baseUrl || baseUrl;
+            apiKey = upstream.apiKey || apiKey;
+            extraHeaders = upstream.headers && typeof upstream.headers === 'object' && !Array.isArray(upstream.headers)
+                ? upstream.headers
+                : {};
+        }
+    }
+
+    const model = pickTaskProviderModel(providerName, provider, config);
+    if (!baseUrl) {
+        return { error: `OpenAI Chat 提供商 ${providerName} 缺少 base_url` };
+    }
+    if (!isValidHttpUrl(baseUrl)) {
+        return { error: `OpenAI Chat 提供商 ${providerName} 的 base_url 无效` };
+    }
+    if (!model) {
+        return { error: `OpenAI Chat 提供商 ${providerName} 未设置模型` };
+    }
+    return {
+        providerName,
+        baseUrl,
+        endpointUrl: buildOpenAiChatEndpointUrl(baseUrl),
+        apiKey,
+        extraHeaders,
+        model
+    };
+}
+
+function postOpenAiChatCompletion(requestConfig, body, options = {}) {
+    const endpointUrl = requestConfig && requestConfig.endpointUrl ? requestConfig.endpointUrl : '';
+    return new Promise((resolve) => {
+        let parsed;
+        try {
+            parsed = new URL(endpointUrl);
+        } catch (error) {
+            resolve({ ok: false, error: 'OpenAI Chat endpoint URL 无效', status: 0, payload: null, body: '' });
+            return;
+        }
+        const transport = parsed.protocol === 'https:' ? https : http;
+        const agent = parsed.protocol === 'https:' ? HTTPS_KEEP_ALIVE_AGENT : HTTP_KEEP_ALIVE_AGENT;
+        const payloadText = JSON.stringify(body || {});
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'codexmate-task-orchestration',
+            'Content-Length': Buffer.byteLength(payloadText, 'utf-8'),
+            ...(requestConfig.extraHeaders && typeof requestConfig.extraHeaders === 'object' ? requestConfig.extraHeaders : {})
+        };
+        if (requestConfig.apiKey) {
+            headers.Authorization = `Bearer ${requestConfig.apiKey}`;
+        }
+        let settled = false;
+        let req = null;
+        const finish = (result) => {
+            if (settled) return;
+            settled = true;
+            resolve(result);
+        };
+        req = transport.request(parsed, { method: 'POST', headers, agent }, (res) => {
+            const status = res.statusCode || 0;
+            let raw = '';
+            let receivedBytes = 0;
+            res.on('data', (chunk) => {
+                receivedBytes += chunk.length || 0;
+                if (receivedBytes > TASK_OPENAI_CHAT_MAX_RESPONSE_BYTES) {
+                    res.destroy(new Error('response too large'));
+                    return;
+                }
+                raw += chunk;
+            });
+            res.on('end', () => {
+                if (settled) return;
+                let parsedPayload = null;
+                try {
+                    parsedPayload = raw ? JSON.parse(raw) : null;
+                } catch (_) {}
+                if (status < 200 || status >= 300) {
+                    const message = parsedPayload && parsedPayload.error
+                        ? (typeof parsedPayload.error === 'string' ? parsedPayload.error : (parsedPayload.error.message || JSON.stringify(parsedPayload.error)))
+                        : (raw || `OpenAI Chat request failed: ${status}`);
+                    finish({ ok: false, status, error: truncateTaskText(message, 1200), payload: parsedPayload, body: raw });
+                    return;
+                }
+                finish({ ok: true, status, error: '', payload: parsedPayload, body: raw });
+            });
+        });
+        if (typeof options.registerAbort === 'function') {
+            options.registerAbort(() => {
+                try {
+                    req.destroy(new Error('cancelled'));
+                } catch (_) {}
+            });
+        }
+        req.setTimeout(TASK_OPENAI_CHAT_TIMEOUT_MS, () => {
+            req.destroy(new Error('OpenAI Chat request timeout'));
+        });
+        req.on('error', (error) => {
+            finish({ ok: false, status: 0, error: error && error.message ? error.message : String(error || 'OpenAI Chat request failed'), payload: null, body: '' });
+        });
+        req.write(payloadText);
+        req.end();
+    });
+}
+
+async function runOpenAiChatTaskNode(node, context = {}) {
+    const requestConfig = resolveTaskOpenAiChatConfig();
+    if (requestConfig.error) {
         return {
             success: false,
-            error: '未找到 codex CLI，请先安装并确保 PATH 可用',
-            summary: 'codex CLI 不可用',
+            error: requestConfig.error,
+            summary: requestConfig.error,
             output: null,
-            logs: [{ at: toIsoTime(Date.now()), level: 'error', message: 'codex CLI 不可用' }]
+            logs: [{ at: toIsoTime(Date.now()), level: 'error', message: requestConfig.error }]
         };
     }
     const allowWrite = context.allowWrite === true && node.write === true;
-    const cwd = typeof context.cwd === 'string' && context.cwd.trim() ? context.cwd.trim() : process.cwd();
     const dependencyResults = Array.isArray(context.dependencyResults) ? context.dependencyResults : [];
     const dependencyLines = dependencyResults
         .map((item) => {
@@ -16091,124 +16246,48 @@ async function runCodexExecTaskNode(node, context = {}) {
         promptParts.push('请在保持目标不变的前提下修复上一轮失败并继续完成当前节点。');
     }
     const finalPrompt = promptParts.filter(Boolean).join('\n\n');
-    const tempRoot = path.join(TASK_RUN_DETAILS_DIR, 'tmp');
-    ensureDir(tempRoot);
-    const tempDir = fs.mkdtempSync(path.join(tempRoot, 'codex-'));
-    const outputFile = path.join(tempDir, 'last-message.txt');
-    const args = [
-        '-a', 'never',
-        '-s', allowWrite ? 'workspace-write' : 'read-only',
-        '-C', cwd,
-        'exec',
-        '--json',
-        '--skip-git-repo-check',
-        '--output-last-message', outputFile,
-        finalPrompt
-    ];
-    const stdoutLines = [];
-    const stderrLines = [];
-    const parsedEvents = [];
-    let sessionId = '';
-    let stdoutPartial = '';
-    let stderrPartial = '';
-    const processCapturedLine = (bucket, line) => {
-        const normalizedLine = String(line || '').trim();
-        if (!normalizedLine) {
-            return;
-        }
-        if (bucket.length < 120) {
-            bucket.push(truncateTaskText(normalizedLine, 1200));
-        }
-        try {
-            const payload = JSON.parse(normalizedLine);
-            if (parsedEvents.length < 120) {
-                parsedEvents.push(payload);
-            }
-            if (!sessionId) {
-                sessionId = findCodexSessionId(payload);
-            }
-        } catch (_) { }
+    const systemPrompt = [
+        '你是 codexmate 任务编排中的 OpenAI Chat-compatible 执行节点。',
+        '基于用户给出的目标、前置节点摘要和当前节点范围，输出可执行、可验证、事实谨慎的结果。',
+        allowWrite
+            ? '当前任务允许写入，但本 OpenAI Chat 节点没有直接本地工具能力；如果需要改文件，请输出精确改动方案、补丁建议、验证命令与风险说明，不要声称已经实际写入。'
+            : '当前任务是只读/验证节点，不要声称修改了文件。',
+        '回答使用中文，避免空泛总结。'
+    ].join('\n');
+    const startedAt = Date.now();
+    const body = {
+        model: requestConfig.model,
+        messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: finalPrompt }
+        ],
+        temperature: 0.2,
+        stream: false
     };
-    const captureLines = (bucket, text, stream) => {
-        const currentPartial = stream === 'stderr' ? stderrPartial : stdoutPartial;
-        const merged = `${currentPartial}${String(text || '')}`;
-        const pieces = merged.split(/\r?\n/g);
-        const nextPartial = pieces.pop() || '';
-        if (stream === 'stderr') {
-            stderrPartial = nextPartial;
-        } else {
-            stdoutPartial = nextPartial;
-        }
-        for (const line of pieces) {
-            processCapturedLine(bucket, line);
-        }
-    };
-    const flushCapturedPartial = (bucket, stream) => {
-        const partial = stream === 'stderr' ? stderrPartial : stdoutPartial;
-        if (stream === 'stderr') {
-            stderrPartial = '';
-        } else {
-            stdoutPartial = '';
-        }
-        processCapturedLine(bucket, partial);
-    };
-    const exit = await new Promise((resolve) => {
-        const child = spawn(codexPath, args, {
-            stdio: ['ignore', 'pipe', 'pipe'],
-            windowsHide: true,
-            shell: process.platform === 'win32'
-        });
-        if (typeof context.registerAbort === 'function') {
-            context.registerAbort(() => {
-                try {
-                    child.kill('SIGTERM');
-                } catch (_) { }
-            });
-        }
-        child.stdout.on('data', (chunk) => {
-            captureLines(stdoutLines, chunk, 'stdout');
-        });
-        child.stderr.on('data', (chunk) => {
-            captureLines(stderrLines, chunk, 'stderr');
-        });
-        child.on('error', (error) => {
-            resolve({ code: 1, signal: '', error: error && error.message ? error.message : String(error || 'spawn failed') });
-        });
-        child.on('close', (code, signal) => {
-            flushCapturedPartial(stdoutLines, 'stdout');
-            flushCapturedPartial(stderrLines, 'stderr');
-            resolve({ code: typeof code === 'number' ? code : 1, signal: signal || '', error: '' });
-        });
+    const result = await postOpenAiChatCompletion(requestConfig, body, {
+        registerAbort: context.registerAbort
     });
-    const lastMessage = readCodexLastMessageFile(outputFile);
-    try {
-        if (fs.rmSync) {
-            fs.rmSync(tempDir, { recursive: true, force: true });
-        } else {
-            fs.rmdirSync(tempDir, { recursive: true });
-        }
-    } catch (_) { }
-    const success = exit.code === 0;
-    const errorMessage = success
-        ? ''
-        : (exit.error || stderrLines[stderrLines.length - 1] || stdoutLines[stdoutLines.length - 1] || `codex exec exited with code ${exit.code}`);
-    const summary = truncateTaskText(lastMessage || (success ? 'Codex 执行完成' : errorMessage), 400);
+    const text = result.ok ? extractModelResponseText(result.payload) : '';
+    const success = result.ok && !!text;
+    const errorMessage = success ? '' : (result.error || 'OpenAI Chat response did not contain text');
+    const summary = truncateTaskText(text || errorMessage, 400);
+    const safeEndpoint = requestConfig.endpointUrl.replace(/([?&](?:key|api_key|token)=)[^&]+/ig, '$1***');
     return {
         success,
         error: errorMessage,
         summary,
         output: {
-            exitCode: exit.code,
-            signal: exit.signal || '',
-            sessionId,
-            lastMessage,
-            events: parsedEvents,
-            stdoutPreview: stdoutLines,
-            stderrPreview: stderrLines
+            provider: requestConfig.providerName,
+            model: requestConfig.model,
+            endpoint: safeEndpoint,
+            status: result.status || 0,
+            text,
+            response: result.payload || null,
+            durationMs: Date.now() - startedAt
         },
         logs: [
-            ...stdoutLines.map((line) => ({ at: toIsoTime(Date.now()), level: 'info', message: line })),
-            ...stderrLines.map((line) => ({ at: toIsoTime(Date.now()), level: 'warn', message: line }))
+            { at: toIsoTime(Date.now()), level: 'info', message: `OpenAI Chat request provider=${requestConfig.providerName} model=${requestConfig.model} status=${result.status || 0}` },
+            ...(success ? [{ at: toIsoTime(Date.now()), level: 'info', message: truncateTaskText(text, 1200) }] : [{ at: toIsoTime(Date.now()), level: 'error', message: errorMessage }])
         ]
     };
 }
@@ -16246,7 +16325,7 @@ async function executeTaskNodeAdapter(node, context = {}) {
                 : []
         };
     }
-    return runCodexExecTaskNode(node, context);
+    return runOpenAiChatTaskNode(node, context);
 }
 
 async function runTaskPlanInternal(plan, options = {}) {

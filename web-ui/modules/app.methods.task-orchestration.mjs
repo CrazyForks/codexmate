@@ -11,7 +11,7 @@ function createDefaultTaskOrchestrationState() {
         notes: '',
         followUpsText: '',
         workflowIdsText: '',
-        selectedEngine: 'codex',
+        selectedEngine: 'openai-chat',
         runMode: 'write',
         concurrency: 2,
         autoFixRounds: 1,
@@ -107,7 +107,7 @@ export function createTaskOrchestrationMethods(options = {}) {
                 notes: String(state.notes || '').trim(),
                 followUps: normalizeLines(state.followUpsText),
                 workflowIds: normalizeLines(state.workflowIdsText),
-                engine: String(state.selectedEngine || 'codex').trim().toLowerCase() === 'workflow' ? 'workflow' : 'codex',
+                engine: String(state.selectedEngine || 'openai-chat').trim().toLowerCase() === 'workflow' ? 'workflow' : 'openai-chat',
                 allowWrite: flags.allowWrite,
                 dryRun: flags.dryRun,
                 concurrency: normalizePositiveInteger(state.concurrency, 2, 1, 8),
@@ -542,7 +542,7 @@ export function createTaskOrchestrationMethods(options = {}) {
             state.notes = '';
             state.followUpsText = '';
             state.workflowIdsText = '';
-            state.selectedEngine = 'codex';
+            state.selectedEngine = 'openai-chat';
             state.runMode = 'write';
             state.concurrency = 2;
             state.autoFixRounds = 1;
