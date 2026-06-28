@@ -87,7 +87,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /v-show="mainTab === 'orchestration'"/);
     assert.match(orchestrationPanel, /t\('orchestration\.hero\.kicker'\)/);
     assert.match(orchestrationPanel, /t\('orchestration\.hero\.title'\)/);
-    assert.match(orchestrationPanel, /@click="previewTaskPlan\(\)"/);
+    assert.doesNotMatch(orchestrationPanel, /@click="previewTaskPlan\(\)"/);
     assert.match(orchestrationPanel, /@click="planAndRunTaskOrchestration\(\)"/);
     assert.match(orchestrationPanel, /@click="queueTaskOrchestrationAndStart\(\)"/);
     assert.match(orchestrationPanel, /@click="startTaskQueueRunner\(\)"/);
@@ -132,7 +132,8 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /taskOrchestration\.plan \|\| taskOrchestration\.planIssues\.length \|\| taskOrchestration\.planWarnings\.length \|\| taskOrchestration\.lastError/);
     assert.match(orchestrationPanel, /class="selector-section task-stage-card"/);
     assert.match(orchestrationPanel, /t\('orchestration\.stage\.title'\)/);
-    assert.match(orchestrationPanel, /class="btn-tool task-action-preview" @click="previewTaskPlan\(\)"/);
+    assert.doesNotMatch(orchestrationPanel, /class="btn-tool task-action-preview" @click="previewTaskPlan\(\)"/);
+    assert.doesNotMatch(orchestrationPanel, /orchestration\.actions\.previewOnly/);
     assert.match(orchestrationPanel, /class="task-action-row-right task-action-row-right-prominent"/);
     assert.match(orchestrationPanel, /class="task-action-caption"/);
     assert.match(orchestrationPanel, /class="task-empty-state"/);

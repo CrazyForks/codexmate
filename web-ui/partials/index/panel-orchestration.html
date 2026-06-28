@@ -342,9 +342,6 @@
                                         </div>
 
                                         <div class="task-action-row task-action-row-prominent task-quick-actions">
-                                            <button type="button" class="btn-tool task-action-preview" @click="previewTaskPlan()" :disabled="taskOrchestration.planning || taskOrchestration.running || !taskOrchestration.target.trim()">
-                                                {{ taskOrchestration.planning ? t('orchestration.actions.planning') : t('orchestration.actions.previewOnly') }}
-                                            </button>
                                             <div class="task-action-row-right task-action-row-right-prominent">
                                                 <button type="button" class="btn-tool btn-primary" @click="planAndRunTaskOrchestration()" :disabled="taskOrchestration.running || taskOrchestration.planning || !taskOrchestration.target.trim()">
                                                     {{ (taskOrchestration.running || taskOrchestration.planning) ? t('orchestration.actions.preparing') : (taskOrchestration.runMode === 'dry-run' ? t('orchestration.actions.generatePlan') : t('orchestration.actions.planAndRun')) }}

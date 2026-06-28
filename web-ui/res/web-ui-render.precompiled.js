@@ -4655,12 +4655,6 @@ return function render(_ctx, _cache) {
                             ])
                           ]),
                           _createElementVNode("div", { class: "task-action-row task-action-row-prominent task-quick-actions" }, [
-                            _createElementVNode("button", {
-                              type: "button",
-                              class: "btn-tool task-action-preview",
-                              onClick: $event => (_ctx.previewTaskPlan()),
-                              disabled: _ctx.taskOrchestration.planning || _ctx.taskOrchestration.running || !_ctx.taskOrchestration.target.trim()
-                            }, _toDisplayString(_ctx.taskOrchestration.planning ? _ctx.t('orchestration.actions.planning') : _ctx.t('orchestration.actions.previewOnly')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
                             _createElementVNode("div", { class: "task-action-row-right task-action-row-right-prominent" }, [
                               _createElementVNode("button", {
                                 type: "button",

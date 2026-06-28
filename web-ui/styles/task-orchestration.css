@@ -528,9 +528,6 @@
     box-sizing: border-box;
 }
 
-.task-action-preview {
-    min-width: 104px;
-}
 
 .task-action-row-right {
     display: flex;
