@@ -1652,15 +1652,13 @@
 #panel-orchestration {
     --task-orchestration-main-width: 920px;
     --task-orchestration-context-width: 0px;
+
     min-height: calc(100vh - 72px);
     padding-bottom: 132px;
 }
 
 #panel-orchestration .task-hero-card,
 #panel-orchestration .task-quick-copy,
-#panel-orchestration .task-quick-side-card,
-#panel-orchestration .task-quick-advanced,
-#panel-orchestration .task-template-block,
 #panel-orchestration .task-stage-card {
     display: none;
 }
@@ -1691,6 +1689,12 @@
 #panel-orchestration .task-quick-main {
     display: block;
     min-width: 0;
+}
+
+#panel-orchestration .task-template-block,
+#panel-orchestration .task-quick-advanced,
+#panel-orchestration .task-quick-side-card {
+    display: block;
 }
 
 #panel-orchestration .task-chat-panel {
@@ -1971,6 +1975,7 @@
 @media (max-width: 760px) {
     #panel-orchestration {
         --task-orchestration-main-width: 100%;
+
         min-height: calc(100vh - 52px);
         padding-bottom: 154px;
     }
@@ -1981,6 +1986,12 @@
     #panel-orchestration .task-quick-card {
         width: 100%;
         max-width: 100%;
+    }
+
+    #panel-orchestration .task-template-block,
+    #panel-orchestration .task-quick-advanced,
+    #panel-orchestration .task-quick-side-card {
+        display: block;
     }
 
     #panel-orchestration .task-chat-panel {
