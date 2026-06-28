@@ -180,7 +180,8 @@ test('config template keeps expected config tabs in top and side navigation', ()
         assert.match(styles, /@media \(max-width:\s*760px\)\s*\{[\s\S]*#panel-orchestration\s*\{[\s\S]*--task-orchestration-main-width:\s*100%;/);
         assert.match(styles, /@media \(max-width:\s*760px\)\s*\{[\s\S]*#panel-orchestration \.task-template-block,[\s\S]*#panel-orchestration \.task-quick-advanced,[\s\S]*#panel-orchestration \.task-quick-side-card\s*\{[\s\S]*display:\s*block;/);
         assert.match(styles, /@media \(max-width:\s*760px\)\s*\{[\s\S]*#panel-orchestration \.task-chat-thread\s*\{[\s\S]*padding-bottom:\s*208px;[\s\S]*scroll-padding-bottom:\s*208px;/);
-        assert.match(styles, /@media \(max-width:\s*760px\)\s*\{[\s\S]*#panel-orchestration \.task-thread-composer\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 1fr\);[\s\S]*right:\s*10px;[\s\S]*bottom:\s*calc\(env\(safe-area-inset-bottom, 0px\) \+ 8px\);[\s\S]*left:\s*10px;/);
+        assert.match(styles, /@media \(max-width:\s*760px\)\s*\{[\s\S]*#panel-orchestration \.task-thread-composer\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) auto;[\s\S]*right:\s*10px;[\s\S]*bottom:\s*calc\(env\(safe-area-inset-bottom, 0px\) \+ 8px\);[\s\S]*left:\s*10px;/);
+        assert.match(styles, /#panel-orchestration \.task-thread-composer \.task-chat-send-row\s*\{[\s\S]*grid-row:\s*1 \/ span 2;[\s\S]*align-self:\s*center;/);
         assert.doesNotMatch(styles, /\.container:has\(#panel-orchestration\[data-active="true"\]\)\s*\{[\s\S]*background:\s*#F6F8FB;/);
         assert.doesNotMatch(styles, /body:has\(#panel-orchestration\[data-active="true"\]\)\s*\{[\s\S]*background:\s*#F6F8FB;/);
         assert.doesNotMatch(styles, /body:has\(#panel-orchestration\[data-active="true"\]\)::before\s*\{[\s\S]*background:\s*none;/);

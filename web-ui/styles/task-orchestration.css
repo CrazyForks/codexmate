@@ -2028,10 +2028,11 @@
 
 #panel-orchestration .task-thread-composer .task-chat-send-row {
     grid-column: 2;
-    grid-row: 1;
+    grid-row: 1 / span 2;
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    align-self: center;
     margin-top: 0;
 }
 
@@ -2052,6 +2053,9 @@
 }
 
 #panel-orchestration .task-thread-composer .btn-tool {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-height: 32px;
     padding: 5px 10px;
     font-size: 0.78rem;
@@ -2124,8 +2128,8 @@
     }
 
     #panel-orchestration .task-thread-composer {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        grid-template-rows: auto auto;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-rows: auto;
         right: 10px;
         bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
         left: 10px;
@@ -2137,19 +2141,19 @@
     }
 
     #panel-orchestration .task-thread-composer .task-chat-composer {
-        grid-column: 1 / -1;
+        grid-column: 1;
         grid-row: 1;
     }
 
-    #panel-orchestration .task-thread-composer .task-chat-send-row,
-    #panel-orchestration .task-thread-composer .task-action-row-prominent {
-        grid-column: auto;
-        grid-row: 2;
+    #panel-orchestration .task-thread-composer .task-chat-send-row {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
     }
 
     #panel-orchestration .task-thread-composer .task-action-row-prominent,
     #panel-orchestration .task-thread-composer .task-action-row-prominent .task-action-row-right,
-    #panel-orchestration .task-thread-composer .btn-tool {
+    #panel-orchestration .task-thread-composer .task-action-row-prominent .btn-tool {
         width: 100%;
     }
 
