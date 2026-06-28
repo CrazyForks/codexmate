@@ -3997,6 +3997,7 @@ return function render(_ctx, _cache) {
                 key: 0,
                 class: "mode-content",
                 id: "panel-orchestration",
+                "data-active": _ctx.mainTab === 'orchestration' ? 'true' : 'false',
                 role: "tabpanel",
                 "aria-labelledby": "tab-orchestration"
               }, [
@@ -4932,7 +4933,7 @@ return function render(_ctx, _cache) {
                           ]))
                         : _createCommentVNode("v-if", true)
                     ]))
-              ], 512 /* NEED_PATCH */)), [
+              ], 8 /* PROPS */, ["data-active"])), [
                 [_vShow, _ctx.mainTab === 'orchestration']
               ])
             : _createCommentVNode("v-if", true),

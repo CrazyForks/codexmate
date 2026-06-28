@@ -1,28 +1,28 @@
-.container:has(#panel-orchestration:not([style*="display: none"])) {
+.container:has(#panel-orchestration[data-active="true"]) {
     background: #F6F8FB;
 }
 
-body:has(#panel-orchestration:not([style*="display: none"])) {
+body:has(#panel-orchestration[data-active="true"]) {
     background: #F6F8FB;
 }
 
-body:has(#panel-orchestration:not([style*="display: none"]))::before {
+body:has(#panel-orchestration[data-active="true"])::before {
     background: none;
 }
 
-body:has(#panel-orchestration:not([style*="display: none"])) .side-rail {
+body:has(#panel-orchestration[data-active="true"]) .side-rail {
     background: #F8FAFC;
     border-right-color: rgba(100, 116, 139, 0.12);
     box-shadow: none;
     backdrop-filter: none;
 }
 
-body:has(#panel-orchestration:not([style*="display: none"])) .brand-block {
+body:has(#panel-orchestration[data-active="true"]) .brand-block {
     background: transparent;
 }
 
-body:has(#panel-orchestration:not([style*="display: none"])) .side-item.active,
-body:has(#panel-orchestration:not([style*="display: none"])) .side-item.nav-intent-active {
+body:has(#panel-orchestration[data-active="true"]) .side-item.active,
+body:has(#panel-orchestration[data-active="true"]) .side-item.nav-intent-active {
     border-color: rgba(100, 116, 139, 0.16);
     background: #FFFFFF;
     color: var(--color-text-primary);
