@@ -130,6 +130,18 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /class="task-empty-state"/);
     assert.match(orchestrationPanel, /taskOrchestration.selectedRunError/);
     assert.match(orchestrationPanel, /taskOrchestrationSelectedRunNodes/);
+    assert.match(orchestrationPanel, /taskOrchestration\.openAiChatStatus/);
+    assert.match(orchestrationPanel, /t\('orchestration\.openai\.status\.title'\)/);
+    assert.match(orchestrationPanel, /@click="openTaskOpenAiChatConfig\(\)"/);
+    assert.match(orchestrationPanel, /node\.output && typeof node\.output === 'object'/);
+    assert.match(orchestrationPanel, /formatTaskNodeOutputText\(node\)/);
+    assert.match(orchestrationPanel, /node\.output\.materializedFiles/);
+    assert.match(bundledScript, /openAiChatStatus:\s*null/);
+    assert.match(bundledScript, /openTaskOpenAiChatConfig\(\)/);
+    assert.match(bundledScript, /formatTaskNodeOutputText\(node\)/);
+    assert.match(bundledScript, /openAiChatStatus\s*=\s*res && res\.openAiChatStatus/);
+    assert.match(bundledScript, /'orchestration\.openai\.status\.title'/);
+    assert.match(bundledScript, /'orchestration\.detail\.node\.output'/);
     for (const styles of [taskOrchestrationStyles, bundledStyles]) {
         assert.match(styles, /\.task-layout-grid-primary\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\);/);
         assert.match(styles, /\.task-layout-grid-secondary\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\);/);
@@ -153,6 +165,10 @@ test('config template keeps expected config tabs in top and side navigation', ()
         assert.match(styles, /\.task-workbench-tabs\s*\{[\s\S]*display:\s*flex;/);
         assert.match(styles, /\.task-action-row-right\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-wrap:\s*wrap;/);
         assert.match(styles, /\.task-runtime-item-actions\s*\{[\s\S]*flex-direction:\s*row;[\s\S]*align-items:\s*center;/);
+        assert.match(styles, /\.task-provider-status-card\s*\{[\s\S]*background:\s*#FFFFFF;/);
+        assert.match(styles, /\.task-provider-status-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/);
+        assert.match(styles, /\.task-node-output-card\s*\{[\s\S]*background:\s*#F8FAFC;/);
+        assert.match(styles, /\.task-output-block\s*\{[\s\S]*max-height:\s*260px;/);
     }
     for (const styles of [bundledStyles]) {
         assert.match(styles, /\.health-failed-provider-main input\s*\{[\s\S]*flex:\s*0 0 auto;[\s\S]*width:\s*13px;[\s\S]*height:\s*13px;[\s\S]*accent-color:\s*var\(--color-brand-dark\);/);

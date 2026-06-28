@@ -1510,6 +1510,14 @@ test('loadTaskOrchestrationOverview keeps selected run detail when overview slic
                     runs: [{ runId: 'run-new', status: 'running' }],
                     queue: [],
                     workflows: [],
+                    openAiChatStatus: {
+                        ready: true,
+                        providerName: 'mock-openai',
+                        model: 'gpt-4.1-mini',
+                        endpoint: 'https://api.example.test/v1/chat/completions',
+                        hasApiKey: true,
+                        hasExtraHeaders: false
+                    },
                     warnings: []
                 };
             }
@@ -1531,6 +1539,46 @@ test('loadTaskOrchestrationOverview keeps selected run detail when overview slic
 
     assert.strictEqual(context.taskOrchestration.selectedRunId, 'run-old');
     assert.strictEqual(context.taskOrchestration.selectedRunDetail.run.runId, 'run-old');
+    assert.deepStrictEqual(context.taskOrchestration.openAiChatStatus, {
+        ready: true,
+        providerName: 'mock-openai',
+        model: 'gpt-4.1-mini',
+        endpoint: 'https://api.example.test/v1/chat/completions',
+        hasApiKey: true,
+        hasExtraHeaders: false
+    });
+});
+
+test('task orchestration detail helpers surface AI output and open OpenAI Chat config', () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const calls = [];
+    const context = {
+        mainTab: 'orchestration',
+        configMode: 'openclaw',
+        providersList: [{ name: 'mock-openai', hasKey: true }],
+        taskOrchestration: {
+            openAiChatStatus: { providerName: 'mock-openai' }
+        },
+        switchMainTab(tab) {
+            calls.push(['switchMainTab', tab]);
+            this.mainTab = tab;
+        },
+        openEditModal(provider) {
+            calls.push(['openEditModal', provider.name]);
+        }
+    };
+
+    assert.strictEqual(methods.formatTaskNodeOutputText.call(context, { output: { text: '  actual AI result  ' } }), 'actual AI result');
+    assert.strictEqual(methods.formatTaskNodeOutputText.call(context, { output: {} }), '(no output)');
+
+    methods.openTaskOpenAiChatConfig.call(context);
+
+    assert.strictEqual(context.mainTab, 'config');
+    assert.strictEqual(context.configMode, 'codex');
+    assert.deepStrictEqual(calls, [
+        ['switchMainTab', 'config'],
+        ['openEditModal', 'mock-openai']
+    ]);
 });
 
 test('selectTaskRun switches workbench to detail and keeps latest detail response only', async () => {

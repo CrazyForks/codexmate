@@ -197,6 +197,37 @@
                             </div>
 
                             <aside class="task-quick-side-card">
+                                <div class="task-provider-status-card">
+                                    <div class="task-readiness-title">{{ t('orchestration.openai.status.title') }}</div>
+                                    <div class="task-readiness-copy">{{ t('orchestration.openai.status.subtitle') }}</div>
+                                    <div v-if="taskOrchestration.openAiChatStatus" class="task-provider-status-grid">
+                                        <div class="task-provider-status-row">
+                                            <span>{{ t('orchestration.openai.status.provider') }}</span>
+                                            <strong>{{ taskOrchestration.openAiChatStatus.providerName || t('common.none') }}</strong>
+                                        </div>
+                                        <div class="task-provider-status-row">
+                                            <span>{{ t('orchestration.openai.status.model') }}</span>
+                                            <strong>{{ taskOrchestration.openAiChatStatus.model || t('common.none') }}</strong>
+                                        </div>
+                                        <div class="task-provider-status-row task-provider-status-row-wide">
+                                            <span>{{ t('orchestration.openai.status.endpoint') }}</span>
+                                            <strong>{{ taskOrchestration.openAiChatStatus.endpoint || t('common.none') }}</strong>
+                                        </div>
+                                        <div class="task-provider-status-row">
+                                            <span>{{ t('orchestration.openai.status.apiKey') }}</span>
+                                            <strong>{{ taskOrchestration.openAiChatStatus.hasApiKey ? t('orchestration.openai.status.configured') : t('orchestration.openai.status.missing') }}</strong>
+                                        </div>
+                                        <div class="task-provider-status-row">
+                                            <span>{{ t('orchestration.openai.status.headers') }}</span>
+                                            <strong>{{ taskOrchestration.openAiChatStatus.hasExtraHeaders ? t('orchestration.openai.status.configured') : t('orchestration.openai.status.notSet') }}</strong>
+                                        </div>
+                                    </div>
+                                    <div v-else class="task-readiness-copy">{{ t('orchestration.openai.status.notLoaded') }}</div>
+                                    <div v-if="taskOrchestration.openAiChatStatus && taskOrchestration.openAiChatStatus.error" class="task-issue-item task-provider-status-error">{{ taskOrchestration.openAiChatStatus.error }}</div>
+                                    <button type="button" class="btn-tool btn-tool-compact task-provider-config-button" @click="openTaskOpenAiChatConfig()">
+                                        {{ t('orchestration.openai.status.configure') }}
+                                    </button>
+                                </div>
                                 <div class="task-readiness-head">
                                     <div>
                                         <div class="task-readiness-title">{{ t('orchestration.quick.checklist.title') }}</div>
@@ -453,6 +484,22 @@
                                             <div v-if="node.summary" class="task-runtime-item-summary">{{ node.summary }}</div>
                                             <div v-if="node.error && node.error !== node.summary" class="task-node-deps">{{ t('orchestration.labels.error') }}{{ node.error }}</div>
                                             <div class="task-node-deps">{{ t('orchestration.labels.dependencies') }}{{ formatTaskNodeDependencies(node) }}</div>
+                                            <div v-if="node.output && typeof node.output === 'object'" class="task-node-output-card">
+                                                <div class="task-node-output-head">
+                                                    <strong>{{ t('orchestration.detail.node.output') }}</strong>
+                                                    <span v-if="node.output.provider || node.output.model" class="task-node-output-meta">{{ node.output.provider || '' }}<template v-if="node.output.provider && node.output.model"> · </template>{{ node.output.model || '' }}</span>
+                                                </div>
+                                                <div class="task-node-output-facts">
+                                                    <span v-if="node.output.endpoint">{{ t('orchestration.detail.node.endpoint') }}{{ node.output.endpoint }}</span>
+                                                    <span v-if="node.output.status">HTTP {{ node.output.status }}</span>
+                                                    <span v-if="node.output.durationMs">{{ node.output.durationMs }}ms</span>
+                                                </div>
+                                                <pre class="task-log-block task-output-block">{{ formatTaskNodeOutputText(node) }}</pre>
+                                                <div v-if="node.output.materializedFiles && node.output.materializedFiles.length" class="task-materialized-files">
+                                                    <div class="task-node-deps">{{ t('orchestration.detail.node.materializedFiles') }}</div>
+                                                    <div v-for="file in node.output.materializedFiles" :key="file.path || file.relativePath" class="task-materialized-file">{{ file.relativePath || file.path }} · {{ file.bytes || 0 }} bytes</div>
+                                                </div>
+                                            </div>
                                             <pre class="task-log-block">{{ formatTaskNodeLogs(node.logs) }}</pre>
                                         </div>
                                     </div>

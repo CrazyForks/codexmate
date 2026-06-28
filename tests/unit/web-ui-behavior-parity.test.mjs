@@ -788,7 +788,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'applyWebUiPreferences',
         'loadWebUiPreferences',
         'persistWebUiPreferences',
-        'copySessionWorkspaceBrief'
+        'copySessionWorkspaceBrief',
+        'formatTaskNodeOutputText',
+        'openTaskOpenAiChatConfig'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',

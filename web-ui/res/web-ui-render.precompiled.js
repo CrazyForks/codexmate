@@ -4356,6 +4356,51 @@ return function render(_ctx, _cache) {
                       ])
                     ]),
                     _createElementVNode("aside", { class: "task-quick-side-card" }, [
+                      _createElementVNode("div", { class: "task-provider-status-card" }, [
+                        _createElementVNode("div", { class: "task-readiness-title" }, _toDisplayString(_ctx.t('orchestration.openai.status.title')), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "task-readiness-copy" }, _toDisplayString(_ctx.t('orchestration.openai.status.subtitle')), 1 /* TEXT */),
+                        (_ctx.taskOrchestration.openAiChatStatus)
+                          ? (_openBlock(), _createElementBlock("div", {
+                              key: 0,
+                              class: "task-provider-status-grid"
+                            }, [
+                              _createElementVNode("div", { class: "task-provider-status-row" }, [
+                                _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.openai.status.provider')), 1 /* TEXT */),
+                                _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.openAiChatStatus.providerName || _ctx.t('common.none')), 1 /* TEXT */)
+                              ]),
+                              _createElementVNode("div", { class: "task-provider-status-row" }, [
+                                _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.openai.status.model')), 1 /* TEXT */),
+                                _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.openAiChatStatus.model || _ctx.t('common.none')), 1 /* TEXT */)
+                              ]),
+                              _createElementVNode("div", { class: "task-provider-status-row task-provider-status-row-wide" }, [
+                                _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.openai.status.endpoint')), 1 /* TEXT */),
+                                _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.openAiChatStatus.endpoint || _ctx.t('common.none')), 1 /* TEXT */)
+                              ]),
+                              _createElementVNode("div", { class: "task-provider-status-row" }, [
+                                _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.openai.status.apiKey')), 1 /* TEXT */),
+                                _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.openAiChatStatus.hasApiKey ? _ctx.t('orchestration.openai.status.configured') : _ctx.t('orchestration.openai.status.missing')), 1 /* TEXT */)
+                              ]),
+                              _createElementVNode("div", { class: "task-provider-status-row" }, [
+                                _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.openai.status.headers')), 1 /* TEXT */),
+                                _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.openAiChatStatus.hasExtraHeaders ? _ctx.t('orchestration.openai.status.configured') : _ctx.t('orchestration.openai.status.notSet')), 1 /* TEXT */)
+                              ])
+                            ]))
+                          : (_openBlock(), _createElementBlock("div", {
+                              key: 1,
+                              class: "task-readiness-copy"
+                            }, _toDisplayString(_ctx.t('orchestration.openai.status.notLoaded')), 1 /* TEXT */)),
+                        (_ctx.taskOrchestration.openAiChatStatus && _ctx.taskOrchestration.openAiChatStatus.error)
+                          ? (_openBlock(), _createElementBlock("div", {
+                              key: 2,
+                              class: "task-issue-item task-provider-status-error"
+                            }, _toDisplayString(_ctx.taskOrchestration.openAiChatStatus.error), 1 /* TEXT */))
+                          : _createCommentVNode("v-if", true),
+                        _createElementVNode("button", {
+                          type: "button",
+                          class: "btn-tool btn-tool-compact task-provider-config-button",
+                          onClick: $event => (_ctx.openTaskOpenAiChatConfig())
+                        }, _toDisplayString(_ctx.t('orchestration.openai.status.configure')), 9 /* TEXT, PROPS */, ["onClick"])
+                      ]),
                       _createElementVNode("div", { class: "task-readiness-head" }, [
                         _createElementVNode("div", null, [
                           _createElementVNode("div", { class: "task-readiness-title" }, _toDisplayString(_ctx.t('orchestration.quick.checklist.title')), 1 /* TEXT */),
@@ -4828,6 +4873,56 @@ return function render(_ctx, _cache) {
                                                     }, _toDisplayString(_ctx.t('orchestration.labels.error')) + _toDisplayString(node.error), 1 /* TEXT */))
                                                   : _createCommentVNode("v-if", true),
                                                 _createElementVNode("div", { class: "task-node-deps" }, _toDisplayString(_ctx.t('orchestration.labels.dependencies')) + _toDisplayString(_ctx.formatTaskNodeDependencies(node)), 1 /* TEXT */),
+                                                (node.output && typeof node.output === 'object')
+                                                  ? (_openBlock(), _createElementBlock("div", {
+                                                      key: 2,
+                                                      class: "task-node-output-card"
+                                                    }, [
+                                                      _createElementVNode("div", { class: "task-node-output-head" }, [
+                                                        _createElementVNode("strong", null, _toDisplayString(_ctx.t('orchestration.detail.node.output')), 1 /* TEXT */),
+                                                        (node.output.provider || node.output.model)
+                                                          ? (_openBlock(), _createElementBlock("span", {
+                                                              key: 0,
+                                                              class: "task-node-output-meta"
+                                                            }, [
+                                                              _createTextVNode(_toDisplayString(node.output.provider || ''), 1 /* TEXT */),
+                                                              (node.output.provider && node.output.model)
+                                                                ? (_openBlock(), _createElementBlock(_Fragment, { key: 0 }, [
+                                                                    _createTextVNode(" · ")
+                                                                  ], 64 /* STABLE_FRAGMENT */))
+                                                                : _createCommentVNode("v-if", true),
+                                                              _createTextVNode(_toDisplayString(node.output.model || ''), 1 /* TEXT */)
+                                                            ]))
+                                                          : _createCommentVNode("v-if", true)
+                                                      ]),
+                                                      _createElementVNode("div", { class: "task-node-output-facts" }, [
+                                                        (node.output.endpoint)
+                                                          ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.t('orchestration.detail.node.endpoint')) + _toDisplayString(node.output.endpoint), 1 /* TEXT */))
+                                                          : _createCommentVNode("v-if", true),
+                                                        (node.output.status)
+                                                          ? (_openBlock(), _createElementBlock("span", { key: 1 }, "HTTP " + _toDisplayString(node.output.status), 1 /* TEXT */))
+                                                          : _createCommentVNode("v-if", true),
+                                                        (node.output.durationMs)
+                                                          ? (_openBlock(), _createElementBlock("span", { key: 2 }, _toDisplayString(node.output.durationMs) + "ms", 1 /* TEXT */))
+                                                          : _createCommentVNode("v-if", true)
+                                                      ]),
+                                                      _createElementVNode("pre", { class: "task-log-block task-output-block" }, _toDisplayString(_ctx.formatTaskNodeOutputText(node)), 1 /* TEXT */),
+                                                      (node.output.materializedFiles && node.output.materializedFiles.length)
+                                                        ? (_openBlock(), _createElementBlock("div", {
+                                                            key: 0,
+                                                            class: "task-materialized-files"
+                                                          }, [
+                                                            _createElementVNode("div", { class: "task-node-deps" }, _toDisplayString(_ctx.t('orchestration.detail.node.materializedFiles')), 1 /* TEXT */),
+                                                            (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(node.output.materializedFiles, (file) => {
+                                                              return (_openBlock(), _createElementBlock("div", {
+                                                                key: file.path || file.relativePath,
+                                                                class: "task-materialized-file"
+                                                              }, _toDisplayString(file.relativePath || file.path) + " · " + _toDisplayString(file.bytes || 0) + " bytes", 1 /* TEXT */))
+                                                            }), 128 /* KEYED_FRAGMENT */))
+                                                          ]))
+                                                        : _createCommentVNode("v-if", true)
+                                                    ]))
+                                                  : _createCommentVNode("v-if", true),
                                                 _createElementVNode("pre", { class: "task-log-block" }, _toDisplayString(_ctx.formatTaskNodeLogs(node.logs)), 1 /* TEXT */)
                                               ]))
                                             }), 128 /* KEYED_FRAGMENT */))

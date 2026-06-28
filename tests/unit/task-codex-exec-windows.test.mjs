@@ -84,6 +84,98 @@ test('postOpenAiChatCompletion fails fast on oversized responses', async () => {
     }
 });
 
+test('buildTaskOpenAiChatStatus reports provider readiness without leaking secrets', () => {
+    const source = extractBlockBySignature(cliSource, 'function buildTaskOpenAiChatStatus() {');
+    const buildTaskOpenAiChatStatus = instantiateFunction(source, 'buildTaskOpenAiChatStatus', {
+        resolveTaskOpenAiChatConfig() {
+            return {
+                providerName: 'mock-openai',
+                model: 'gpt-4.1-mini',
+                endpointUrl: 'https://secret.example.test/v1/chat/completions?key=abc123',
+                apiKey: 'sk-secret',
+                extraHeaders: { 'X-Api-Key': 'hidden' }
+            };
+        },
+        redactTaskEndpointUrl(endpointUrl) {
+            return String(endpointUrl || '').replace('key=abc123', 'key=***');
+        }
+    });
+
+    assert.deepStrictEqual(buildTaskOpenAiChatStatus(), {
+        ok: true,
+        ready: true,
+        error: '',
+        providerName: 'mock-openai',
+        model: 'gpt-4.1-mini',
+        endpoint: 'https://secret.example.test/v1/chat/completions?key=***',
+        hasApiKey: true,
+        hasExtraHeaders: true
+    });
+});
+
+test('buildTaskOpenAiChatStatus surfaces OpenAI Chat config errors', () => {
+    const source = extractBlockBySignature(cliSource, 'function buildTaskOpenAiChatStatus() {');
+    const buildTaskOpenAiChatStatus = instantiateFunction(source, 'buildTaskOpenAiChatStatus', {
+        resolveTaskOpenAiChatConfig() {
+            return { error: 'OpenAI Chat 提供商 mock 缺少 base_url' };
+        },
+        redactTaskEndpointUrl(endpointUrl) {
+            return endpointUrl;
+        }
+    });
+
+    assert.deepStrictEqual(buildTaskOpenAiChatStatus(), {
+        ok: false,
+        ready: false,
+        error: 'OpenAI Chat 提供商 mock 缺少 base_url',
+        providerName: '',
+        model: '',
+        endpoint: '',
+        hasApiKey: false,
+        hasExtraHeaders: false
+    });
+});
+
+test('runOpenAiChatTaskNode fails before request when OpenAI Chat auth is missing', async () => {
+    const source = extractBlockBySignature(cliSource, 'async function runOpenAiChatTaskNode(node, context = {}) {');
+    let requested = false;
+    const runOpenAiChatTaskNode = instantiateFunction(source, 'runOpenAiChatTaskNode', {
+        resolveTaskOpenAiChatConfig() {
+            return {
+                providerName: 'mock-openai',
+                model: 'gpt-4.1-mini',
+                endpointUrl: 'https://api.example.test/v1/chat/completions',
+                apiKey: '',
+                extraHeaders: {}
+            };
+        },
+        postOpenAiChatCompletion() {
+            requested = true;
+            return Promise.resolve({ ok: true, status: 200, payload: {} });
+        },
+        extractModelResponseText() {
+            return '';
+        },
+        truncateTaskText(text, limit) {
+            return String(text || '').slice(0, limit || 1000);
+        },
+        redactTaskEndpointUrl(endpointUrl) {
+            return endpointUrl;
+        },
+        toIsoTime() {
+            return '2026-06-27T15:30:00.000Z';
+        },
+        Date
+    });
+
+    const result = await runOpenAiChatTaskNode({ id: 'analysis-01', prompt: 'inspect', write: false }, {});
+
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /缺少 API key/);
+    assert.strictEqual(result.output.provider, 'mock-openai');
+    assert.strictEqual(requested, false);
+});
+
 test('runOpenAiChatTaskNode uses configured OpenAI Chat provider without spawning codex', async () => {
     const source = extractBlockBySignature(cliSource, 'async function runOpenAiChatTaskNode(node, context = {}) {');
     const requests = [];

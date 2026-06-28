@@ -16065,6 +16065,7 @@ function buildTaskOverviewPayload(options = {}) {
     }
     return {
         workflows: workflowCatalog.workflows,
+        openAiChatStatus: buildTaskOpenAiChatStatus(),
         warnings,
         queue,
         runs,
@@ -16222,6 +16223,39 @@ function resolveTaskOpenAiChatConfig() {
         apiKey,
         extraHeaders,
         model
+    };
+}
+
+function buildTaskOpenAiChatStatus() {
+    const requestConfig = resolveTaskOpenAiChatConfig();
+    if (requestConfig && requestConfig.error) {
+        return {
+            ok: false,
+            ready: false,
+            error: requestConfig.error,
+            providerName: '',
+            model: '',
+            endpoint: '',
+            hasApiKey: false,
+            hasExtraHeaders: false
+        };
+    }
+    const hasApiKey = !!(requestConfig && typeof requestConfig.apiKey === 'string' && requestConfig.apiKey.trim());
+    const hasExtraHeaders = !!(requestConfig
+        && requestConfig.extraHeaders
+        && typeof requestConfig.extraHeaders === 'object'
+        && !Array.isArray(requestConfig.extraHeaders)
+        && Object.keys(requestConfig.extraHeaders).length > 0);
+    const hasAuthMaterial = hasApiKey || hasExtraHeaders;
+    return {
+        ok: true,
+        ready: hasAuthMaterial,
+        error: hasAuthMaterial ? '' : `OpenAI Chat 提供商 ${requestConfig.providerName || ''} 缺少 API key 或额外 headers`,
+        providerName: requestConfig.providerName || '',
+        model: requestConfig.model || '',
+        endpoint: redactTaskEndpointUrl(requestConfig.endpointUrl || ''),
+        hasApiKey,
+        hasExtraHeaders
     };
 }
 
@@ -16470,6 +16504,30 @@ async function runOpenAiChatTaskNode(node, context = {}) {
             summary: requestConfig.error,
             output: null,
             logs: [{ at: toIsoTime(Date.now()), level: 'error', message: requestConfig.error }]
+        };
+    }
+    const hasApiKey = typeof requestConfig.apiKey === 'string' && requestConfig.apiKey.trim();
+    const hasExtraHeaders = requestConfig.extraHeaders
+        && typeof requestConfig.extraHeaders === 'object'
+        && !Array.isArray(requestConfig.extraHeaders)
+        && Object.keys(requestConfig.extraHeaders).length > 0;
+    if (!hasApiKey && !hasExtraHeaders) {
+        const error = `OpenAI Chat 提供商 ${requestConfig.providerName || ''} 缺少 API key 或额外 headers`;
+        return {
+            success: false,
+            error,
+            summary: error,
+            output: {
+                provider: requestConfig.providerName || '',
+                model: requestConfig.model || '',
+                endpoint: redactTaskEndpointUrl(requestConfig.endpointUrl || ''),
+                status: 0,
+                text: '',
+                response: null,
+                durationMs: 0,
+                materializedFiles: []
+            },
+            logs: [{ at: toIsoTime(Date.now()), level: 'error', message: error }]
         };
     }
     const allowWrite = context.allowWrite === true && node.write !== false && context.dryRun !== true;

@@ -23,6 +23,7 @@ function createDefaultTaskOrchestrationState() {
         planIssues: [],
         planWarnings: [],
         overviewWarnings: [],
+        openAiChatStatus: null,
         workflows: [],
         queue: [],
         runs: [],
@@ -171,6 +172,33 @@ export function createTaskOrchestrationMethods(options = {}) {
             return logs.map((item) => `${item && item.at ? item.at : ''} ${item && item.level ? item.level : ''} ${item && item.message ? item.message : ''}`.trim()).join('\n');
         },
 
+        formatTaskNodeOutputText(node) {
+            const output = node && node.output && typeof node.output === 'object' ? node.output : null;
+            const text = output && typeof output.text === 'string' ? output.text.trim() : '';
+            return text || '(no output)';
+        },
+
+        openTaskOpenAiChatConfig() {
+            if (typeof this.switchMainTab === 'function') {
+                this.switchMainTab('config');
+            } else {
+                this.mainTab = 'config';
+            }
+            this.configMode = 'codex';
+            const status = this.taskOrchestration && this.taskOrchestration.openAiChatStatus
+                ? this.taskOrchestration.openAiChatStatus
+                : null;
+            const providerName = status && typeof status.providerName === 'string' ? status.providerName.trim() : '';
+            const provider = providerName && Array.isArray(this.providersList)
+                ? this.providersList.find((item) => item && item.name === providerName)
+                : null;
+            if (provider && typeof this.openEditModal === 'function') {
+                this.openEditModal(provider);
+            } else if (!providerName && typeof this.openAddProviderModal === 'function') {
+                this.openAddProviderModal();
+            }
+        },
+
         appendTaskWorkflowId(workflowId) {
             const state = this.ensureTaskOrchestrationState();
             const normalizedWorkflowId = typeof workflowId === 'string' ? workflowId.trim() : '';
@@ -208,6 +236,9 @@ export function createTaskOrchestrationMethods(options = {}) {
                 state.workflows = Array.isArray(res && res.workflows) ? res.workflows : [];
                 state.queue = Array.isArray(res && res.queue) ? res.queue : [];
                 state.runs = Array.isArray(res && res.runs) ? res.runs : [];
+                state.openAiChatStatus = res && res.openAiChatStatus && typeof res.openAiChatStatus === 'object'
+                    ? res.openAiChatStatus
+                    : null;
                 state.overviewWarnings = Array.isArray(res && res.warnings) ? res.warnings : [];
                 state.lastLoadedAt = new Date().toISOString();
                 if (!state.selectedRunId && state.runs.length > 0) {
