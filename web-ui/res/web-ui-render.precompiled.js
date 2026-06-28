@@ -4049,126 +4049,111 @@ return function render(_ctx, _cache) {
                       ], 8 /* PROPS */, ["aria-label"]))
                     : _createCommentVNode("v-if", true)
                 ]),
-                _createElementVNode("div", { class: "task-layout-grid task-layout-grid-primary" }, [
-                  _createElementVNode("section", { class: "selector-section task-compose-flow-card" }, [
-                    _createElementVNode("div", { class: "task-flow-section task-flow-section-compact" }, [
-                      _createElementVNode("div", { class: "task-flow-head" }, [
-                        _createElementVNode("div", { class: "task-flow-step" }, "1"),
-                        _createElementVNode("div", null, [
-                          _createElementVNode("div", { class: "task-flow-title" }, _toDisplayString(_ctx.t('orchestration.step1.title')), 1 /* TEXT */),
-                          _createElementVNode("div", { class: "task-flow-copy" }, _toDisplayString(_ctx.t('orchestration.step1.subtitle')), 1 /* TEXT */)
-                        ])
+                _createElementVNode("div", { class: "task-layout-grid task-layout-grid-primary task-quick-layout" }, [
+                  _createElementVNode("section", { class: "selector-section task-compose-flow-card task-quick-card" }, [
+                    _createElementVNode("div", { class: "task-quick-main" }, [
+                      _createElementVNode("div", { class: "task-quick-copy" }, [
+                        _createElementVNode("div", { class: "task-hero-kicker" }, _toDisplayString(_ctx.t('orchestration.quick.kicker')), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "selector-title task-quick-title" }, _toDisplayString(_ctx.t('orchestration.quick.title')), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "skills-panel-note task-hero-copy" }, _toDisplayString(_ctx.t('orchestration.quick.subtitle')), 1 /* TEXT */)
                       ]),
-                      (!_ctx.taskOrchestration.target.trim())
-                        ? (_openBlock(), _createElementBlock("details", {
-                            key: 0,
-                            class: "task-template-panel"
-                          }, [
-                            _createElementVNode("summary", { class: "task-advanced-summary" }, _toDisplayString(_ctx.t('orchestration.templates.title')), 1 /* TEXT */),
-                            _createElementVNode("div", { class: "task-template-block" }, [
-                              _createElementVNode("div", { class: "task-template-chip-group" }, [
-                                _createElementVNode("button", {
-                                  type: "button",
-                                  class: "task-template-chip",
-                                  onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.reviewFix.target'); _ctx.taskOrchestration.selectedEngine = 'openai-chat'; _ctx.taskOrchestration.workflowIdsText = ''; _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.reviewFix.notes'); _ctx.taskOrchestration.followUpsText = _ctx.t('orchestration.templates.reviewFix.followUps')}
-                                }, _toDisplayString(_ctx.t('orchestration.templates.reviewFix.label')), 9 /* TEXT, PROPS */, ["onClick"]),
-                                _createElementVNode("button", {
-                                  type: "button",
-                                  class: "task-template-chip",
-                                  onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.planOnly.target'); _ctx.taskOrchestration.selectedEngine = 'openai-chat'; _ctx.taskOrchestration.workflowIdsText = ''; _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.planOnly.notes'); _ctx.taskOrchestration.followUpsText = ''}
-                                }, _toDisplayString(_ctx.t('orchestration.templates.planOnly.label')), 9 /* TEXT, PROPS */, ["onClick"]),
-                                _createElementVNode("button", {
-                                  type: "button",
-                                  class: "task-template-chip",
-                                  onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.workflowBatch.target'); _ctx.taskOrchestration.selectedEngine = 'workflow'; _ctx.taskOrchestration.workflowIdsText = _ctx.t('orchestration.templates.workflowBatch.workflowIds'); _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.workflowBatch.notes'); _ctx.taskOrchestration.followUpsText = ''}
-                                }, _toDisplayString(_ctx.t('orchestration.templates.workflowBatch.label')), 9 /* TEXT, PROPS */, ["onClick"])
-                              ])
-                            ])
-                          ]))
-                        : _createCommentVNode("v-if", true),
-                      _createElementVNode("div", { class: "selector-grid task-composer-grid task-composer-grid-primary" }, [
-                        _createElementVNode("label", { class: "selector-field task-field task-field-wide task-goal-field" }, [
+                      _createElementVNode("div", { class: "task-quick-input-card" }, [
+                        _createElementVNode("label", { class: "task-quick-target-field" }, [
                           _createElementVNode("span", { class: "selector-label" }, _toDisplayString(_ctx.t('orchestration.fields.target')), 1 /* TEXT */),
                           _withDirectives(_createElementVNode("textarea", {
                             "onUpdate:modelValue": $event => ((_ctx.taskOrchestration.target) = $event),
-                            class: "task-textarea task-textarea-goal",
+                            class: "task-textarea task-textarea-goal task-quick-target",
                             rows: "5",
                             placeholder: _ctx.t('orchestration.fields.target.placeholder')
                           }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                             [_vModelText, _ctx.taskOrchestration.target]
                           ]),
                           _createElementVNode("span", { class: "task-field-hint" }, _toDisplayString(_ctx.t('orchestration.fields.target.hint')), 1 /* TEXT */)
-                        ])
-                      ]),
-                      _createElementVNode("div", { class: "task-draft-overview task-draft-inline" }, [
-                        _createElementVNode("div", { class: "task-draft-inline-head" }, [
-                          _createElementVNode("span", {
-                            class: _normalizeClass(['pill', _ctx.taskOrchestrationDraftReadiness.tone])
-                          }, _toDisplayString(_ctx.taskOrchestrationDraftReadiness.title), 3 /* TEXT, CLASS */),
-                          _createElementVNode("div", { class: "task-readiness-copy task-draft-inline-copy" }, _toDisplayString(_ctx.taskOrchestrationDraftReadiness.summary), 1 /* TEXT */)
                         ]),
-                        _createElementVNode("div", { class: "task-config-strip" }, [
-                          _createElementVNode("div", { class: "task-config-pill" }, _toDisplayString(_ctx.taskOrchestration.selectedEngine === 'workflow' ? _ctx.t('orchestration.engine.workflow') : _ctx.t('orchestration.engine.openaiChat')), 1 /* TEXT */),
-                          _createElementVNode("div", { class: "task-config-pill" }, _toDisplayString(_ctx.taskOrchestration.runMode === 'dry-run' ? _ctx.t('orchestration.runMode.dryRun') : (_ctx.taskOrchestration.runMode === 'read' ? _ctx.t('orchestration.runMode.readOnly') : _ctx.t('orchestration.runMode.write'))), 1 /* TEXT */),
-                          (_ctx.taskOrchestration.title.trim())
-                            ? (_openBlock(), _createElementBlock("div", {
-                                key: 0,
-                                class: "task-config-pill"
-                              }, _toDisplayString(_ctx.t('orchestration.pills.hasTitle')), 1 /* TEXT */))
-                            : _createCommentVNode("v-if", true),
-                          (_ctx.taskOrchestration.selectedEngine === 'workflow' && _ctx.taskOrchestrationDraftMetrics.workflowCount > 0)
-                            ? (_openBlock(), _createElementBlock("div", {
-                                key: 1,
-                                class: "task-config-pill"
-                              }, _toDisplayString(_ctx.t('orchestration.pills.workflowCount', { count: _ctx.taskOrchestrationDraftMetrics.workflowCount })), 1 /* TEXT */))
-                            : _createCommentVNode("v-if", true),
-                          (_ctx.taskOrchestration.plan)
-                            ? (_openBlock(), _createElementBlock("div", {
-                                key: 2,
-                                class: "task-config-pill"
-                              }, _toDisplayString(_ctx.t('orchestration.pills.planNodes', { count: _ctx.taskOrchestrationDraftMetrics.planNodeCount })), 1 /* TEXT */))
-                            : _createCommentVNode("v-if", true)
-                        ])
-                      ])
-                    ]),
-                    _createElementVNode("div", { class: "task-flow-section task-flow-section-compact" }, [
-                      _createElementVNode("div", { class: "task-flow-head" }, [
-                        _createElementVNode("div", { class: "task-flow-step" }, "2"),
-                        _createElementVNode("div", null, [
-                          _createElementVNode("div", { class: "task-flow-title" }, _toDisplayString(_ctx.t('orchestration.step2.title')), 1 /* TEXT */),
-                          _createElementVNode("div", { class: "task-flow-copy" }, _toDisplayString(_ctx.t('orchestration.step2.subtitle')), 1 /* TEXT */)
-                        ])
-                      ]),
-                      _createElementVNode("div", { class: "selector-grid task-composer-grid task-composer-grid-compact task-composer-grid-inline" }, [
-                        _createElementVNode("label", { class: "selector-field" }, [
-                          _createElementVNode("span", { class: "selector-label" }, _toDisplayString(_ctx.t('orchestration.fields.engine')), 1 /* TEXT */),
-                          _withDirectives(_createElementVNode("select", {
-                            "onUpdate:modelValue": $event => ((_ctx.taskOrchestration.selectedEngine) = $event),
-                            class: "provider-fast-switch-select",
-                            disabled: ""
-                          }, [
-                            _createElementVNode("option", { value: "openai-chat" }, _toDisplayString(_ctx.t('orchestration.engine.openaiChat')), 1 /* TEXT */),
-                            _createElementVNode("option", { value: "workflow" }, _toDisplayString(_ctx.t('orchestration.engine.workflow')), 1 /* TEXT */)
-                          ], 8 /* PROPS */, ["onUpdate:modelValue"]), [
-                            [_vModelSelect, _ctx.taskOrchestration.selectedEngine]
+                        _createElementVNode("div", { class: "task-draft-overview task-draft-inline task-quick-readiness" }, [
+                          _createElementVNode("div", { class: "task-draft-inline-head" }, [
+                            _createElementVNode("span", {
+                              class: _normalizeClass(['pill', _ctx.taskOrchestrationDraftReadiness.tone])
+                            }, _toDisplayString(_ctx.taskOrchestrationDraftReadiness.title), 3 /* TEXT, CLASS */),
+                            _createElementVNode("div", { class: "task-readiness-copy task-draft-inline-copy" }, _toDisplayString(_ctx.taskOrchestrationDraftReadiness.summary), 1 /* TEXT */)
+                          ]),
+                          _createElementVNode("div", { class: "task-config-strip" }, [
+                            _createElementVNode("div", { class: "task-config-pill" }, _toDisplayString(_ctx.taskOrchestration.selectedEngine === 'workflow' ? _ctx.t('orchestration.engine.workflow') : _ctx.t('orchestration.engine.openaiChat')), 1 /* TEXT */),
+                            _createElementVNode("div", { class: "task-config-pill" }, _toDisplayString(_ctx.taskOrchestration.runMode === 'dry-run' ? _ctx.t('orchestration.runMode.dryRun') : (_ctx.taskOrchestration.runMode === 'read' ? _ctx.t('orchestration.runMode.readOnly') : _ctx.t('orchestration.runMode.write') )), 1 /* TEXT */),
+                            (_ctx.taskOrchestration.title.trim())
+                              ? (_openBlock(), _createElementBlock("div", {
+                                  key: 0,
+                                  class: "task-config-pill"
+                                }, _toDisplayString(_ctx.t('orchestration.pills.hasTitle')), 1 /* TEXT */))
+                              : _createCommentVNode("v-if", true),
+                            (_ctx.taskOrchestration.selectedEngine === 'workflow' && _ctx.taskOrchestrationDraftMetrics.workflowCount > 0)
+                              ? (_openBlock(), _createElementBlock("div", {
+                                  key: 1,
+                                  class: "task-config-pill"
+                                }, _toDisplayString(_ctx.t('orchestration.pills.workflowCount', { count: _ctx.taskOrchestrationDraftMetrics.workflowCount })), 1 /* TEXT */))
+                              : _createCommentVNode("v-if", true),
+                            (_ctx.taskOrchestration.plan)
+                              ? (_openBlock(), _createElementBlock("div", {
+                                  key: 2,
+                                  class: "task-config-pill"
+                                }, _toDisplayString(_ctx.t('orchestration.pills.planNodes', { count: _ctx.taskOrchestrationDraftMetrics.planNodeCount })), 1 /* TEXT */))
+                              : _createCommentVNode("v-if", true)
                           ])
                         ]),
-                        _createElementVNode("label", { class: "selector-field" }, [
-                          _createElementVNode("span", { class: "selector-label" }, _toDisplayString(_ctx.t('orchestration.fields.runMode')), 1 /* TEXT */),
-                          _withDirectives(_createElementVNode("select", {
-                            "onUpdate:modelValue": $event => ((_ctx.taskOrchestration.runMode) = $event),
-                            class: "provider-fast-switch-select",
-                            disabled: ""
-                          }, [
-                            _createElementVNode("option", { value: "write" }, _toDisplayString(_ctx.t('orchestration.runMode.write')), 1 /* TEXT */),
-                            _createElementVNode("option", { value: "read" }, _toDisplayString(_ctx.t('orchestration.runMode.readOnly')), 1 /* TEXT */),
-                            _createElementVNode("option", { value: "dry-run" }, _toDisplayString(_ctx.t('orchestration.runMode.dryRun')), 1 /* TEXT */)
-                          ], 8 /* PROPS */, ["onUpdate:modelValue"]), [
-                            [_vModelSelect, _ctx.taskOrchestration.runMode]
+                        _createElementVNode("div", { class: "task-action-row task-action-row-prominent task-quick-actions" }, [
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "btn-tool task-action-preview",
+                            onClick: $event => (_ctx.previewTaskPlan()),
+                            disabled: _ctx.taskOrchestration.planning || _ctx.taskOrchestration.running || !_ctx.taskOrchestration.target.trim()
+                          }, _toDisplayString(_ctx.taskOrchestration.planning ? _ctx.t('orchestration.actions.planning') : _ctx.t('orchestration.actions.previewOnly')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                          _createElementVNode("div", { class: "task-action-row-right task-action-row-right-prominent" }, [
+                            _createElementVNode("button", {
+                              type: "button",
+                              class: "btn-tool btn-primary",
+                              onClick: $event => (_ctx.planAndRunTaskOrchestration()),
+                              disabled: _ctx.taskOrchestration.running || _ctx.taskOrchestration.planning || !_ctx.taskOrchestration.target.trim()
+                            }, _toDisplayString((_ctx.taskOrchestration.running || _ctx.taskOrchestration.planning) ? _ctx.t('orchestration.actions.preparing') : (_ctx.taskOrchestration.runMode === 'dry-run' ? _ctx.t('orchestration.actions.generatePlan') : _ctx.t('orchestration.actions.planAndRun'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                            _createElementVNode("button", {
+                              type: "button",
+                              class: "btn-tool",
+                              onClick: $event => (_ctx.queueTaskOrchestrationAndStart()),
+                              disabled: _ctx.taskOrchestration.queueAdding || _ctx.taskOrchestration.queueStarting || _ctx.taskOrchestration.planning || !_ctx.taskOrchestration.target.trim()
+                            }, _toDisplayString((_ctx.taskOrchestration.queueAdding || _ctx.taskOrchestration.queueStarting) ? _ctx.t('orchestration.actions.processing') : _ctx.t('orchestration.actions.queueAndStart')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                           ])
+                        ]),
+                        _createElementVNode("div", { class: "task-action-caption" }, _toDisplayString(_ctx.t('orchestration.quick.caption')), 1 /* TEXT */)
+                      ]),
+                      _createElementVNode("div", { class: "task-template-block task-quick-template-block" }, [
+                        _createElementVNode("div", { class: "task-template-label" }, _toDisplayString(_ctx.t('orchestration.templates.title')), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "task-quick-template-grid" }, [
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "task-quick-template-card",
+                            onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.reviewFix.target'); _ctx.taskOrchestration.selectedEngine = 'openai-chat'; _ctx.taskOrchestration.workflowIdsText = ''; _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.reviewFix.notes'); _ctx.taskOrchestration.followUpsText = _ctx.t('orchestration.templates.reviewFix.followUps')}
+                          }, [
+                            _createElementVNode("strong", null, _toDisplayString(_ctx.t('orchestration.templates.reviewFix.label')), 1 /* TEXT */),
+                            _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.quick.templates.reviewFix.meta')), 1 /* TEXT */)
+                          ], 8 /* PROPS */, ["onClick"]),
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "task-quick-template-card",
+                            onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.planOnly.target'); _ctx.taskOrchestration.selectedEngine = 'openai-chat'; _ctx.taskOrchestration.workflowIdsText = ''; _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.planOnly.notes'); _ctx.taskOrchestration.followUpsText = ''}
+                          }, [
+                            _createElementVNode("strong", null, _toDisplayString(_ctx.t('orchestration.templates.planOnly.label')), 1 /* TEXT */),
+                            _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.quick.templates.planOnly.meta')), 1 /* TEXT */)
+                          ], 8 /* PROPS */, ["onClick"]),
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "task-quick-template-card",
+                            onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.workflowBatch.target'); _ctx.taskOrchestration.selectedEngine = 'workflow'; _ctx.taskOrchestration.workflowIdsText = _ctx.t('orchestration.templates.workflowBatch.workflowIds'); _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.workflowBatch.notes'); _ctx.taskOrchestration.followUpsText = ''}
+                          }, [
+                            _createElementVNode("strong", null, _toDisplayString(_ctx.t('orchestration.templates.workflowBatch.label')), 1 /* TEXT */),
+                            _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.quick.templates.workflowBatch.meta')), 1 /* TEXT */)
+                          ], 8 /* PROPS */, ["onClick"])
                         ])
                       ]),
-                      _createElementVNode("details", { class: "task-advanced-panel" }, [
+                      _createElementVNode("details", { class: "task-advanced-panel task-quick-advanced" }, [
                         _createElementVNode("summary", { class: "task-advanced-summary" }, _toDisplayString(_ctx.t('orchestration.advanced.title')), 1 /* TEXT */),
                         _createElementVNode("div", { class: "selector-grid task-composer-grid task-composer-grid-secondary" }, [
                           _createElementVNode("label", { class: "selector-field task-field-wide" }, [
@@ -4180,6 +4165,33 @@ return function render(_ctx, _cache) {
                               placeholder: _ctx.t('orchestration.fields.title.placeholder')
                             }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                               [_vModelText, _ctx.taskOrchestration.title]
+                            ])
+                          ]),
+                          _createElementVNode("label", { class: "selector-field" }, [
+                            _createElementVNode("span", { class: "selector-label" }, _toDisplayString(_ctx.t('orchestration.fields.engine')), 1 /* TEXT */),
+                            _withDirectives(_createElementVNode("select", {
+                              "onUpdate:modelValue": $event => ((_ctx.taskOrchestration.selectedEngine) = $event),
+                              class: "provider-fast-switch-select",
+                              disabled: ""
+                            }, [
+                              _createElementVNode("option", { value: "openai-chat" }, _toDisplayString(_ctx.t('orchestration.engine.openaiChat')), 1 /* TEXT */),
+                              _createElementVNode("option", { value: "workflow" }, _toDisplayString(_ctx.t('orchestration.engine.workflow')), 1 /* TEXT */)
+                            ], 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                              [_vModelSelect, _ctx.taskOrchestration.selectedEngine]
+                            ])
+                          ]),
+                          _createElementVNode("label", { class: "selector-field" }, [
+                            _createElementVNode("span", { class: "selector-label" }, _toDisplayString(_ctx.t('orchestration.fields.runMode')), 1 /* TEXT */),
+                            _withDirectives(_createElementVNode("select", {
+                              "onUpdate:modelValue": $event => ((_ctx.taskOrchestration.runMode) = $event),
+                              class: "provider-fast-switch-select",
+                              disabled: ""
+                            }, [
+                              _createElementVNode("option", { value: "write" }, _toDisplayString(_ctx.t('orchestration.runMode.write')), 1 /* TEXT */),
+                              _createElementVNode("option", { value: "read" }, _toDisplayString(_ctx.t('orchestration.runMode.readOnly')), 1 /* TEXT */),
+                              _createElementVNode("option", { value: "dry-run" }, _toDisplayString(_ctx.t('orchestration.runMode.dryRun')), 1 /* TEXT */)
+                            ], 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                              [_vModelSelect, _ctx.taskOrchestration.runMode]
                             ])
                           ]),
                           _createElementVNode("label", { class: "selector-field task-field-wide" }, [
@@ -4271,37 +4283,29 @@ return function render(_ctx, _cache) {
                         ])
                       ])
                     ]),
-                    _createElementVNode("div", { class: "task-flow-section task-flow-section-actions task-flow-section-compact" }, [
-                      _createElementVNode("div", { class: "task-flow-head" }, [
-                        _createElementVNode("div", { class: "task-flow-step" }, "3"),
+                    _createElementVNode("aside", { class: "task-quick-side-card" }, [
+                      _createElementVNode("div", { class: "task-readiness-head" }, [
                         _createElementVNode("div", null, [
-                          _createElementVNode("div", { class: "task-flow-title" }, _toDisplayString(_ctx.t('orchestration.step3.title')), 1 /* TEXT */),
-                          _createElementVNode("div", { class: "task-flow-copy" }, _toDisplayString(_ctx.t('orchestration.step3.subtitle')), 1 /* TEXT */)
+                          _createElementVNode("div", { class: "task-readiness-title" }, _toDisplayString(_ctx.t('orchestration.quick.checklist.title')), 1 /* TEXT */),
+                          _createElementVNode("div", { class: "task-readiness-copy" }, _toDisplayString(_ctx.t('orchestration.quick.checklist.subtitle')), 1 /* TEXT */)
                         ])
                       ]),
-                      _createElementVNode("div", { class: "task-action-row task-action-row-prominent" }, [
-                        _createElementVNode("button", {
-                          type: "button",
-                          class: "btn-tool task-action-preview",
-                          onClick: $event => (_ctx.previewTaskPlan()),
-                          disabled: _ctx.taskOrchestration.planning || _ctx.taskOrchestration.running || !_ctx.taskOrchestration.target.trim()
-                        }, _toDisplayString(_ctx.taskOrchestration.planning ? _ctx.t('orchestration.actions.planning') : _ctx.t('orchestration.actions.previewOnly')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                        _createElementVNode("div", { class: "task-action-row-right task-action-row-right-prominent" }, [
-                          _createElementVNode("button", {
-                            type: "button",
-                            class: "btn-tool btn-primary",
-                            onClick: $event => (_ctx.planAndRunTaskOrchestration()),
-                            disabled: _ctx.taskOrchestration.running || _ctx.taskOrchestration.planning || !_ctx.taskOrchestration.target.trim()
-                          }, _toDisplayString((_ctx.taskOrchestration.running || _ctx.taskOrchestration.planning) ? _ctx.t('orchestration.actions.preparing') : (_ctx.taskOrchestration.runMode === 'dry-run' ? _ctx.t('orchestration.actions.generatePlan') : _ctx.t('orchestration.actions.planAndRun'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                          _createElementVNode("button", {
-                            type: "button",
-                            class: "btn-tool",
-                            onClick: $event => (_ctx.queueTaskOrchestrationAndStart()),
-                            disabled: _ctx.taskOrchestration.queueAdding || _ctx.taskOrchestration.queueStarting || _ctx.taskOrchestration.planning || !_ctx.taskOrchestration.target.trim()
-                          }, _toDisplayString((_ctx.taskOrchestration.queueAdding || _ctx.taskOrchestration.queueStarting) ? _ctx.t('orchestration.actions.processing') : _ctx.t('orchestration.actions.queueAndStart')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
-                        ])
+                      _createElementVNode("div", { class: "task-readiness-grid task-quick-checklist" }, [
+                        (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.taskOrchestrationDraftChecklist, (item) => {
+                          return (_openBlock(), _createElementBlock("div", {
+                            key: item.key,
+                            class: _normalizeClass(['task-readiness-item', { done: item.done }])
+                          }, [
+                            _createElementVNode("strong", null, _toDisplayString(item.label), 1 /* TEXT */),
+                            _createElementVNode("span", null, _toDisplayString(item.detail), 1 /* TEXT */)
+                          ], 2 /* CLASS */))
+                        }), 128 /* KEYED_FRAGMENT */))
                       ]),
-                      _createElementVNode("div", { class: "task-action-caption" }, _toDisplayString(_ctx.t('orchestration.actions.caption')), 1 /* TEXT */)
+                      _createElementVNode("div", { class: "task-quick-status-card" }, [
+                        _createElementVNode("div", { class: "task-plan-summary-label" }, _toDisplayString(_ctx.t('orchestration.quick.status.title')), 1 /* TEXT */),
+                        _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestrationDraftReadiness.title), 1 /* TEXT */),
+                        _createElementVNode("span", null, _toDisplayString(_ctx.taskOrchestrationDraftReadiness.summary), 1 /* TEXT */)
+                      ])
                     ])
                   ])
                 ]),

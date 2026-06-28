@@ -93,12 +93,13 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /@click="startTaskQueueRunner\(\)"/);
     assert.match(orchestrationPanel, /@click="retryTaskRunFromUi\(taskOrchestration.selectedRunId\)"/);
     assert.match(orchestrationPanel, /class="selector-section task-hero-card"/);
-    assert.match(orchestrationPanel, /class="task-layout-grid task-layout-grid-primary"/);
-    assert.match(orchestrationPanel, /class="task-template-chip-group"/);
+    assert.match(orchestrationPanel, /class="[^"]*task-layout-grid task-layout-grid-primary[^"]*"/);
+    assert.match(orchestrationPanel, /class="[^"]*task-quick-card[^"]*"/);
+    assert.match(orchestrationPanel, /class="task-quick-template-grid"/);
     assert.match(orchestrationPanel, /class="task-workflow-suggestions"/);
     assert.match(orchestrationPanel, /@click="appendTaskWorkflowId\(workflow.id \|\| workflow.name\)"/);
     assert.match(orchestrationPanel, /class="[^"]*task-draft-overview[^"]*"/);
-    assert.match(orchestrationPanel, /class="task-advanced-panel"/);
+    assert.match(orchestrationPanel, /class="[^"]*task-advanced-panel[^"]*"/);
     assert.match(orchestrationPanel, /taskOrchestrationDraftReadiness.summary/);
     assert.match(orchestrationPanel, /taskOrchestrationDraftReadiness.title/);
     assert.match(orchestrationPanel, /class="task-config-strip"/);

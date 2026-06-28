@@ -31,84 +31,91 @@
                         </div>
                     </section>
 
-                    <div class="task-layout-grid task-layout-grid-primary">
-                        <section class="selector-section task-compose-flow-card">
-                            <div class="task-flow-section task-flow-section-compact">
-                                <div class="task-flow-head">
-                                    <div class="task-flow-step">1</div>
-                                    <div>
-                                        <div class="task-flow-title">{{ t('orchestration.step1.title') }}</div>
-                                        <div class="task-flow-copy">{{ t('orchestration.step1.subtitle') }}</div>
-                                    </div>
+                    <div class="task-layout-grid task-layout-grid-primary task-quick-layout">
+                        <section class="selector-section task-compose-flow-card task-quick-card">
+                            <div class="task-quick-main">
+                                <div class="task-quick-copy">
+                                    <div class="task-hero-kicker">{{ t('orchestration.quick.kicker') }}</div>
+                                    <div class="selector-title task-quick-title">{{ t('orchestration.quick.title') }}</div>
+                                    <div class="skills-panel-note task-hero-copy">{{ t('orchestration.quick.subtitle') }}</div>
                                 </div>
 
-                                <details v-if="!taskOrchestration.target.trim()" class="task-template-panel">
-                                    <summary class="task-advanced-summary">{{ t('orchestration.templates.title') }}</summary>
-                                    <div class="task-template-block">
-                                        <div class="task-template-chip-group">
-                                            <button type="button" class="task-template-chip" @click="taskOrchestration.target = t('orchestration.templates.reviewFix.target'); taskOrchestration.selectedEngine = 'openai-chat'; taskOrchestration.workflowIdsText = ''; taskOrchestration.notes = t('orchestration.templates.reviewFix.notes'); taskOrchestration.followUpsText = t('orchestration.templates.reviewFix.followUps')">{{ t('orchestration.templates.reviewFix.label') }}</button>
-                                            <button type="button" class="task-template-chip" @click="taskOrchestration.target = t('orchestration.templates.planOnly.target'); taskOrchestration.selectedEngine = 'openai-chat'; taskOrchestration.workflowIdsText = ''; taskOrchestration.notes = t('orchestration.templates.planOnly.notes'); taskOrchestration.followUpsText = ''">{{ t('orchestration.templates.planOnly.label') }}</button>
-                                            <button type="button" class="task-template-chip" @click="taskOrchestration.target = t('orchestration.templates.workflowBatch.target'); taskOrchestration.selectedEngine = 'workflow'; taskOrchestration.workflowIdsText = t('orchestration.templates.workflowBatch.workflowIds'); taskOrchestration.notes = t('orchestration.templates.workflowBatch.notes'); taskOrchestration.followUpsText = ''">{{ t('orchestration.templates.workflowBatch.label') }}</button>
-                                        </div>
-                                    </div>
-                                </details>
-
-                                <div class="selector-grid task-composer-grid task-composer-grid-primary">
-                                    <label class="selector-field task-field task-field-wide task-goal-field">
+                                <div class="task-quick-input-card">
+                                    <label class="task-quick-target-field">
                                         <span class="selector-label">{{ t('orchestration.fields.target') }}</span>
-                                        <textarea v-model="taskOrchestration.target" class="task-textarea task-textarea-goal" rows="5" :placeholder="t('orchestration.fields.target.placeholder')"></textarea>
+                                        <textarea v-model="taskOrchestration.target" class="task-textarea task-textarea-goal task-quick-target" rows="5" :placeholder="t('orchestration.fields.target.placeholder')"></textarea>
                                         <span class="task-field-hint">{{ t('orchestration.fields.target.hint') }}</span>
                                     </label>
-                                </div>
 
-                                <div class="task-draft-overview task-draft-inline">
-                                    <div class="task-draft-inline-head">
-                                        <span :class="['pill', taskOrchestrationDraftReadiness.tone]">{{ taskOrchestrationDraftReadiness.title }}</span>
-                                        <div class="task-readiness-copy task-draft-inline-copy">{{ taskOrchestrationDraftReadiness.summary }}</div>
+                                    <div class="task-draft-overview task-draft-inline task-quick-readiness">
+                                        <div class="task-draft-inline-head">
+                                            <span :class="['pill', taskOrchestrationDraftReadiness.tone]">{{ taskOrchestrationDraftReadiness.title }}</span>
+                                            <div class="task-readiness-copy task-draft-inline-copy">{{ taskOrchestrationDraftReadiness.summary }}</div>
+                                        </div>
+                                        <div class="task-config-strip">
+                                            <div class="task-config-pill">{{ taskOrchestration.selectedEngine === 'workflow' ? t('orchestration.engine.workflow') : t('orchestration.engine.openaiChat') }}</div>
+                                            <div class="task-config-pill">{{ taskOrchestration.runMode === 'dry-run' ? t('orchestration.runMode.dryRun') : (taskOrchestration.runMode === 'read' ? t('orchestration.runMode.readOnly') : t('orchestration.runMode.write') ) }}</div>
+                                            <div v-if="taskOrchestration.title.trim()" class="task-config-pill">{{ t('orchestration.pills.hasTitle') }}</div>
+                                            <div v-if="taskOrchestration.selectedEngine === 'workflow' && taskOrchestrationDraftMetrics.workflowCount > 0" class="task-config-pill">{{ t('orchestration.pills.workflowCount', { count: taskOrchestrationDraftMetrics.workflowCount }) }}</div>
+                                            <div v-if="taskOrchestration.plan" class="task-config-pill">{{ t('orchestration.pills.planNodes', { count: taskOrchestrationDraftMetrics.planNodeCount }) }}</div>
+                                        </div>
                                     </div>
-                                    <div class="task-config-strip">
-                                        <div class="task-config-pill">{{ taskOrchestration.selectedEngine === 'workflow' ? t('orchestration.engine.workflow') : t('orchestration.engine.openaiChat') }}</div>
-                                        <div class="task-config-pill">{{ taskOrchestration.runMode === 'dry-run' ? t('orchestration.runMode.dryRun') : (taskOrchestration.runMode === 'read' ? t('orchestration.runMode.readOnly') : t('orchestration.runMode.write')) }}</div>
-                                        <div v-if="taskOrchestration.title.trim()" class="task-config-pill">{{ t('orchestration.pills.hasTitle') }}</div>
-                                        <div v-if="taskOrchestration.selectedEngine === 'workflow' && taskOrchestrationDraftMetrics.workflowCount > 0" class="task-config-pill">{{ t('orchestration.pills.workflowCount', { count: taskOrchestrationDraftMetrics.workflowCount }) }}</div>
-                                        <div v-if="taskOrchestration.plan" class="task-config-pill">{{ t('orchestration.pills.planNodes', { count: taskOrchestrationDraftMetrics.planNodeCount }) }}</div>
+
+                                    <div class="task-action-row task-action-row-prominent task-quick-actions">
+                                        <button type="button" class="btn-tool task-action-preview" @click="previewTaskPlan()" :disabled="taskOrchestration.planning || taskOrchestration.running || !taskOrchestration.target.trim()">
+                                            {{ taskOrchestration.planning ? t('orchestration.actions.planning') : t('orchestration.actions.previewOnly') }}
+                                        </button>
+                                        <div class="task-action-row-right task-action-row-right-prominent">
+                                            <button type="button" class="btn-tool btn-primary" @click="planAndRunTaskOrchestration()" :disabled="taskOrchestration.running || taskOrchestration.planning || !taskOrchestration.target.trim()">
+                                                {{ (taskOrchestration.running || taskOrchestration.planning) ? t('orchestration.actions.preparing') : (taskOrchestration.runMode === 'dry-run' ? t('orchestration.actions.generatePlan') : t('orchestration.actions.planAndRun')) }}
+                                            </button>
+                                            <button type="button" class="btn-tool" @click="queueTaskOrchestrationAndStart()" :disabled="taskOrchestration.queueAdding || taskOrchestration.queueStarting || taskOrchestration.planning || !taskOrchestration.target.trim()">
+                                                {{ (taskOrchestration.queueAdding || taskOrchestration.queueStarting) ? t('orchestration.actions.processing') : t('orchestration.actions.queueAndStart') }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="task-action-caption">{{ t('orchestration.quick.caption') }}</div>
+                                </div>
+
+                                <div class="task-template-block task-quick-template-block">
+                                    <div class="task-template-label">{{ t('orchestration.templates.title') }}</div>
+                                    <div class="task-quick-template-grid">
+                                        <button type="button" class="task-quick-template-card" @click="taskOrchestration.target = t('orchestration.templates.reviewFix.target'); taskOrchestration.selectedEngine = 'openai-chat'; taskOrchestration.workflowIdsText = ''; taskOrchestration.notes = t('orchestration.templates.reviewFix.notes'); taskOrchestration.followUpsText = t('orchestration.templates.reviewFix.followUps')">
+                                            <strong>{{ t('orchestration.templates.reviewFix.label') }}</strong>
+                                            <span>{{ t('orchestration.quick.templates.reviewFix.meta') }}</span>
+                                        </button>
+                                        <button type="button" class="task-quick-template-card" @click="taskOrchestration.target = t('orchestration.templates.planOnly.target'); taskOrchestration.selectedEngine = 'openai-chat'; taskOrchestration.workflowIdsText = ''; taskOrchestration.notes = t('orchestration.templates.planOnly.notes'); taskOrchestration.followUpsText = ''">
+                                            <strong>{{ t('orchestration.templates.planOnly.label') }}</strong>
+                                            <span>{{ t('orchestration.quick.templates.planOnly.meta') }}</span>
+                                        </button>
+                                        <button type="button" class="task-quick-template-card" @click="taskOrchestration.target = t('orchestration.templates.workflowBatch.target'); taskOrchestration.selectedEngine = 'workflow'; taskOrchestration.workflowIdsText = t('orchestration.templates.workflowBatch.workflowIds'); taskOrchestration.notes = t('orchestration.templates.workflowBatch.notes'); taskOrchestration.followUpsText = ''">
+                                            <strong>{{ t('orchestration.templates.workflowBatch.label') }}</strong>
+                                            <span>{{ t('orchestration.quick.templates.workflowBatch.meta') }}</span>
+                                        </button>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="task-flow-section task-flow-section-compact">
-                                <div class="task-flow-head">
-                                    <div class="task-flow-step">2</div>
-                                    <div>
-                                        <div class="task-flow-title">{{ t('orchestration.step2.title') }}</div>
-                                        <div class="task-flow-copy">{{ t('orchestration.step2.subtitle') }}</div>
-                                    </div>
-                                </div>
-
-                                <div class="selector-grid task-composer-grid task-composer-grid-compact task-composer-grid-inline">
-                                    <label class="selector-field">
-                                        <span class="selector-label">{{ t('orchestration.fields.engine') }}</span>
-                                        <select v-model="taskOrchestration.selectedEngine" class="provider-fast-switch-select" disabled>
-                                            <option value="openai-chat">{{ t('orchestration.engine.openaiChat') }}</option>
-                                            <option value="workflow">{{ t('orchestration.engine.workflow') }}</option>
-                                        </select>
-                                    </label>
-                                    <label class="selector-field">
-                                        <span class="selector-label">{{ t('orchestration.fields.runMode') }}</span>
-                                        <select v-model="taskOrchestration.runMode" class="provider-fast-switch-select" disabled>
-                                            <option value="write">{{ t('orchestration.runMode.write') }}</option>
-                                            <option value="read">{{ t('orchestration.runMode.readOnly') }}</option>
-                                            <option value="dry-run">{{ t('orchestration.runMode.dryRun') }}</option>
-                                        </select>
-                                    </label>
-                                </div>
-
-                                <details class="task-advanced-panel">
+                                <details class="task-advanced-panel task-quick-advanced">
                                     <summary class="task-advanced-summary">{{ t('orchestration.advanced.title') }}</summary>
                                     <div class="selector-grid task-composer-grid task-composer-grid-secondary">
                                         <label class="selector-field task-field-wide">
                                             <span class="selector-label">{{ t('orchestration.fields.title') }}</span>
                                             <input v-model="taskOrchestration.title" class="model-input" type="text" :placeholder="t('orchestration.fields.title.placeholder')">
+                                        </label>
+                                        <label class="selector-field">
+                                            <span class="selector-label">{{ t('orchestration.fields.engine') }}</span>
+                                            <select v-model="taskOrchestration.selectedEngine" class="provider-fast-switch-select" disabled>
+                                                <option value="openai-chat">{{ t('orchestration.engine.openaiChat') }}</option>
+                                                <option value="workflow">{{ t('orchestration.engine.workflow') }}</option>
+                                            </select>
+                                        </label>
+                                        <label class="selector-field">
+                                            <span class="selector-label">{{ t('orchestration.fields.runMode') }}</span>
+                                            <select v-model="taskOrchestration.runMode" class="provider-fast-switch-select" disabled>
+                                                <option value="write">{{ t('orchestration.runMode.write') }}</option>
+                                                <option value="read">{{ t('orchestration.runMode.readOnly') }}</option>
+                                                <option value="dry-run">{{ t('orchestration.runMode.dryRun') }}</option>
+                                            </select>
                                         </label>
                                         <label class="selector-field task-field-wide">
                                             <span class="selector-label">{{ t('orchestration.fields.notes') }}</span>
@@ -149,29 +156,25 @@
                                 </details>
                             </div>
 
-                            <div class="task-flow-section task-flow-section-actions task-flow-section-compact">
-                                <div class="task-flow-head">
-                                    <div class="task-flow-step">3</div>
+                            <aside class="task-quick-side-card">
+                                <div class="task-readiness-head">
                                     <div>
-                                        <div class="task-flow-title">{{ t('orchestration.step3.title') }}</div>
-                                        <div class="task-flow-copy">{{ t('orchestration.step3.subtitle') }}</div>
+                                        <div class="task-readiness-title">{{ t('orchestration.quick.checklist.title') }}</div>
+                                        <div class="task-readiness-copy">{{ t('orchestration.quick.checklist.subtitle') }}</div>
                                     </div>
                                 </div>
-                                <div class="task-action-row task-action-row-prominent">
-                                    <button type="button" class="btn-tool task-action-preview" @click="previewTaskPlan()" :disabled="taskOrchestration.planning || taskOrchestration.running || !taskOrchestration.target.trim()">
-                                        {{ taskOrchestration.planning ? t('orchestration.actions.planning') : t('orchestration.actions.previewOnly') }}
-                                    </button>
-                                    <div class="task-action-row-right task-action-row-right-prominent">
-                                        <button type="button" class="btn-tool btn-primary" @click="planAndRunTaskOrchestration()" :disabled="taskOrchestration.running || taskOrchestration.planning || !taskOrchestration.target.trim()">
-                                            {{ (taskOrchestration.running || taskOrchestration.planning) ? t('orchestration.actions.preparing') : (taskOrchestration.runMode === 'dry-run' ? t('orchestration.actions.generatePlan') : t('orchestration.actions.planAndRun')) }}
-                                        </button>
-                                        <button type="button" class="btn-tool" @click="queueTaskOrchestrationAndStart()" :disabled="taskOrchestration.queueAdding || taskOrchestration.queueStarting || taskOrchestration.planning || !taskOrchestration.target.trim()">
-                                            {{ (taskOrchestration.queueAdding || taskOrchestration.queueStarting) ? t('orchestration.actions.processing') : t('orchestration.actions.queueAndStart') }}
-                                        </button>
+                                <div class="task-readiness-grid task-quick-checklist">
+                                    <div v-for="item in taskOrchestrationDraftChecklist" :key="item.key" :class="['task-readiness-item', { done: item.done }]">
+                                        <strong>{{ item.label }}</strong>
+                                        <span>{{ item.detail }}</span>
                                     </div>
                                 </div>
-                                <div class="task-action-caption">{{ t('orchestration.actions.caption') }}</div>
-                            </div>
+                                <div class="task-quick-status-card">
+                                    <div class="task-plan-summary-label">{{ t('orchestration.quick.status.title') }}</div>
+                                    <strong>{{ taskOrchestrationDraftReadiness.title }}</strong>
+                                    <span>{{ taskOrchestrationDraftReadiness.summary }}</span>
+                                </div>
+                            </aside>
                         </section>
                     </div>
 
