@@ -504,9 +504,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (pathname === '/web-ui' || pathname === '/web-ui/' || pathname === '/web-ui/index.html') {
                     const url = new URL(window.location.href);
                     url.pathname = '/';
-                    // 移除查询参数和 hash，保持 URL 纯净
-                    url.search = '';
-                    url.hash = '';
+                    // Preserve startup query/hash flags while normalizing the legacy web-ui path.
+                    // Feature gates such as ?taskOrchestration=1 are consumed below after redirect.
                     window.location.replace(url.toString());
                     return;
                 }
