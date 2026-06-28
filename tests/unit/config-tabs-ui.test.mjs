@@ -96,6 +96,12 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /class="[^"]*task-layout-grid task-layout-grid-primary[^"]*"/);
     assert.match(orchestrationPanel, /class="[^"]*task-quick-card[^"]*"/);
     assert.match(orchestrationPanel, /class="task-chat-thread" role="log" :aria-label="t\('orchestration\.chat\.thread\.aria'\)"/);
+    assert.match(orchestrationPanel, /class="task-thread-composer"/);
+    assert.match(orchestrationPanel, /class="[^\"]*task-thread-message-card[^\"]*task-thread-plan-card[^\"]*"/);
+    assert.match(orchestrationPanel, /class="[^\"]*task-thread-message-card[^\"]*task-thread-workbench-card[^\"]*"/);
+    assert.match(orchestrationPanel, /class="task-thread-card-label">AI · \{\{ t\('orchestration\.plan\.title'\) \}\}/);
+    assert.match(orchestrationPanel, /class="task-chat-bubble-row is-user task-thread-plan-request"/);
+    assert.match(orchestrationPanel, /You · latest request/);
     assert.match(orchestrationPanel, /v-for="message in taskOrchestrationConversationMessages"/);
     assert.match(orchestrationPanel, /message\.role === 'user' \? 'is-user' : 'is-assistant'/);
     assert.match(orchestrationPanel, /class="[^"]*task-chat-composer[^"]*"/);
@@ -150,8 +156,10 @@ test('config template keeps expected config tabs in top and side navigation', ()
         assert.match(styles, /#panel-orchestration\s*\{[\s\S]*--task-orchestration-main-width:\s*1200px;[\s\S]*--task-orchestration-context-width:\s*260px;/);
         assert.match(styles, /#panel-orchestration \.task-hero-card\s*\{[\s\S]*max-width:\s*var\(--task-orchestration-main-width\);/);
         assert.match(styles, /#panel-orchestration \.task-layout-grid-primary,[\s\S]*#panel-orchestration \.task-layout-grid-secondary\s*\{[\s\S]*max-width:\s*var\(--task-orchestration-main-width\);/);
-        assert.match(styles, /#panel-orchestration \.task-quick-card\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) var\(--task-orchestration-context-width\);/);
-        assert.match(styles, /@media \(max-width:\s*760px\)\s*\{[\s\S]*#panel-orchestration \.task-quick-side-card\s*\{[\s\S]*display:\s*none;/);
+        assert.match(styles, /#panel-orchestration \.task-quick-card\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\);/);
+        assert.match(styles, /#panel-orchestration \.task-thread-composer\s*\{[\s\S]*position:\s*relative;[\s\S]*bottom:\s*auto;/);
+        assert.match(styles, /#panel-orchestration \.task-thread-message-card\s*\{[\s\S]*width:\s*min\(100%, 720px\);/);
+        assert.match(styles, /@media \(max-width:\s*760px\)\s*\{[\s\S]*#panel-orchestration \.task-quick-side-card,[\s\S]*display:\s*none;/);
         assert.doesNotMatch(styles, /\.container:has\(#panel-orchestration\[data-active="true"\]\)\s*\{[\s\S]*background:\s*#F6F8FB;/);
         assert.doesNotMatch(styles, /body:has\(#panel-orchestration\[data-active="true"\]\)\s*\{[\s\S]*background:\s*#F6F8FB;/);
         assert.doesNotMatch(styles, /body:has\(#panel-orchestration\[data-active="true"\]\)::before\s*\{[\s\S]*background:\s*none;/);

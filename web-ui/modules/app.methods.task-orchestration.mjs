@@ -45,6 +45,26 @@ function normalizeLines(text) {
         .filter(Boolean);
 }
 
+function scrollTaskOrchestrationThreadToEnd() {
+    if (typeof document === 'undefined') {
+        return;
+    }
+    setTimeout(() => {
+        const thread = document.querySelector('#panel-orchestration .task-chat-thread');
+        if (!thread) {
+            return;
+        }
+        const latestCard = thread.querySelector('.task-thread-plan-request:last-of-type')
+            || thread.querySelector('.task-thread-message-card:last-of-type')
+            || thread.lastElementChild;
+        if (latestCard && Number.isFinite(latestCard.offsetTop)) {
+            thread.scrollTop = Math.max(0, latestCard.offsetTop - thread.offsetTop - 12);
+            return;
+        }
+        thread.scrollTop = thread.scrollHeight;
+    }, 0);
+}
+
 function normalizePositiveInteger(value, fallback, min = 1, max = 8) {
     const numeric = Number.parseInt(String(value), 10);
     if (!Number.isFinite(numeric)) {
@@ -282,6 +302,7 @@ export function createTaskOrchestrationMethods(options = {}) {
             state.planIssues = [];
             state.planWarnings = [];
             state.lastError = '';
+            scrollTaskOrchestrationThreadToEnd();
             return true;
         },
 
@@ -300,6 +321,7 @@ export function createTaskOrchestrationMethods(options = {}) {
                 state.planIssues = Array.isArray(res && res.issues) ? res.issues : [];
                 state.planWarnings = Array.isArray(res && res.warnings) ? res.warnings : [];
                 state.planFingerprint = state.plan ? this.buildTaskOrchestrationFingerprint() : '';
+                scrollTaskOrchestrationThreadToEnd();
                 if (res && res.error) {
                     if (!options.silent) {
                         this.showMessage(res.error, 'error');

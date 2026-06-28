@@ -1307,58 +1307,193 @@
     min-width: 0;
 }
 
-#panel-orchestration .task-chat-panel {
-    margin: 0;
-    padding: 14px;
-    border: 1px solid var(--color-border-soft);
-    border-radius: 18px;
-    background: var(--color-surface-raised, var(--color-surface));
+#panel-orchestration {
+    min-height: calc(100vh - 96px);
+}
+
+#panel-orchestration .task-hero-card {
+    padding: 10px 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.62);
     box-shadow: none;
 }
 
-#panel-orchestration .task-chat-thread {
-    max-height: 280px;
-    margin-bottom: 10px;
+#panel-orchestration .task-hero-main {
+    align-items: center;
+    gap: 12px;
+}
+
+#panel-orchestration .task-hero-card .selector-title {
+    font-size: 1rem;
+    line-height: 1.25;
+}
+
+#panel-orchestration .task-hero-card .task-hero-copy,
+#panel-orchestration .task-hero-card .task-hero-kicker {
+    display: none;
+}
+
+#panel-orchestration .task-quick-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--task-orchestration-context-width);
+    gap: 14px;
+    align-items: start;
     padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+#panel-orchestration .task-quick-main {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+#panel-orchestration .task-chat-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: min(780px, calc(100vh - 170px));
+    min-height: 620px;
+    margin: 0;
+    padding: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(199, 116, 98, 0.16);
+    border-radius: 22px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 252, 248, 0.7)),
+        rgba(255, 255, 255, 0.6);
+    box-shadow: 0 18px 52px rgba(86, 58, 39, 0.08);
+}
+
+#panel-orchestration .task-chat-thread {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    margin: 0;
+    padding: 10px 8px 16px;
+    gap: 12px;
+    overflow-y: auto;
     border: 0;
     background: transparent;
 }
 
-#panel-orchestration .task-chat-composer .task-textarea-goal {
-    min-height: 116px;
+#panel-orchestration .task-thread-message-card {
+    position: relative;
+    align-self: flex-start;
+    width: min(100%, 760px);
+    margin: 2px 0 4px 44px;
+    padding: 14px;
+    border: 1px solid rgba(199, 116, 98, 0.18);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.84);
+    box-shadow: 0 12px 30px rgba(86, 58, 39, 0.09);
+}
+
+#panel-orchestration .task-thread-message-card::before {
+    content: 'AI';
+    position: absolute;
+    left: -40px;
+    top: 12px;
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--color-brand-light);
+    color: var(--color-brand-dark);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+#panel-orchestration .task-thread-message-card .selector-header {
+    margin-bottom: 10px;
+}
+
+#panel-orchestration .task-thread-message-card .selector-title {
+    font-size: 0.98rem;
+}
+
+#panel-orchestration .task-thread-message-card .skills-panel-note {
+    font-size: 0.82rem;
+}
+
+#panel-orchestration .task-thread-composer {
+    flex: 0 0 auto;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    width: min(100%, 800px);
+    align-self: center;
+    margin-top: 0;
+    padding: 10px;
+    border: 1px solid rgba(199, 116, 98, 0.18);
+    border-radius: 18px 18px 20px 20px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 -10px 34px rgba(86, 58, 39, 0.13);
+}
+
+#panel-orchestration .task-thread-composer .selector-label {
+    font-size: 0.78rem;
+}
+
+#panel-orchestration .task-thread-composer .task-textarea-goal {
+    min-height: 76px;
     resize: vertical;
     border: 0;
-    border-radius: 0;
-    background: transparent;
-    padding: 0;
+    border-radius: 12px;
+    background: rgba(255, 248, 241, 0.48);
+    font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
     font-size: 15px;
     line-height: 1.55;
     box-shadow: none;
 }
 
-#panel-orchestration .task-chat-composer .task-textarea-goal:focus {
+#panel-orchestration .task-thread-composer .task-textarea-goal:focus {
     box-shadow: none;
 }
 
-#panel-orchestration .task-chat-send-row,
-#panel-orchestration .task-chat-context-row,
-#panel-orchestration .task-draft-inline,
-#panel-orchestration .task-action-row-prominent {
-    margin-top: 10px;
+#panel-orchestration .task-thread-composer .task-chat-send-row,
+#panel-orchestration .task-thread-composer .task-chat-context-row,
+#panel-orchestration .task-thread-composer .task-draft-inline,
+#panel-orchestration .task-thread-composer .task-action-row-prominent {
+    margin-top: 8px;
 }
 
-#panel-orchestration .task-chat-context-row,
-#panel-orchestration .task-config-strip {
-    opacity: 0.82;
+#panel-orchestration .task-thread-composer .task-draft-inline {
+    padding: 8px 10px;
+    border-radius: 14px;
+    background: rgba(255, 248, 241, 0.58);
 }
 
-#panel-orchestration .task-action-row-prominent {
-    padding-top: 10px;
-    border-top: 1px solid var(--color-border-soft);
+#panel-orchestration .task-thread-composer .task-action-row-prominent {
+    padding-top: 0;
+    border-top: 1px solid rgba(199, 116, 98, 0.12);
 }
 
-#panel-orchestration .task-action-row-prominent .task-action-row-right {
+#panel-orchestration .task-thread-composer .task-action-row-right {
     margin-left: auto;
+}
+
+#panel-orchestration .task-thread-composer .task-field-hint {
+    font-size: 0.75rem;
+}
+
+#panel-orchestration .task-plan-summary-strip,
+#panel-orchestration .task-wave-list,
+#panel-orchestration .task-node-list,
+#panel-orchestration .task-runtime-list {
+    gap: 8px;
+}
+
+#panel-orchestration .task-quick-advanced {
+    margin-top: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    background: rgba(255, 255, 255, 0.46);
+    box-shadow: none;
 }
 
 #panel-orchestration .task-codex-queue-action {
@@ -1366,43 +1501,21 @@
     margin: 0 0 12px;
 }
 
-#panel-orchestration .task-quick-advanced {
-    margin-top: 8px;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-}
-
-#panel-orchestration .task-plan-card,
-#panel-orchestration .task-workbench-card {
-    border-radius: 20px;
-    box-shadow: none;
-}
-
-@media (max-width: 760px) {
-    #panel-orchestration .task-hero-main,
-    #panel-orchestration .task-action-row-prominent,
-    #panel-orchestration .task-action-row-prominent .task-action-row-right {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    #panel-orchestration .task-action-row-prominent .btn-tool,
-    #panel-orchestration .task-action-row-prominent .task-action-row-right {
-        width: 100%;
-    }
-}
-
-#panel-orchestration {
-    min-height: calc(100vh - 96px);
-}
-
 #panel-orchestration .task-quick-side-card {
     position: sticky;
     top: 14px;
     padding: 12px;
     border-radius: 18px;
-    background: rgba(255, 255, 255, 0.58);
+    background: rgba(255, 255, 255, 0.42);
+    opacity: 0.82;
+    box-shadow: none;
+}
+
+#panel-orchestration .task-provider-status-card,
+#panel-orchestration .task-quick-status-card,
+#panel-orchestration .task-quick-side-card .task-readiness-item {
+    background: rgba(255, 255, 255, 0.48);
+    border-color: rgba(148, 163, 184, 0.16);
     box-shadow: none;
 }
 
@@ -1411,7 +1524,6 @@
     margin-bottom: 10px;
     padding: 10px;
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.72);
 }
 
 #panel-orchestration .task-provider-status-grid {
@@ -1422,7 +1534,7 @@
 #panel-orchestration .task-provider-status-row {
     padding: 7px 8px;
     border-radius: 10px;
-    background: rgba(248, 250, 252, 0.78);
+    background: rgba(248, 250, 252, 0.62);
 }
 
 #panel-orchestration .task-provider-status-card .task-readiness-copy,
@@ -1450,6 +1562,15 @@
         grid-template-columns: minmax(0, 1fr);
     }
 
+    #panel-orchestration .task-thread-message-card {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    #panel-orchestration .task-thread-message-card::before {
+        display: none;
+    }
+
     #panel-orchestration .task-quick-side-card {
         position: static;
         display: grid;
@@ -1464,7 +1585,423 @@
 }
 
 @media (max-width: 760px) {
-    #panel-orchestration .task-quick-side-card {
+    #panel-orchestration .task-hero-main,
+    #panel-orchestration .task-action-row-prominent,
+    #panel-orchestration .task-action-row-prominent .task-action-row-right {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    #panel-orchestration .task-action-row-prominent .btn-tool,
+    #panel-orchestration .task-action-row-prominent .task-action-row-right {
+        width: 100%;
+    }
+
+    #panel-orchestration .task-quick-side-card,
+    #panel-orchestration .task-template-block,
+    #panel-orchestration .task-quick-copy,
+    #panel-orchestration .task-stage-card {
         display: none;
+    }
+
+    #panel-orchestration .task-chat-panel {
+        height: calc(100vh - 126px);
+        min-height: 620px;
+        padding: 10px;
+        border-radius: 18px;
+    }
+
+    #panel-orchestration .task-chat-thread {
+        padding: 10px 6px 14px;
+    }
+
+    #panel-orchestration .task-thread-message-card {
+        padding: 12px;
+        border-radius: 18px;
+    }
+
+    #panel-orchestration .task-thread-composer {
+        width: 100%;
+        padding: 8px;
+        border-radius: 16px;
+        box-shadow: 0 -8px 26px rgba(86, 58, 39, 0.12);
+    }
+
+    #panel-orchestration .task-thread-composer .task-textarea-goal {
+        min-height: 56px;
+        max-height: 120px;
+    }
+
+    #panel-orchestration .task-thread-composer .task-chat-context-row,
+    #panel-orchestration .task-thread-composer .task-draft-inline,
+    #panel-orchestration .task-thread-composer .task-action-caption,
+    #panel-orchestration .task-thread-composer .task-field-hint {
+        display: none;
+    }
+
+    #panel-orchestration .task-thread-composer .task-chat-send-row,
+    #panel-orchestration .task-thread-composer .task-action-row-prominent {
+        margin-top: 6px;
+    }
+
+    #panel-orchestration .task-thread-composer .btn-tool {
+        min-height: 34px;
+        padding: 0 12px;
+        font-size: 0.78rem;
+    }
+}
+
+/* Codex-style final pass: keep the transcript primary and collapse dashboard chrome. */
+#panel-orchestration .task-layout-grid-primary,
+#panel-orchestration .task-layout-grid-secondary {
+    max-width: 980px;
+}
+
+#panel-orchestration .task-hero-card {
+    max-width: 980px;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    border-color: rgba(148, 163, 184, 0.12);
+    background: rgba(255, 255, 255, 0.38);
+}
+
+#panel-orchestration .task-hero-actions .btn-tool {
+    min-height: 30px;
+    padding: 0 10px;
+    font-size: 0.76rem;
+}
+
+#panel-orchestration .task-quick-card {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 980px;
+}
+
+#panel-orchestration .task-quick-side-card {
+    display: none;
+}
+
+#panel-orchestration .task-chat-panel {
+    height: min(790px, calc(100vh - 136px));
+    min-height: 660px;
+}
+
+#panel-orchestration .task-thread-composer {
+    position: relative;
+    bottom: auto;
+    width: min(100%, 760px);
+    padding: 8px;
+    border-radius: 18px;
+    box-shadow: 0 -4px 18px rgba(86, 58, 39, 0.08);
+}
+
+#panel-orchestration .task-thread-composer .selector-label,
+#panel-orchestration .task-thread-composer .task-chat-context-row,
+#panel-orchestration .task-thread-composer .task-draft-inline,
+#panel-orchestration .task-thread-composer .task-action-caption,
+#panel-orchestration .task-thread-composer .task-field-hint {
+    display: none;
+}
+
+#panel-orchestration .task-thread-composer .task-textarea-goal {
+    min-height: 64px;
+    border-radius: 14px;
+}
+
+#panel-orchestration .task-thread-composer .task-chat-send-row,
+#panel-orchestration .task-thread-composer .task-action-row-prominent {
+    margin-top: 6px;
+}
+
+#panel-orchestration .task-thread-composer .task-action-row-prominent {
+    border-top: 0;
+}
+
+#panel-orchestration .task-thread-message-card {
+    width: min(100%, 720px);
+}
+
+@media (max-width: 760px) {
+    #panel-orchestration .task-layout-grid-primary,
+    #panel-orchestration .task-layout-grid-secondary,
+    #panel-orchestration .task-hero-card,
+    #panel-orchestration .task-quick-card {
+        max-width: 100%;
+    }
+
+    #panel-orchestration .task-hero-card {
+        display: none;
+    }
+
+    #panel-orchestration .task-chat-panel {
+        height: calc(100vh - 82px);
+        min-height: 620px;
+    }
+
+    #panel-orchestration .task-thread-message-card {
+        width: 100%;
+    }
+}
+
+/* Transcript-first hardening: remove console chrome from the default path. */
+#panel-orchestration .task-hero-card,
+#panel-orchestration .task-quick-advanced {
+    display: none;
+}
+
+#panel-orchestration .task-chat-panel {
+    height: min(820px, calc(100vh - 72px));
+    min-height: 680px;
+}
+
+#panel-orchestration .task-chat-thread {
+    padding-bottom: 28px;
+}
+
+#panel-orchestration .task-plan-summary-item,
+#panel-orchestration .task-wave-card,
+#panel-orchestration .task-node-card {
+    background: rgba(255, 255, 255, 0.46);
+    border-color: rgba(148, 163, 184, 0.14);
+    box-shadow: none;
+}
+
+@media (max-width: 760px) {
+    #panel-orchestration .task-chat-panel {
+        height: calc(100vh - 58px);
+        min-height: 640px;
+    }
+
+    #panel-orchestration .task-chat-thread {
+        padding-bottom: 32px;
+    }
+}
+
+#panel-orchestration .task-thread-card-label {
+    margin-bottom: 8px;
+    color: var(--color-text-secondary);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+#panel-orchestration .task-thread-message-card {
+    border-radius: 18px 18px 18px 6px;
+}
+
+#panel-orchestration .task-thread-message-card .selector-header {
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+#panel-orchestration .task-thread-message-card .task-plan-summary-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+#panel-orchestration .task-thread-message-card .task-plan-summary-item {
+    min-width: 104px;
+    padding: 8px 10px;
+    border-radius: 12px;
+}
+
+#panel-orchestration .task-thread-message-card .task-wave-card,
+#panel-orchestration .task-thread-message-card .task-node-card,
+#panel-orchestration .task-thread-message-card .task-runtime-item {
+    padding: 9px 10px;
+    border-radius: 12px;
+    background: rgba(248, 250, 252, 0.54);
+}
+
+#panel-orchestration .task-thread-message-card .task-node-title,
+#panel-orchestration .task-thread-message-card .task-wave-title,
+#panel-orchestration .task-thread-message-card .task-runtime-item-title {
+    font-size: 0.86rem;
+}
+
+#panel-orchestration .task-thread-message-card .task-node-meta,
+#panel-orchestration .task-thread-message-card .task-node-deps,
+#panel-orchestration .task-thread-message-card .task-wave-nodes,
+#panel-orchestration .task-thread-message-card .task-runtime-item-meta {
+    font-size: 0.74rem;
+    line-height: 1.45;
+}
+
+@media (max-width: 760px) {
+    #panel-orchestration .task-thread-message-card .task-plan-summary-item {
+        min-width: calc(50% - 4px);
+    }
+}
+
+#panel-orchestration .task-thread-plan-request {
+    margin-top: 4px;
+}
+
+#panel-orchestration .task-thread-plan-request .task-chat-bubble {
+    max-width: min(78%, 640px);
+    border-radius: 18px 18px 6px 18px;
+}
+
+@media (max-width: 760px) {
+    #panel-orchestration .task-thread-plan-request .task-chat-bubble {
+        max-width: 92%;
+    }
+}
+
+/* Composer must reserve layout space, never overlay transcript content. */
+#panel-orchestration .task-thread-composer {
+    position: relative;
+    bottom: auto;
+    z-index: 0;
+    box-shadow: 0 10px 32px rgba(86, 58, 39, 0.08);
+}
+
+#panel-orchestration .task-chat-thread {
+    scroll-padding-bottom: 32px;
+    padding-bottom: 36px;
+}
+
+@media (max-width: 760px) {
+    #panel-orchestration .task-chat-thread {
+        scroll-padding-bottom: 36px;
+        padding-bottom: 40px;
+    }
+}
+
+/* In the chat transcript, plan details are attachments, not the whole conversation. */
+#panel-orchestration .task-thread-plan-card .task-plan-summary-strip {
+    margin-top: 6px;
+}
+
+#panel-orchestration .task-thread-plan-card .task-wave-list,
+#panel-orchestration .task-thread-plan-card .task-node-list {
+    gap: 5px;
+    margin-top: 8px;
+}
+
+#panel-orchestration .task-thread-plan-card .task-wave-card,
+#panel-orchestration .task-thread-plan-card .task-node-card {
+    padding: 6px 8px;
+    border-radius: 10px;
+}
+
+#panel-orchestration .task-thread-plan-card .task-wave-nodes,
+#panel-orchestration .task-thread-plan-card .task-node-meta,
+#panel-orchestration .task-thread-plan-card .task-node-deps {
+    display: none;
+}
+
+#panel-orchestration .task-thread-plan-card .task-node-head {
+    align-items: center;
+}
+
+#panel-orchestration .task-thread-plan-card .pill {
+    padding: 3px 7px;
+    font-size: 10px;
+}
+
+#panel-orchestration .task-thread-plan-card .task-node-title,
+#panel-orchestration .task-thread-plan-card .task-wave-title {
+    font-size: 0.82rem;
+    font-weight: 650;
+}
+
+#panel-orchestration .task-thread-plan-card .task-plan-summary-item {
+    min-width: 88px;
+    padding: 6px 8px;
+}
+
+#panel-orchestration .task-thread-plan-card .task-plan-summary-label {
+    font-size: 9px;
+}
+
+@media (max-width: 760px) {
+    #panel-orchestration .task-thread-plan-card .task-plan-summary-item {
+        min-width: calc(50% - 4px);
+    }
+}
+
+/* Codex-like composer: compact on desktop too, so it cannot eat the transcript. */
+#panel-orchestration .task-thread-composer .selector-label,
+#panel-orchestration .task-thread-composer .task-chat-context-row,
+#panel-orchestration .task-thread-composer .task-draft-inline,
+#panel-orchestration .task-thread-composer .task-action-caption,
+#panel-orchestration .task-thread-composer .task-field-hint {
+    display: none;
+}
+
+#panel-orchestration .task-thread-composer {
+    display: grid;
+    gap: 8px;
+    padding: 8px 10px;
+}
+
+#panel-orchestration .task-thread-composer .task-textarea-goal {
+    min-height: 54px;
+    max-height: 96px;
+    padding: 8px 10px;
+    font-size: 14px;
+    line-height: 1.35;
+}
+
+#panel-orchestration .task-thread-composer .task-chat-send-row,
+#panel-orchestration .task-thread-composer .task-action-row-prominent {
+    margin-top: 0;
+}
+
+#panel-orchestration .task-thread-composer .task-chat-send-row {
+    display: flex;
+    justify-content: flex-end;
+}
+
+#panel-orchestration .task-thread-composer .task-action-row-prominent {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 0;
+    border-top: 0;
+}
+
+#panel-orchestration .task-thread-composer .btn-tool {
+    padding: 6px 10px;
+}
+
+#panel-orchestration .task-thread-composer {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    align-items: stretch;
+}
+
+#panel-orchestration .task-thread-composer .task-chat-composer {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    display: block;
+}
+
+#panel-orchestration .task-thread-composer .task-chat-send-row {
+    grid-column: 2;
+    grid-row: 1;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+#panel-orchestration .task-thread-composer .task-action-row-prominent {
+    grid-column: 2;
+    grid-row: 2;
+    justify-content: flex-end;
+}
+
+@media (max-width: 760px) {
+    #panel-orchestration .task-thread-composer {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+    }
+
+    #panel-orchestration .task-thread-composer .task-chat-composer,
+    #panel-orchestration .task-thread-composer .task-chat-send-row,
+    #panel-orchestration .task-thread-composer .task-action-row-prominent {
+        grid-column: 1;
+        grid-row: auto;
     }
 }
