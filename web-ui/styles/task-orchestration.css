@@ -1895,7 +1895,7 @@
     right: 50%;
     bottom: 16px;
     z-index: 20;
-    width: min(740px, calc(100vw - 48px));
+    width: min(872px, calc(100vw - 48px));
     transform: translateX(50%);
     margin-top: 0;
     padding: 6px 8px;
@@ -2022,9 +2022,9 @@
     #panel-orchestration .task-thread-composer {
         grid-template-columns: 1fr;
         grid-template-rows: auto auto auto;
-        right: 12px;
+        right: 10px;
         bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
-        left: 12px;
+        left: 10px;
         width: auto;
         transform: none;
         padding: 7px;
