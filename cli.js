@@ -13865,6 +13865,10 @@ function printTaskHelp() {
     console.log('  --dry-run               仅计划/预演，不执行写入');
     console.log('  --plan-only             仅输出计划，不执行');
     console.log('  --engine <openai-chat|workflow>  选择编排引擎');
+    console.log('  --cwd <路径>           指定任务工作区路径');
+    console.log('  --thread-id <ID>       指定任务线程 ID');
+    console.log('  --conversation-id <ID> 指定任务线程 ID（兼容别名）');
+    console.log('  --session-id <ID>      指定任务线程 ID（兼容别名）');
     console.log('  --concurrency <N>       并发度');
     console.log('  --auto-fix-rounds <N>   自动修复回合数');
     console.log('  --limit <N>             runs/queue list 数量');
@@ -15691,6 +15695,7 @@ function coerceTaskPlanPayload(params = {}) {
                 }
             }
         }
+        plan.cwd = typeof plan.cwd === 'string' && plan.cwd.trim() ? plan.cwd.trim() : process.cwd();
         plan.threadId = normalizeTaskThreadId(plan.threadId) || createTaskThreadId();
         plan.engine = normalizeTaskEngine(plan.engine);
         plan.workflowIds = normalizeTaskFollowUps(plan.workflowIds || []).map((id) => normalizeWorkflowId(id)).filter(Boolean);
@@ -16437,6 +16442,16 @@ function materializeOpenAiChatTaskArtifacts(text, options = {}) {
                 continue;
             }
             ensureDir(path.dirname(normalized.path));
+            try {
+                if (fs.lstatSync(normalized.path).isSymbolicLink()) {
+                    warnings.push(`artifact target is a symlink: ${normalized.relativePath}`);
+                    continue;
+                }
+            } catch (error) {
+                if (!error || error.code !== 'ENOENT') {
+                    throw error;
+                }
+            }
             fs.writeFileSync(normalized.path, fileContent, { encoding: 'utf-8', mode: 0o600 });
             files.push({ path: normalized.path, relativePath: normalized.relativePath, bytes: Buffer.byteLength(fileContent, 'utf-8') });
         } catch (error) {

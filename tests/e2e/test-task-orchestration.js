@@ -44,7 +44,9 @@ const server = http.createServer((req, res) => {
     if (req.method === 'POST' && requestPath === '/v1/chat/completions') {
       const model = parsedBody && parsedBody.model ? parsedBody.model : 'unknown-model';
       const requestText = JSON.stringify(parsedBody || {});
-      const content = requestText.includes('symlink-artifact-probe')
+      const content = requestText.includes('target-symlink-artifact-probe')
+        ? '输出文件：index.html\\n\`\`\`html\\n<!doctype html><html><body><h1>target symlink escape</h1></body></html>\\n\`\`\`'
+        : requestText.includes('symlink-artifact-probe')
         ? '输出文件：link/index.html\\n\`\`\`html\\n<!doctype html><html><body><h1>symlink escape</h1></body></html>\\n\`\`\`'
         : requestText.includes('index.html')
         ? '输出文件：index.html\\n\`\`\`html\\n<!doctype html><html><head><meta charset="utf-8"><title>2048 Probe</title></head><body><h1>2048</h1><div id="grid">2 4 8 16</div></body></html>\\n\`\`\`'
@@ -395,6 +397,36 @@ module.exports = async function testTaskOrchestration(ctx) {
         const openAiLogsPayload = parseJsonOutput(openAiLogsResult.stdout);
         assert(String(openAiLogsPayload.logs || '').includes('OpenAI Chat request provider=local-openai-chat'), 'OpenAI Chat logs should include provider request');
 
+        const rawPlanDefaultCwdPath = path.join(tmpHome, 'task-raw-plan-default-cwd.json');
+        const rawPlanDefaultCwd = path.join(tmpHome, 'task-raw-plan-default-cwd-workspace');
+        fs.mkdirSync(rawPlanDefaultCwd, { recursive: true });
+        fs.writeFileSync(rawPlanDefaultCwdPath, JSON.stringify({
+            id: 'task-raw-plan-default-cwd',
+            title: 'Raw plan default cwd',
+            target: 'Keep the implicit cwd stable',
+            engine: 'openai-chat',
+            nodes: [
+                {
+                    id: 'raw-default-cwd-node',
+                    title: 'Raw default cwd node',
+                    kind: 'openai-chat',
+                    prompt: 'No artifact write needed.',
+                    dependsOn: []
+                }
+            ]
+        }, null, 2), 'utf-8');
+        const rawPlanDefaultCwdResult = runSync(node, [
+            cliPath,
+            'task',
+            'plan',
+            '--plan',
+            `@${rawPlanDefaultCwdPath}`,
+            '--json'
+        ], { env, cwd: rawPlanDefaultCwd });
+        assert(rawPlanDefaultCwdResult.status === 0, `OpenAI Chat raw plan default cwd failed: ${rawPlanDefaultCwdResult.stderr || rawPlanDefaultCwdResult.stdout}`);
+        const rawPlanDefaultCwdPayload = parseJsonOutput(rawPlanDefaultCwdResult.stdout);
+        assert(rawPlanDefaultCwdPayload.plan && rawPlanDefaultCwdPayload.plan.cwd === rawPlanDefaultCwd, 'OpenAI Chat raw plans should default cwd to the invoking process cwd');
+
         const directPlanPath = path.join(tmpHome, 'task-direct-openai-plan.json');
         const directPlanCwd = path.join(tmpHome, 'task-direct-plan-workspace');
         fs.mkdirSync(directPlanCwd, { recursive: true });
@@ -448,7 +480,7 @@ module.exports = async function testTaskOrchestration(ctx) {
         const symlinkEscapeDir = path.join(tmpHome, 'task-symlink-escape-target');
         fs.mkdirSync(symlinkPlanCwd, { recursive: true });
         fs.mkdirSync(symlinkEscapeDir, { recursive: true });
-        fs.symlinkSync(symlinkEscapeDir, path.join(symlinkPlanCwd, 'link'), 'dir');
+        fs.symlinkSync(symlinkEscapeDir, path.join(symlinkPlanCwd, 'link'), process.platform === 'win32' ? 'junction' : 'dir');
         fs.writeFileSync(symlinkPlanPath, JSON.stringify({
             id: 'task-symlink-openai-plan',
             title: 'Symlink OpenAI Chat plan',
@@ -487,6 +519,53 @@ module.exports = async function testTaskOrchestration(ctx) {
         assert(symlinkMaterializedFiles.length === 0, 'OpenAI Chat symlink materialization should not report escaped files');
         const symlinkLogs = JSON.stringify(symlinkPlanRunPayload.run.nodes.flatMap(item => Array.isArray(item && item.logs) ? item.logs : []));
         assert(symlinkLogs.includes('artifact parent is a symlink'), 'OpenAI Chat symlink rejection should be visible in run logs');
+
+        if (process.platform !== 'win32') {
+            const targetSymlinkPlanPath = path.join(tmpHome, 'task-target-symlink-openai-plan.json');
+            const targetSymlinkCwd = path.join(tmpHome, 'task-target-symlink-workspace');
+            const targetSymlinkEscapeDir = path.join(tmpHome, 'task-target-symlink-escape-target');
+            fs.mkdirSync(targetSymlinkCwd, { recursive: true });
+            fs.mkdirSync(targetSymlinkEscapeDir, { recursive: true });
+            fs.symlinkSync(path.join(targetSymlinkEscapeDir, 'index.html'), path.join(targetSymlinkCwd, 'index.html'));
+            fs.writeFileSync(targetSymlinkPlanPath, JSON.stringify({
+                id: 'task-target-symlink-openai-plan',
+                title: 'Target symlink OpenAI Chat plan',
+                target: 'target-symlink-artifact-probe',
+                notes: 'The model will try to write index.html; this must be rejected because index.html is a symlink.',
+                cwd: targetSymlinkCwd,
+                threadId: 'thread-target-symlink-plan',
+                engine: 'openai-chat',
+                allowWrite: true,
+                dryRun: false,
+                concurrency: 1,
+                nodes: [
+                    {
+                        id: 'target-symlink-openai-node',
+                        title: 'Target symlink OpenAI node',
+                        kind: 'openai-chat',
+                        prompt: 'target-symlink-artifact-probe: return index.html in an html fenced block.',
+                        dependsOn: []
+                    }
+                ]
+            }, null, 2), 'utf-8');
+            const targetSymlinkRunResult = runSync(node, [
+                cliPath,
+                'task',
+                'run',
+                '--json',
+                '--allow-write',
+                '--plan',
+                `@${targetSymlinkPlanPath}`
+            ], { env });
+            assert(targetSymlinkRunResult.status === 0, `OpenAI Chat target symlink plan run failed: ${targetSymlinkRunResult.stderr || targetSymlinkRunResult.stdout}`);
+            const targetSymlinkPayload = parseJsonOutput(targetSymlinkRunResult.stdout);
+            assertOpenAiRunPayload(targetSymlinkPayload, 'OpenAI Chat target symlink plan run');
+            assert(!fs.existsSync(path.join(targetSymlinkEscapeDir, 'index.html')), 'OpenAI Chat materialization must not follow final target symlinks outside cwd');
+            const targetSymlinkFiles = targetSymlinkPayload.run.nodes.flatMap(item => item && item.output && Array.isArray(item.output.materializedFiles) ? item.output.materializedFiles : []);
+            assert(targetSymlinkFiles.length === 0, 'OpenAI Chat target symlink materialization should not report escaped files');
+            const targetSymlinkLogs = JSON.stringify(targetSymlinkPayload.run.nodes.flatMap(item => Array.isArray(item && item.logs) ? item.logs : []));
+            assert(targetSymlinkLogs.includes('artifact target is a symlink'), 'OpenAI Chat target symlink rejection should be visible in run logs');
+        }
 
         const openAiQueueAddResult = runSync(node, [
             cliPath,

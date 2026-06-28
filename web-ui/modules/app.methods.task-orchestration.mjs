@@ -110,6 +110,11 @@ export function createTaskOrchestrationMethods(options = {}) {
         buildTaskOrchestrationRequest() {
             const state = this.ensureTaskOrchestrationState();
             const flags = buildRunModeFlags(state.runMode);
+            const selectedEngine = normalizeTaskSelectedEngine(state.selectedEngine);
+            const workflowIds = selectedEngine === 'workflow' ? normalizeLines(state.workflowIdsText) : [];
+            if (selectedEngine !== 'workflow' && state.workflowIdsText) {
+                state.workflowIdsText = '';
+            }
             return {
                 title: String(state.title || '').trim(),
                 target: String(state.target || '').trim(),
@@ -117,8 +122,8 @@ export function createTaskOrchestrationMethods(options = {}) {
                 cwd: String(state.workspacePath || '').trim(),
                 threadId: String(state.threadId || '').trim(),
                 followUps: normalizeLines(state.followUpsText),
-                workflowIds: normalizeLines(state.workflowIdsText),
-                engine: normalizeTaskSelectedEngine(state.selectedEngine),
+                workflowIds,
+                engine: selectedEngine,
                 allowWrite: flags.allowWrite,
                 dryRun: flags.dryRun,
                 concurrency: normalizePositiveInteger(state.concurrency, 2, 1, 8),
@@ -439,12 +444,6 @@ export function createTaskOrchestrationMethods(options = {}) {
                     return res;
                 }
                 state.selectedRunDetail = res;
-                if (res && res.threadId) {
-                    state.threadId = res.threadId;
-                }
-                if (res && res.cwd && !state.workspacePath) {
-                    state.workspacePath = res.cwd;
-                }
                 state.selectedRunError = '';
                 this.syncTaskOrchestrationPolling();
                 return res;
@@ -533,11 +532,15 @@ export function createTaskOrchestrationMethods(options = {}) {
             if (!detail) {
                 return;
             }
+            const continuedEngine = normalizeTaskSelectedEngine(detail.engine || state.selectedEngine || 'openai-chat');
             state.threadId = String(detail.threadId || state.threadId || '').trim();
             state.workspacePath = String(detail.cwd || state.workspacePath || '').trim();
             state.title = String(detail.title || state.title || '').trim();
             state.target = String(detail.target || state.target || '').trim();
-            state.selectedEngine = String(detail.engine || state.selectedEngine || 'openai-chat').trim().toLowerCase() === 'workflow' ? 'workflow' : 'openai-chat';
+            state.selectedEngine = continuedEngine;
+            state.workflowIdsText = continuedEngine === 'workflow'
+                ? (Array.isArray(detail.plan && detail.plan.workflowIds) ? detail.plan.workflowIds.join('\n') : '')
+                : '';
             state.runMode = detail.dryRun ? 'dry-run' : (detail.allowWrite ? 'write' : 'read');
             state.notes = '';
             state.followUpsText = '';

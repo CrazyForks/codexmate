@@ -1262,6 +1262,32 @@ test('buildTaskOrchestrationRequest includes workspace path and thread id', () =
     assert.deepStrictEqual(req.followUps, ['Verify page']);
 });
 
+test('buildTaskOrchestrationRequest clears stale workflow ids outside workflow mode', () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const context = {
+        taskOrchestration: {
+            title: 'Continue normal run',
+            target: 'Add one more check',
+            notes: '',
+            workspacePath: '',
+            threadId: '',
+            followUpsText: '',
+            workflowIdsText: 'diagnose-config',
+            selectedEngine: 'openai-chat',
+            runMode: 'write',
+            concurrency: 2,
+            autoFixRounds: 1
+        },
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState
+    };
+
+    const req = methods.buildTaskOrchestrationRequest.call(context);
+
+    assert.strictEqual(req.engine, 'openai-chat');
+    assert.deepStrictEqual(req.workflowIds, []);
+    assert.strictEqual(context.taskOrchestration.workflowIdsText, '');
+});
+
 test('taskOrchestrationSelectedRunNodes prefers top-level detail nodes when present', () => {
     const computed = createMainTabsComputed();
     const context = {
@@ -1428,6 +1454,34 @@ test('selectTaskRun switches workbench to detail and keeps latest detail respons
     assert.strictEqual(context.taskOrchestration.selectedRunError, '');
 });
 
+test('loadTaskRunDetail does not mutate draft thread or workspace', async () => {
+    const methods = createTaskOrchestrationMethods({
+        api: async (name) => {
+            assert.strictEqual(name, 'task-run-detail');
+            return {
+                run: { runId: 'run-history', status: 'success' },
+                threadId: 'thread-from-history',
+                cwd: '/tmp/history-workspace',
+                nodes: []
+            };
+        }
+    });
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        showMessage() {},
+        syncTaskOrchestrationPolling() {}
+    };
+    context.taskOrchestration = methods.ensureTaskOrchestrationState.call(context);
+    context.taskOrchestration.threadId = 'draft-thread';
+    context.taskOrchestration.workspacePath = '/tmp/draft-workspace';
+
+    await methods.loadTaskRunDetail.call(context, 'run-history', { silent: true });
+
+    assert.strictEqual(context.taskOrchestration.selectedRunDetail.threadId, 'thread-from-history');
+    assert.strictEqual(context.taskOrchestration.threadId, 'draft-thread');
+    assert.strictEqual(context.taskOrchestration.workspacePath, '/tmp/draft-workspace');
+});
+
 test('continueTaskThreadFromUi inherits selected run workspace and thread', () => {
     const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
     const messages = [];
@@ -1443,6 +1497,7 @@ test('continueTaskThreadFromUi inherits selected run workspace and thread', () =
                 dryRun: false
             },
             selectedEngine: 'workflow',
+            workflowIdsText: 'diagnose-config',
             runMode: 'read',
             plan: { nodes: [{ id: 'old' }] },
             planIssues: ['old issue'],
@@ -1459,6 +1514,8 @@ test('continueTaskThreadFromUi inherits selected run workspace and thread', () =
     assert.strictEqual(context.taskOrchestration.threadId, 'thread-existing');
     assert.strictEqual(context.taskOrchestration.workspacePath, '/tmp/existing-workspace');
     assert.strictEqual(context.taskOrchestration.target, 'Create 2048 page');
+    assert.strictEqual(context.taskOrchestration.selectedEngine, 'openai-chat');
+    assert.strictEqual(context.taskOrchestration.workflowIdsText, '');
     assert.strictEqual(context.taskOrchestration.runMode, 'write');
     assert.strictEqual(context.taskOrchestration.plan, null);
     assert.deepStrictEqual(context.taskOrchestration.planIssues, []);

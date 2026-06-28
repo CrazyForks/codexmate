@@ -4180,11 +4180,12 @@ return function render(_ctx, _cache) {
                             _createElementVNode("span", { class: "selector-label" }, _toDisplayString(_ctx.t('orchestration.fields.engine')), 1 /* TEXT */),
                             _withDirectives(_createElementVNode("select", {
                               "onUpdate:modelValue": $event => ((_ctx.taskOrchestration.selectedEngine) = $event),
-                              class: "provider-fast-switch-select"
+                              class: "provider-fast-switch-select",
+                              onChange: $event => (_ctx.taskOrchestration.selectedEngine === 'workflow' ? null : _ctx.taskOrchestration.workflowIdsText = '')
                             }, [
                               _createElementVNode("option", { value: "openai-chat" }, _toDisplayString(_ctx.t('orchestration.engine.openaiChat')), 1 /* TEXT */),
                               _createElementVNode("option", { value: "workflow" }, _toDisplayString(_ctx.t('orchestration.engine.workflow')), 1 /* TEXT */)
-                            ], 8 /* PROPS */, ["onUpdate:modelValue"]), [
+                            ], 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "onChange"]), [
                               [_vModelSelect, _ctx.taskOrchestration.selectedEngine]
                             ])
                           ]),

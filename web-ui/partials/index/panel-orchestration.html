@@ -109,7 +109,7 @@
                                         </label>
                                         <label class="selector-field">
                                             <span class="selector-label">{{ t('orchestration.fields.engine') }}</span>
-                                            <select v-model="taskOrchestration.selectedEngine" class="provider-fast-switch-select">
+                                            <select v-model="taskOrchestration.selectedEngine" class="provider-fast-switch-select" @change="taskOrchestration.selectedEngine === 'workflow' ? null : taskOrchestration.workflowIdsText = ''">
                                                 <option value="openai-chat">{{ t('orchestration.engine.openaiChat') }}</option>
                                                 <option value="workflow">{{ t('orchestration.engine.workflow') }}</option>
                                             </select>
