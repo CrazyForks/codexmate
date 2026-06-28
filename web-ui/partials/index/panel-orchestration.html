@@ -41,11 +41,16 @@
                                 </div>
 
                                 <div class="task-quick-input-card">
-                                    <label class="task-quick-target-field">
-                                        <span class="selector-label">{{ t('orchestration.fields.target') }}</span>
-                                        <textarea v-model="taskOrchestration.target" class="task-textarea task-textarea-goal task-quick-target" rows="5" :placeholder="t('orchestration.fields.target.placeholder')"></textarea>
-                                        <span class="task-field-hint">{{ t('orchestration.fields.target.hint') }}</span>
+                                    <label class="task-quick-target-field task-chat-composer">
+                                        <span class="selector-label">{{ t('orchestration.chat.input.label') }}</span>
+                                        <textarea v-model="taskOrchestration.target" class="task-textarea task-textarea-goal task-quick-target" rows="5" :placeholder="t('orchestration.chat.input.placeholder')"></textarea>
+                                        <span class="task-field-hint">{{ t('orchestration.chat.input.hint') }}</span>
                                     </label>
+                                    <div class="task-chat-context-row" role="group" :aria-label="t('orchestration.chat.context.aria')">
+                                        <span class="task-chat-context-chip">{{ taskOrchestration.workspacePath.trim() ? t('orchestration.chat.context.workspace.value', { value: taskOrchestration.workspacePath.trim() }) : t('orchestration.chat.context.workspace.auto') }}</span>
+                                        <span class="task-chat-context-chip">{{ taskOrchestration.threadId.trim() ? t('orchestration.chat.context.thread.value', { value: taskOrchestration.threadId.trim() }) : t('orchestration.chat.context.thread.auto') }}</span>
+                                        <span class="task-chat-context-chip">{{ taskOrchestration.runMode === 'dry-run' ? t('orchestration.runMode.dryRun') : (taskOrchestration.runMode === 'read' ? t('orchestration.runMode.readOnly') : t('orchestration.runMode.write') ) }}</span>
+                                    </div>
 
                                     <div class="task-draft-overview task-draft-inline task-quick-readiness">
                                         <div class="task-draft-inline-head">

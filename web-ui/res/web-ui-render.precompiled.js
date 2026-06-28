@@ -4058,18 +4058,27 @@ return function render(_ctx, _cache) {
                         _createElementVNode("div", { class: "skills-panel-note task-hero-copy" }, _toDisplayString(_ctx.t('orchestration.quick.subtitle')), 1 /* TEXT */)
                       ]),
                       _createElementVNode("div", { class: "task-quick-input-card" }, [
-                        _createElementVNode("label", { class: "task-quick-target-field" }, [
-                          _createElementVNode("span", { class: "selector-label" }, _toDisplayString(_ctx.t('orchestration.fields.target')), 1 /* TEXT */),
+                        _createElementVNode("label", { class: "task-quick-target-field task-chat-composer" }, [
+                          _createElementVNode("span", { class: "selector-label" }, _toDisplayString(_ctx.t('orchestration.chat.input.label')), 1 /* TEXT */),
                           _withDirectives(_createElementVNode("textarea", {
                             "onUpdate:modelValue": $event => ((_ctx.taskOrchestration.target) = $event),
                             class: "task-textarea task-textarea-goal task-quick-target",
                             rows: "5",
-                            placeholder: _ctx.t('orchestration.fields.target.placeholder')
+                            placeholder: _ctx.t('orchestration.chat.input.placeholder')
                           }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
                             [_vModelText, _ctx.taskOrchestration.target]
                           ]),
-                          _createElementVNode("span", { class: "task-field-hint" }, _toDisplayString(_ctx.t('orchestration.fields.target.hint')), 1 /* TEXT */)
+                          _createElementVNode("span", { class: "task-field-hint" }, _toDisplayString(_ctx.t('orchestration.chat.input.hint')), 1 /* TEXT */)
                         ]),
+                        _createElementVNode("div", {
+                          class: "task-chat-context-row",
+                          role: "group",
+                          "aria-label": _ctx.t('orchestration.chat.context.aria')
+                        }, [
+                          _createElementVNode("span", { class: "task-chat-context-chip" }, _toDisplayString(_ctx.taskOrchestration.workspacePath.trim() ? _ctx.t('orchestration.chat.context.workspace.value', { value: _ctx.taskOrchestration.workspacePath.trim() }) : _ctx.t('orchestration.chat.context.workspace.auto')), 1 /* TEXT */),
+                          _createElementVNode("span", { class: "task-chat-context-chip" }, _toDisplayString(_ctx.taskOrchestration.threadId.trim() ? _ctx.t('orchestration.chat.context.thread.value', { value: _ctx.taskOrchestration.threadId.trim() }) : _ctx.t('orchestration.chat.context.thread.auto')), 1 /* TEXT */),
+                          _createElementVNode("span", { class: "task-chat-context-chip" }, _toDisplayString(_ctx.taskOrchestration.runMode === 'dry-run' ? _ctx.t('orchestration.runMode.dryRun') : (_ctx.taskOrchestration.runMode === 'read' ? _ctx.t('orchestration.runMode.readOnly') : _ctx.t('orchestration.runMode.write') )), 1 /* TEXT */)
+                        ], 8 /* PROPS */, ["aria-label"]),
                         _createElementVNode("div", { class: "task-draft-overview task-draft-inline task-quick-readiness" }, [
                           _createElementVNode("div", { class: "task-draft-inline-head" }, [
                             _createElementVNode("span", {

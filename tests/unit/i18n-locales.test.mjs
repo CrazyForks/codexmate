@@ -181,6 +181,30 @@ test('provider cache and local Web preference settings are localized in every lo
     }
 });
 
+test('task orchestration chat composer copy is localized in every locale', () => {
+    const keys = [
+        'orchestration.chat.input.label',
+        'orchestration.chat.input.placeholder',
+        'orchestration.chat.input.hint',
+        'orchestration.chat.context.aria',
+        'orchestration.chat.context.workspace.auto',
+        'orchestration.chat.context.workspace.value',
+        'orchestration.chat.context.thread.auto',
+        'orchestration.chat.context.thread.value'
+    ];
+    for (const code of expectedLocales) {
+        for (const key of keys) {
+            assert.strictEqual(typeof DICT[code][key], 'string', `${code} should define ${key}`);
+            assert(DICT[code][key].trim(), `${code} ${key} should not be empty`);
+            assert.deepStrictEqual(
+                placeholders(DICT[code][key]),
+                placeholders(DICT.zh[key]),
+                `${code} placeholder mismatch for key: ${key}`
+            );
+        }
+    }
+});
+
 
 test('plugins catalog metadata is localized from i18n dictionaries', async () => {
     const { createPluginsComputed } = await import('../../plugins/prompt-templates/computed.mjs');
