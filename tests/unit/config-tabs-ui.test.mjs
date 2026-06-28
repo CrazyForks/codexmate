@@ -147,6 +147,9 @@ test('config template keeps expected config tabs in top and side navigation', ()
     for (const styles of [taskOrchestrationStyles, bundledStyles]) {
         assert.match(styles, /\.task-layout-grid-primary\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\);/);
         assert.match(styles, /\.task-layout-grid-secondary\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\);/);
+        assert.match(styles, /#panel-orchestration\s*\{[\s\S]*--task-orchestration-main-width:\s*1120px;/);
+        assert.match(styles, /#panel-orchestration \.task-hero-card\s*\{[\s\S]*max-width:\s*var\(--task-orchestration-main-width\);/);
+        assert.match(styles, /#panel-orchestration \.task-layout-grid-primary,[\s\S]*#panel-orchestration \.task-layout-grid-secondary\s*\{[\s\S]*max-width:\s*var\(--task-orchestration-main-width\);/);
         assert.doesNotMatch(styles, /\.container:has\(#panel-orchestration\[data-active="true"\]\)\s*\{[\s\S]*background:\s*#F6F8FB;/);
         assert.doesNotMatch(styles, /body:has\(#panel-orchestration\[data-active="true"\]\)\s*\{[\s\S]*background:\s*#F6F8FB;/);
         assert.doesNotMatch(styles, /body:has\(#panel-orchestration\[data-active="true"\]\)::before\s*\{[\s\S]*background:\s*none;/);
