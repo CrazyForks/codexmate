@@ -147,13 +147,11 @@ test('config template keeps expected config tabs in top and side navigation', ()
     for (const styles of [taskOrchestrationStyles, bundledStyles]) {
         assert.match(styles, /\.task-layout-grid-primary\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\);/);
         assert.match(styles, /\.task-layout-grid-secondary\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\);/);
-        assert.match(styles, /\.container:has\(#panel-orchestration\[data-active="true"\]\)\s*\{[\s\S]*background:\s*#F6F8FB;/);
-        assert.match(styles, /body:has\(#panel-orchestration\[data-active="true"\]\)\s*\{[\s\S]*background:\s*#F6F8FB;/);
-        assert.match(styles, /body:has\(#panel-orchestration\[data-active="true"\]\)::before\s*\{[\s\S]*background:\s*none;/);
-        assert.match(styles, /body:has\(#panel-orchestration\[data-active="true"\]\) \.side-rail\s*\{[\s\S]*background:\s*#F8FAFC;[\s\S]*box-shadow:\s*none;/);
-        assert.match(styles, /body:has\(#panel-orchestration\[data-active="true"\]\) \.side-item\.active,[\s\S]*\.side-item\.nav-intent-active\s*\{[\s\S]*background:\s*#FFFFFF;/);
+        assert.doesNotMatch(styles, /\.container:has\(#panel-orchestration\[data-active="true"\]\)\s*\{[\s\S]*background:\s*#F6F8FB;/);
+        assert.doesNotMatch(styles, /body:has\(#panel-orchestration\[data-active="true"\]\)\s*\{[\s\S]*background:\s*#F6F8FB;/);
+        assert.doesNotMatch(styles, /body:has\(#panel-orchestration\[data-active="true"\]\)::before\s*\{[\s\S]*background:\s*none;/);
         assert.match(styles, /\.task-hero-card,[\s\S]*\.task-empty-state\s*\{[\s\S]*border:\s*1px solid/);
-        assert.match(styles, /\.task-hero-card\s*\{[\s\S]*background:\s*var\(--color-surface\);/);
+        assert.match(styles, /\.task-hero-card\s*\{[\s\S]*background:\s*linear-gradient\(180deg, rgba\(199, 116, 98, 0\.10\) 0%, rgba\(199, 116, 98, 0\.03\) 100%\), var\(--color-surface\);/);
         assert.match(styles, /\.task-quick-input-card\s*\{[\s\S]*background:\s*#F8FAFC;/);
         assert.match(styles, /\.task-template-chip-group,[\s\S]*\.task-workflow-suggestions\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-wrap:\s*wrap;/);
         assert.match(styles, /\.task-checklist-inline\s*\{[\s\S]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/);
