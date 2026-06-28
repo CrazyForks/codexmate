@@ -629,6 +629,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'selectTaskRun',
         'retryTaskRunFromUi',
         'cancelTaskRunFromUi',
+        'continueTaskThreadFromUi',
         'taskOrchestrationHasLiveActivity',
         'stopTaskOrchestrationPolling',
         'syncTaskOrchestrationPolling',

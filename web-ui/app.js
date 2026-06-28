@@ -462,6 +462,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     target: '',
                     title: '',
                     notes: '',
+                    workspacePath: '',
+                    threadId: '',
                     followUpsText: '',
                     workflowIdsText: '',
                     selectedEngine: 'openai-chat',

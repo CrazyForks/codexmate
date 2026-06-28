@@ -13018,6 +13018,8 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                         detached: true,
                                         taskId,
                                         runId,
+                                        threadId: plan.threadId || '',
+                                        cwd: plan.cwd || '',
                                         warnings: validation.warnings || []
                                     };
                                 } else {
@@ -14032,6 +14034,38 @@ function parseTaskCliOptions(args = []) {
             options.explicit.autoFixRounds = true;
             continue;
         }
+        if (arg === '--cwd') {
+            options.cwd = String(args[i + 1] || '').trim();
+            options.explicit.cwd = true;
+            i += 1;
+            continue;
+        }
+        if (arg.startsWith('--cwd=')) {
+            options.cwd = arg.slice('--cwd='.length).trim();
+            options.explicit.cwd = true;
+            continue;
+        }
+        if (arg === '--thread-id' || arg === '--conversation-id' || arg === '--session-id') {
+            options.threadId = String(args[i + 1] || '').trim();
+            options.explicit.threadId = true;
+            i += 1;
+            continue;
+        }
+        if (arg.startsWith('--thread-id=')) {
+            options.threadId = arg.slice('--thread-id='.length).trim();
+            options.explicit.threadId = true;
+            continue;
+        }
+        if (arg.startsWith('--conversation-id=')) {
+            options.threadId = arg.slice('--conversation-id='.length).trim();
+            options.explicit.threadId = true;
+            continue;
+        }
+        if (arg.startsWith('--session-id=')) {
+            options.threadId = arg.slice('--session-id='.length).trim();
+            options.explicit.threadId = true;
+            continue;
+        }
         if (arg === '--limit') {
             const value = parseInt(args[i + 1], 10);
             if (Number.isFinite(value)) options.limit = value;
@@ -14092,6 +14126,8 @@ function buildTaskCliPayload(options = {}, rest = []) {
     if (explicit.engine) payload.engine = options.engine || 'openai-chat';
     if (explicit.concurrency) payload.concurrency = options.concurrency;
     if (explicit.autoFixRounds) payload.autoFixRounds = options.autoFixRounds;
+    if (explicit.cwd && options.cwd) payload.cwd = options.cwd;
+    if (explicit.threadId && options.threadId) payload.threadId = options.threadId;
     if (explicit.taskId && options.taskId) payload.taskId = options.taskId;
     if (explicit.runId && options.runId) payload.runId = options.runId;
     if (!payload.target && Array.isArray(rest) && rest.length > 0) {
@@ -15559,6 +15595,10 @@ function createTaskRunId() {
     return `tr-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
 }
 
+function createTaskThreadId() {
+    return `tt-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
+}
+
 function validateTaskRunId(value) {
     const runId = typeof value === 'string' ? value.trim() : '';
     if (!runId) {
@@ -15568,6 +15608,14 @@ function validateTaskRunId(value) {
         return { ok: false, error: 'runId contains unsupported characters', runId: '' };
     }
     return { ok: true, error: '', runId };
+}
+
+function normalizeTaskThreadId(value) {
+    const threadId = typeof value === 'string' ? value.trim() : '';
+    if (!threadId) {
+        return '';
+    }
+    return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(threadId) ? threadId : '';
 }
 
 function normalizeTaskEngine(value) {
@@ -15615,6 +15663,7 @@ function normalizeTaskPlanRequest(params = {}) {
         : (typeof source.followUp === 'string' && source.followUp.trim() ? [source.followUp.trim()] : []);
     return {
         id: typeof source.id === 'string' ? source.id.trim() : '',
+        threadId: normalizeTaskThreadId(source.threadId || source.conversationId || source.sessionId),
         title: typeof source.title === 'string' ? source.title.trim() : '',
         target: typeof source.target === 'string' ? source.target.trim() : '',
         notes: typeof source.notes === 'string' ? source.notes.trim() : '',
@@ -15632,12 +15681,17 @@ function normalizeTaskPlanRequest(params = {}) {
 function coerceTaskPlanPayload(params = {}) {
     if (params && params.plan && typeof params.plan === 'object' && !Array.isArray(params.plan)) {
         const plan = cloneJson(params.plan, {});
-        const overrideKeys = ['id', 'title', 'target', 'notes', 'cwd', 'engine', 'allowWrite', 'dryRun', 'concurrency', 'autoFixRounds', 'workflowIds', 'followUps'];
+        const overrideKeys = ['id', 'threadId', 'conversationId', 'sessionId', 'title', 'target', 'notes', 'cwd', 'engine', 'allowWrite', 'dryRun', 'concurrency', 'autoFixRounds', 'workflowIds', 'followUps'];
         for (const key of overrideKeys) {
             if (Object.prototype.hasOwnProperty.call(params, key) && params[key] !== undefined) {
-                plan[key] = cloneJson(params[key], params[key]);
+                if (key === 'conversationId' || key === 'sessionId') {
+                    plan.threadId = cloneJson(params[key], params[key]);
+                } else {
+                    plan[key] = cloneJson(params[key], params[key]);
+                }
             }
         }
+        plan.threadId = normalizeTaskThreadId(plan.threadId) || createTaskThreadId();
         plan.engine = normalizeTaskEngine(plan.engine);
         plan.workflowIds = normalizeTaskFollowUps(plan.workflowIds || []).map((id) => normalizeWorkflowId(id)).filter(Boolean);
         plan.followUps = normalizeTaskFollowUps(plan.followUps || []);
@@ -15652,6 +15706,7 @@ function coerceTaskPlanPayload(params = {}) {
     });
     return {
         ...plan,
+        threadId: request.threadId || createTaskThreadId(),
         engine: normalizeTaskEngine(request.engine || plan.engine)
     };
 }
@@ -15674,8 +15729,10 @@ function normalizeTaskQueueItem(raw = {}) {
     const taskId = typeof raw.taskId === 'string' ? raw.taskId.trim() : '';
     return {
         taskId: taskId || createTaskId(),
+        threadId: normalizeTaskThreadId(raw.threadId || plan.threadId) || createTaskThreadId(),
         title: typeof raw.title === 'string' ? raw.title.trim() : (typeof plan.title === 'string' ? plan.title.trim() : ''),
         target: typeof raw.target === 'string' ? raw.target.trim() : (typeof plan.target === 'string' ? plan.target.trim() : ''),
+        cwd: typeof raw.cwd === 'string' && raw.cwd.trim() ? raw.cwd.trim() : (typeof plan.cwd === 'string' ? plan.cwd.trim() : ''),
         status: typeof raw.status === 'string' ? raw.status.trim().toLowerCase() : 'queued',
         createdAt: toIsoTime(raw.createdAt || Date.now(), ''),
         updatedAt: toIsoTime(raw.updatedAt || raw.createdAt || Date.now(), ''),
@@ -15876,8 +15933,10 @@ function collectTaskRunSummary(detail = {}) {
     return {
         runId: detail.runId || '',
         taskId: detail.taskId || '',
+        threadId: detail.threadId || '',
         title: detail.title || '',
         target: detail.target || '',
+        cwd: detail.cwd || '',
         engine: detail.engine || '',
         allowWrite: detail.allowWrite === true,
         dryRun: detail.dryRun === true,
@@ -16462,13 +16521,18 @@ async function runTaskPlanInternal(plan, options = {}) {
     }
     const taskId = typeof options.taskId === 'string' && options.taskId.trim() ? options.taskId.trim() : (plan.id || createTaskId());
     const runId = typeof options.runId === 'string' && options.runId.trim() ? options.runId.trim() : createTaskRunId();
+    const threadId = normalizeTaskThreadId(options.threadId || plan.threadId) || createTaskThreadId();
+    plan.threadId = threadId;
+    const cwd = typeof plan.cwd === 'string' && plan.cwd.trim() ? plan.cwd.trim() : process.cwd();
     const controller = new AbortController();
     const baseDetail = {
         runId,
         taskId,
+        threadId,
         workerPid: process.pid,
         title: plan.title || '',
         target: plan.target || '',
+        cwd,
         engine: normalizeTaskEngine(plan.engine),
         allowWrite: plan.allowWrite === true,
         dryRun: plan.dryRun === true,
@@ -16504,6 +16568,8 @@ async function runTaskPlanInternal(plan, options = {}) {
         const queued = upsertTaskQueueItem({
             ...options.queueItem,
             taskId,
+            threadId,
+            cwd,
             status: 'running',
             runStatus: 'running',
             lastRunId: runId,
@@ -16524,7 +16590,7 @@ async function runTaskPlanInternal(plan, options = {}) {
                 runId,
                 allowWrite: plan.allowWrite === true,
                 dryRun: plan.dryRun === true,
-                cwd: plan.cwd || process.cwd()
+                cwd
             }),
             onUpdate: async (snapshot) => {
                 const nextDetail = {
@@ -16538,6 +16604,8 @@ async function runTaskPlanInternal(plan, options = {}) {
                     const queued = upsertTaskQueueItem({
                         ...options.queueItem,
                         taskId,
+                        threadId,
+                        cwd,
                         status: snapshot.status === 'success'
                             ? 'completed'
                             : (snapshot.status === 'failed' ? 'failed' : (snapshot.status === 'cancelled' ? 'cancelled' : 'running')),
@@ -16567,6 +16635,8 @@ async function runTaskPlanInternal(plan, options = {}) {
             const queued = upsertTaskQueueItem({
                 ...options.queueItem,
                 taskId,
+                threadId,
+                cwd,
                 status: run.status === 'success'
                     ? 'completed'
                     : (run.status === 'cancelled' ? 'cancelled' : 'failed'),
@@ -16597,8 +16667,10 @@ function addTaskToQueue(params = {}) {
     const taskId = typeof params.taskId === 'string' && params.taskId.trim() ? params.taskId.trim() : createTaskId();
     const item = upsertTaskQueueItem({
         taskId,
+        threadId: plan.threadId || createTaskThreadId(),
         title: plan.title,
         target: plan.target,
+        cwd: plan.cwd || process.cwd(),
         status: 'queued',
         createdAt: toIsoTime(Date.now()),
         updatedAt: toIsoTime(Date.now()),

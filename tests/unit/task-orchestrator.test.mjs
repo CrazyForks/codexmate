@@ -47,6 +47,19 @@ test('buildTaskPlan generates OpenAI Chat orchestration nodes and follow-ups', (
     assert.strictEqual(plan.nodes[plan.nodes.length - 1].kind, 'openai-chat');
 });
 
+test('buildTaskPlan carries workspace and thread context into OpenAI Chat nodes', () => {
+    const plan = buildTaskPlan({
+        target: '在指定工作区创建 2048 页面',
+        cwd: '/tmp/codexmate-workspace',
+        threadId: 'thread-2048',
+        allowWrite: true
+    });
+
+    assert.strictEqual(plan.cwd, '/tmp/codexmate-workspace');
+    assert.strictEqual(plan.threadId, 'thread-2048');
+    assert.ok(plan.nodes.some((node) => String(node.prompt || '').includes('工作区路径: /tmp/codexmate-workspace')));
+});
+
 test('buildTaskPlan can map workflow ids onto sequential workflow nodes', () => {
     const plan = buildTaskPlan({
         target: '诊断并切换 provider',

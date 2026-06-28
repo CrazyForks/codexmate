@@ -1208,6 +1208,8 @@ test('ensureTaskOrchestrationState creates workbench defaults including workspac
     const state = methods.ensureTaskOrchestrationState.call(context);
 
     assert.strictEqual(state.workspaceTab, 'queue');
+    assert.strictEqual(state.workspacePath, '');
+    assert.strictEqual(state.threadId, '');
     assert.strictEqual(state.selectedRunError, '');
     assert.strictEqual(state.detailRequestToken, 0);
     assert.deepStrictEqual(state.overviewWarnings, []);
@@ -1226,9 +1228,38 @@ test('ensureTaskOrchestrationState backfills missing workbench fields on existin
 
     assert.strictEqual(state.target, 'keep-me');
     assert.strictEqual(state.workspaceTab, 'runs');
+    assert.strictEqual(state.workspacePath, '');
+    assert.strictEqual(state.threadId, '');
     assert.strictEqual(state.selectedRunError, '');
     assert.strictEqual(state.detailRequestToken, 0);
     assert.deepStrictEqual(state.overviewWarnings, []);
+});
+
+test('buildTaskOrchestrationRequest includes workspace path and thread id', () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const context = {
+        taskOrchestration: {
+            title: '2048 task',
+            target: 'Create 2048 page',
+            notes: 'Only write inside cwd',
+            workspacePath: ' /tmp/codexmate-web-workspace ',
+            threadId: ' thread-2048 ',
+            followUpsText: 'Verify page',
+            workflowIdsText: '',
+            selectedEngine: 'openai-chat',
+            runMode: 'write',
+            concurrency: 1,
+            autoFixRounds: 0
+        },
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState
+    };
+
+    const req = methods.buildTaskOrchestrationRequest.call(context);
+
+    assert.strictEqual(req.cwd, '/tmp/codexmate-web-workspace');
+    assert.strictEqual(req.threadId, 'thread-2048');
+    assert.strictEqual(req.allowWrite, true);
+    assert.deepStrictEqual(req.followUps, ['Verify page']);
 });
 
 test('taskOrchestrationSelectedRunNodes prefers top-level detail nodes when present', () => {
@@ -1393,4 +1424,41 @@ test('selectTaskRun switches workbench to detail and keeps latest detail respons
 
     assert.strictEqual(context.taskOrchestration.selectedRunDetail.run.runId, 'run-2');
     assert.strictEqual(context.taskOrchestration.selectedRunError, '');
+});
+
+test('continueTaskThreadFromUi inherits selected run workspace and thread', () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const messages = [];
+    const context = {
+        taskOrchestration: {
+            selectedRunDetail: {
+                threadId: 'thread-existing',
+                cwd: '/tmp/existing-workspace',
+                title: 'Existing task',
+                target: 'Create 2048 page',
+                engine: 'openai-chat',
+                allowWrite: true,
+                dryRun: false
+            },
+            selectedEngine: 'workflow',
+            runMode: 'read',
+            plan: { nodes: [{ id: 'old' }] },
+            planIssues: ['old issue'],
+            planWarnings: ['old warning']
+        },
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        showMessage(message, tone) {
+            messages.push({ message, tone });
+        }
+    };
+
+    methods.continueTaskThreadFromUi.call(context);
+
+    assert.strictEqual(context.taskOrchestration.threadId, 'thread-existing');
+    assert.strictEqual(context.taskOrchestration.workspacePath, '/tmp/existing-workspace');
+    assert.strictEqual(context.taskOrchestration.target, 'Create 2048 page');
+    assert.strictEqual(context.taskOrchestration.runMode, 'write');
+    assert.strictEqual(context.taskOrchestration.plan, null);
+    assert.deepStrictEqual(context.taskOrchestration.planIssues, []);
+    assert.deepStrictEqual(messages, [{ message: '已继承该任务的会话与工作区，可继续追加要求', tone: 'success' }]);
 });

@@ -338,6 +338,10 @@ module.exports = async function testTaskOrchestration(ctx) {
             'plan',
             '--target',
             'OpenAI Chat provider 端到端模拟',
+            '--cwd',
+            path.join(tmpHome, 'task-plan-workspace'),
+            '--thread-id',
+            'thread-cli-plan',
             '--follow-up',
             '输出风险说明',
             '--engine',
@@ -348,8 +352,12 @@ module.exports = async function testTaskOrchestration(ctx) {
         const openAiPlanPayload = parseJsonOutput(openAiPlanResult.stdout);
         assert(openAiPlanPayload.ok === true, 'OpenAI Chat task plan should validate');
         assert(openAiPlanPayload.plan && openAiPlanPayload.plan.engine === 'openai-chat', 'OpenAI Chat plan should keep engine');
+        assert(openAiPlanPayload.plan.threadId === 'thread-cli-plan', 'OpenAI Chat plan should preserve CLI thread id');
+        assert(openAiPlanPayload.plan.cwd === path.join(tmpHome, 'task-plan-workspace'), 'OpenAI Chat plan should preserve CLI cwd');
         assert(openAiPlanPayload.plan.nodes.every((node) => node.kind === 'openai-chat'), 'OpenAI Chat plan should produce OpenAI Chat nodes');
 
+        const openAiRunCwd = path.join(tmpHome, 'task-run-workspace');
+        fs.mkdirSync(openAiRunCwd, { recursive: true });
         const openAiRunResult = runSync(node, [
             cliPath,
             'task',
@@ -360,6 +368,10 @@ module.exports = async function testTaskOrchestration(ctx) {
             '输出验证摘要',
             '--engine',
             'openai-chat',
+            '--cwd',
+            openAiRunCwd,
+            '--thread-id',
+            'thread-cli-run',
             '--concurrency',
             '2',
             '--json'
@@ -367,6 +379,8 @@ module.exports = async function testTaskOrchestration(ctx) {
         assert(openAiRunResult.status === 0, `OpenAI Chat task run failed: ${openAiRunResult.stderr || openAiRunResult.stdout}`);
         const openAiRunPayload = parseJsonOutput(openAiRunResult.stdout);
         assertOpenAiRunPayload(openAiRunPayload, 'OpenAI Chat CLI run');
+        assert(openAiRunPayload.threadId === 'thread-cli-run', 'OpenAI Chat CLI run should preserve thread id');
+        assert(openAiRunPayload.cwd === openAiRunCwd, 'OpenAI Chat CLI run should preserve cwd');
 
         const openAiLogsResult = runSync(node, [
             cliPath,
@@ -388,6 +402,7 @@ module.exports = async function testTaskOrchestration(ctx) {
             target: 'Create index.html for direct OpenAI Chat plan execution',
             notes: 'Write index.html only inside the provided cwd.',
             cwd: directPlanCwd,
+            threadId: 'thread-direct-plan',
             engine: 'openai-chat',
             allowWrite: true,
             dryRun: false,
@@ -415,6 +430,8 @@ module.exports = async function testTaskOrchestration(ctx) {
         const directPlanRunPayload = parseJsonOutput(directPlanRunResult.stdout);
         assertOpenAiRunPayload(directPlanRunPayload, 'OpenAI Chat direct plan run');
         assert(Array.isArray(directPlanRunPayload.plan && directPlanRunPayload.plan.waves), 'OpenAI Chat direct plan run should compute waves');
+        assert(directPlanRunPayload.threadId === 'thread-direct-plan', 'OpenAI Chat direct plan run should preserve plan thread id');
+        assert(directPlanRunPayload.cwd === directPlanCwd, 'OpenAI Chat direct plan run should preserve plan cwd');
         const directPlanIndexPath = path.join(directPlanCwd, 'index.html');
         assert(fs.existsSync(directPlanIndexPath), 'OpenAI Chat direct plan run should materialize index.html when allow-write is enabled');
         assert(fs.readFileSync(directPlanIndexPath, 'utf-8').includes('2048'), 'materialized index.html should contain generated page content');
@@ -430,11 +447,17 @@ module.exports = async function testTaskOrchestration(ctx) {
             'OpenAI Chat provider CLI 队列链路',
             '--engine',
             'openai-chat',
+            '--cwd',
+            path.join(tmpHome, 'task-queue-workspace'),
+            '--thread-id',
+            'thread-cli-queue',
             '--json'
         ], { env });
         assert(openAiQueueAddResult.status === 0, `OpenAI Chat queue add failed: ${openAiQueueAddResult.stderr || openAiQueueAddResult.stdout}`);
         const openAiQueueAddPayload = parseJsonOutput(openAiQueueAddResult.stdout);
         assert(openAiQueueAddPayload.ok === true && openAiQueueAddPayload.task && openAiQueueAddPayload.task.engine === 'openai-chat', 'OpenAI Chat queue add should persist engine');
+        assert(openAiQueueAddPayload.task.threadId === 'thread-cli-queue', 'OpenAI Chat queue add should persist thread id');
+        assert(openAiQueueAddPayload.task.cwd === path.join(tmpHome, 'task-queue-workspace'), 'OpenAI Chat queue add should persist cwd');
 
         const openAiQueueStartResult = runSync(node, [
             cliPath,
@@ -448,38 +471,58 @@ module.exports = async function testTaskOrchestration(ctx) {
         const openAiQueueStartPayload = parseJsonOutput(openAiQueueStartResult.stdout);
         assert(openAiQueueStartPayload.ok === true, 'OpenAI Chat queue start should succeed');
         assertOpenAiRunPayload(openAiQueueStartPayload.detail, 'OpenAI Chat CLI queue start');
+        assert(openAiQueueStartPayload.detail.threadId === 'thread-cli-queue', 'OpenAI Chat queue start should preserve thread id');
+        assert(openAiQueueStartPayload.detail.cwd === path.join(tmpHome, 'task-queue-workspace'), 'OpenAI Chat queue start should preserve cwd');
 
         const apiOpenAiPlan = await api('task-plan', {
             target: 'OpenAI Chat Web API 计划链路',
             engine: 'openai-chat',
+            cwd: path.join(tmpHome, 'api-plan-workspace'),
+            threadId: 'thread-api-plan',
             followUps: ['输出结论']
         });
         assert(apiOpenAiPlan.ok === true, 'OpenAI Chat task-plan API should validate');
         assert(apiOpenAiPlan.plan && apiOpenAiPlan.plan.engine === 'openai-chat', 'OpenAI Chat task-plan API should keep engine');
+        assert(apiOpenAiPlan.plan.threadId === 'thread-api-plan', 'OpenAI Chat task-plan API should preserve thread id');
+        assert(apiOpenAiPlan.plan.cwd === path.join(tmpHome, 'api-plan-workspace'), 'OpenAI Chat task-plan API should preserve cwd');
         assert(apiOpenAiPlan.plan.nodes.every((node) => node.kind === 'openai-chat'), 'OpenAI Chat task-plan API should produce OpenAI Chat nodes');
 
+        const apiRunCwd = path.join(tmpHome, 'api-run-workspace');
+        fs.mkdirSync(apiRunCwd, { recursive: true });
         const apiOpenAiRun = await api('task-run', {
             target: 'OpenAI Chat Web API 同步运行链路',
             engine: 'openai-chat',
+            cwd: apiRunCwd,
+            threadId: 'thread-api-run',
             concurrency: 1
         }, 15000);
         assertOpenAiRunPayload(apiOpenAiRun, 'OpenAI Chat API run');
+        assert(apiOpenAiRun.threadId === 'thread-api-run', 'OpenAI Chat API run should preserve thread id');
+        assert(apiOpenAiRun.cwd === apiRunCwd, 'OpenAI Chat API run should preserve cwd');
 
         const apiOpenAiDetail = await api('task-run-detail', { runId: apiOpenAiRun.runId });
         assert(apiOpenAiDetail && apiOpenAiDetail.run && apiOpenAiDetail.run.status === 'success', 'OpenAI Chat task-run-detail API should return run detail');
+        assert(apiOpenAiDetail.threadId === 'thread-api-run', 'OpenAI Chat task-run-detail API should expose thread id');
+        assert(apiOpenAiDetail.cwd === apiRunCwd, 'OpenAI Chat task-run-detail API should expose cwd');
         assert(apiOpenAiDetail.run.nodes.every((node) => node.kind === 'openai-chat'), 'OpenAI Chat task-run-detail API should expose OpenAI Chat nodes');
 
         const apiOpenAiQueueAdd = await api('task-queue-add', {
             target: 'OpenAI Chat Web API 队列链路',
-            engine: 'openai-chat'
+            engine: 'openai-chat',
+            cwd: path.join(tmpHome, 'api-queue-workspace'),
+            threadId: 'thread-api-queue'
         });
         assert(apiOpenAiQueueAdd.ok === true && apiOpenAiQueueAdd.task && apiOpenAiQueueAdd.task.engine === 'openai-chat', 'OpenAI Chat task-queue-add API should persist engine');
+        assert(apiOpenAiQueueAdd.task.threadId === 'thread-api-queue', 'OpenAI Chat task-queue-add API should persist thread id');
+        assert(apiOpenAiQueueAdd.task.cwd === path.join(tmpHome, 'api-queue-workspace'), 'OpenAI Chat task-queue-add API should persist cwd');
         const apiOpenAiQueueStart = await api('task-queue-start', {
             taskId: apiOpenAiQueueAdd.task.taskId,
             detach: false
         }, 15000);
         assert(apiOpenAiQueueStart.ok === true, 'OpenAI Chat task-queue-start API should succeed');
         assertOpenAiRunPayload(apiOpenAiQueueStart.detail, 'OpenAI Chat API queue start');
+        assert(apiOpenAiQueueStart.detail.threadId === 'thread-api-queue', 'OpenAI Chat task-queue-start API should preserve thread id');
+        assert(apiOpenAiQueueStart.detail.cwd === path.join(tmpHome, 'api-queue-workspace'), 'OpenAI Chat task-queue-start API should preserve cwd');
 
         const apiOpenAiOverview = await api('task-overview');
         assert(Array.isArray(apiOpenAiOverview.runs), 'OpenAI Chat task-overview API should return runs after execution');

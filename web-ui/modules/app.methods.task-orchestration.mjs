@@ -9,6 +9,8 @@ function createDefaultTaskOrchestrationState() {
         target: '',
         title: '',
         notes: '',
+        workspacePath: '',
+        threadId: '',
         followUpsText: '',
         workflowIdsText: '',
         selectedEngine: 'openai-chat',
@@ -105,6 +107,8 @@ export function createTaskOrchestrationMethods(options = {}) {
                 title: String(state.title || '').trim(),
                 target: String(state.target || '').trim(),
                 notes: String(state.notes || '').trim(),
+                cwd: String(state.workspacePath || '').trim(),
+                threadId: String(state.threadId || '').trim(),
                 followUps: normalizeLines(state.followUpsText),
                 workflowIds: normalizeLines(state.workflowIdsText),
                 engine: String(state.selectedEngine || 'openai-chat').trim().toLowerCase() === 'workflow' ? 'workflow' : 'openai-chat',
@@ -121,6 +125,8 @@ export function createTaskOrchestrationMethods(options = {}) {
                 title: req.title,
                 target: req.target,
                 notes: req.notes,
+                cwd: req.cwd,
+                threadId: req.threadId,
                 followUps: req.followUps,
                 workflowIds: req.workflowIds,
                 engine: req.engine,
@@ -222,6 +228,9 @@ export function createTaskOrchestrationMethods(options = {}) {
             try {
                 const res = await api('task-plan', this.buildTaskOrchestrationRequest());
                 state.plan = res && res.plan ? res.plan : null;
+                if (state.plan && state.plan.threadId && !state.threadId) {
+                    state.threadId = state.plan.threadId;
+                }
                 state.planIssues = Array.isArray(res && res.issues) ? res.issues : [];
                 state.planWarnings = Array.isArray(res && res.warnings) ? res.warnings : [];
                 state.planFingerprint = state.plan ? this.buildTaskOrchestrationFingerprint() : '';
@@ -265,6 +274,9 @@ export function createTaskOrchestrationMethods(options = {}) {
                     return res;
                 }
                 state.selectedRunId = res.runId || state.selectedRunId;
+                if (res && res.threadId) {
+                    state.threadId = res.threadId;
+                }
                 await this.loadTaskOrchestrationOverview({ silent: true, includeDetail: false });
                 if (state.selectedRunId) {
                     await this.loadTaskRunDetail(state.selectedRunId, { silent: true });
@@ -294,6 +306,9 @@ export function createTaskOrchestrationMethods(options = {}) {
                         this.showMessage(res.error, 'error');
                     }
                     return res;
+                }
+                if (res && res.task && res.task.threadId) {
+                    state.threadId = res.task.threadId;
                 }
                 if (!options.deferRefresh) {
                     await this.loadTaskOrchestrationOverview({ silent: true, includeDetail: false });
@@ -417,6 +432,12 @@ export function createTaskOrchestrationMethods(options = {}) {
                     return res;
                 }
                 state.selectedRunDetail = res;
+                if (res && res.threadId) {
+                    state.threadId = res.threadId;
+                }
+                if (res && res.cwd && !state.workspacePath) {
+                    state.workspacePath = res.cwd;
+                }
                 state.selectedRunError = '';
                 this.syncTaskOrchestrationPolling();
                 return res;
@@ -455,6 +476,9 @@ export function createTaskOrchestrationMethods(options = {}) {
                     return res;
                 }
                 state.selectedRunId = res.runId || state.selectedRunId;
+                if (res && res.threadId) {
+                    state.threadId = res.threadId;
+                }
                 await this.loadTaskOrchestrationOverview({ silent: true, includeDetail: false });
                 if (state.selectedRunId) {
                     await this.loadTaskRunDetail(state.selectedRunId, { silent: true });
@@ -494,6 +518,26 @@ export function createTaskOrchestrationMethods(options = {}) {
                 this.showMessage(message, 'error');
                 return { error: message };
             }
+        },
+
+        continueTaskThreadFromUi() {
+            const state = this.ensureTaskOrchestrationState();
+            const detail = state.selectedRunDetail && typeof state.selectedRunDetail === 'object' ? state.selectedRunDetail : null;
+            if (!detail) {
+                return;
+            }
+            state.threadId = String(detail.threadId || state.threadId || '').trim();
+            state.workspacePath = String(detail.cwd || state.workspacePath || '').trim();
+            state.title = String(detail.title || state.title || '').trim();
+            state.target = String(detail.target || state.target || '').trim();
+            state.selectedEngine = String(detail.engine || state.selectedEngine || 'openai-chat').trim().toLowerCase() === 'workflow' ? 'workflow' : 'openai-chat';
+            state.runMode = detail.dryRun ? 'dry-run' : (detail.allowWrite ? 'write' : 'read');
+            state.notes = '';
+            state.followUpsText = '';
+            state.plan = null;
+            state.planIssues = [];
+            state.planWarnings = [];
+            this.showMessage('已继承该任务的会话与工作区，可继续追加要求', 'success');
         },
 
         taskOrchestrationHasLiveActivity() {
@@ -540,6 +584,8 @@ export function createTaskOrchestrationMethods(options = {}) {
             state.target = '';
             state.title = '';
             state.notes = '';
+            state.workspacePath = '';
+            state.threadId = '';
             state.followUpsText = '';
             state.workflowIdsText = '';
             state.selectedEngine = 'openai-chat';

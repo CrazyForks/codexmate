@@ -4207,6 +4207,30 @@ return function render(_ctx, _cache) {
                             _createElementVNode("span", { class: "task-field-hint" }, _toDisplayString(_ctx.t('orchestration.fields.notes.hint')), 1 /* TEXT */)
                           ]),
                           _createElementVNode("label", { class: "selector-field task-field-wide" }, [
+                            _createElementVNode("span", { class: "selector-label" }, _toDisplayString(_ctx.t('orchestration.fields.workspacePath')), 1 /* TEXT */),
+                            _withDirectives(_createElementVNode("input", {
+                              "onUpdate:modelValue": $event => ((_ctx.taskOrchestration.workspacePath) = $event),
+                              class: "model-input",
+                              type: "text",
+                              placeholder: _ctx.t('orchestration.fields.workspacePath.placeholder')
+                            }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
+                              [_vModelText, _ctx.taskOrchestration.workspacePath]
+                            ]),
+                            _createElementVNode("span", { class: "task-field-hint" }, _toDisplayString(_ctx.t('orchestration.fields.workspacePath.hint')), 1 /* TEXT */)
+                          ]),
+                          _createElementVNode("label", { class: "selector-field" }, [
+                            _createElementVNode("span", { class: "selector-label" }, _toDisplayString(_ctx.t('orchestration.fields.threadId')), 1 /* TEXT */),
+                            _withDirectives(_createElementVNode("input", {
+                              "onUpdate:modelValue": $event => ((_ctx.taskOrchestration.threadId) = $event),
+                              class: "model-input",
+                              type: "text",
+                              placeholder: _ctx.t('orchestration.fields.threadId.placeholder')
+                            }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
+                              [_vModelText, _ctx.taskOrchestration.threadId]
+                            ]),
+                            _createElementVNode("span", { class: "task-field-hint" }, _toDisplayString(_ctx.t('orchestration.fields.threadId.hint')), 1 /* TEXT */)
+                          ]),
+                          _createElementVNode("label", { class: "selector-field task-field-wide" }, [
                             _createElementVNode("span", { class: "selector-label" }, _toDisplayString(_ctx.t('orchestration.fields.followUps')), 1 /* TEXT */),
                             _withDirectives(_createElementVNode("textarea", {
                               "onUpdate:modelValue": $event => ((_ctx.taskOrchestration.followUpsText) = $event),
@@ -4387,7 +4411,25 @@ return function render(_ctx, _cache) {
                                     _createElementVNode("div", { class: "task-plan-summary-item" }, [
                                       _createElementVNode("span", { class: "task-plan-summary-label" }, _toDisplayString(_ctx.t('orchestration.plan.summary.engine')), 1 /* TEXT */),
                                       _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.plan.engine), 1 /* TEXT */)
-                                    ])
+                                    ]),
+                                    (_ctx.taskOrchestration.plan.threadId)
+                                      ? (_openBlock(), _createElementBlock("div", {
+                                          key: 0,
+                                          class: "task-plan-summary-item"
+                                        }, [
+                                          _createElementVNode("span", { class: "task-plan-summary-label" }, _toDisplayString(_ctx.t('orchestration.plan.summary.threadId')), 1 /* TEXT */),
+                                          _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.plan.threadId), 1 /* TEXT */)
+                                        ]))
+                                      : _createCommentVNode("v-if", true),
+                                    (_ctx.taskOrchestration.plan.cwd)
+                                      ? (_openBlock(), _createElementBlock("div", {
+                                          key: 1,
+                                          class: "task-plan-summary-item"
+                                        }, [
+                                          _createElementVNode("span", { class: "task-plan-summary-label" }, _toDisplayString(_ctx.t('orchestration.plan.summary.cwd')), 1 /* TEXT */),
+                                          _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.plan.cwd), 1 /* TEXT */)
+                                        ]))
+                                      : _createCommentVNode("v-if", true)
                                   ]),
                                   _createElementVNode("div", { class: "task-wave-list" }, [
                                     (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.taskOrchestration.plan.waves, (wave) => {
@@ -4522,9 +4564,25 @@ return function render(_ctx, _cache) {
                                             _createElementVNode("div", { class: "task-runtime-item-main" }, [
                                               _createElementVNode("div", { class: "task-runtime-item-title" }, _toDisplayString(item.title || item.target || item.taskId), 1 /* TEXT */),
                                               _createElementVNode("div", { class: "task-runtime-item-meta" }, _toDisplayString(item.taskId) + " · " + _toDisplayString(item.updatedAt || item.createdAt), 1 /* TEXT */),
-                                              (item.lastSummary)
+                                              (item.threadId || item.cwd)
                                                 ? (_openBlock(), _createElementBlock("div", {
                                                     key: 0,
+                                                    class: "task-runtime-item-meta"
+                                                  }, [
+                                                    (item.threadId)
+                                                      ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.t('orchestration.plan.summary.threadId')) + ": " + _toDisplayString(item.threadId), 1 /* TEXT */))
+                                                      : _createCommentVNode("v-if", true),
+                                                    (item.threadId && item.cwd)
+                                                      ? (_openBlock(), _createElementBlock("span", { key: 1 }, " · "))
+                                                      : _createCommentVNode("v-if", true),
+                                                    (item.cwd)
+                                                      ? (_openBlock(), _createElementBlock("span", { key: 2 }, _toDisplayString(_ctx.t('orchestration.plan.summary.cwd')) + ": " + _toDisplayString(item.cwd), 1 /* TEXT */))
+                                                      : _createCommentVNode("v-if", true)
+                                                  ]))
+                                                : _createCommentVNode("v-if", true),
+                                              (item.lastSummary)
+                                                ? (_openBlock(), _createElementBlock("div", {
+                                                    key: 1,
                                                     class: "task-runtime-item-summary"
                                                   }, _toDisplayString(item.lastSummary), 1 /* TEXT */))
                                                 : _createCommentVNode("v-if", true)
@@ -4573,9 +4631,25 @@ return function render(_ctx, _cache) {
                                               _createElementVNode("div", { class: "task-runtime-item-main" }, [
                                                 _createElementVNode("div", { class: "task-runtime-item-title" }, _toDisplayString(item.title || item.taskId || item.runId), 1 /* TEXT */),
                                                 _createElementVNode("div", { class: "task-runtime-item-meta" }, _toDisplayString(item.runId) + " · " + _toDisplayString(item.durationMs || 0) + "ms", 1 /* TEXT */),
-                                                (item.summary)
+                                                (item.threadId || item.cwd)
                                                   ? (_openBlock(), _createElementBlock("div", {
                                                       key: 0,
+                                                      class: "task-runtime-item-meta"
+                                                    }, [
+                                                      (item.threadId)
+                                                        ? (_openBlock(), _createElementBlock("span", { key: 0 }, _toDisplayString(_ctx.t('orchestration.plan.summary.threadId')) + ": " + _toDisplayString(item.threadId), 1 /* TEXT */))
+                                                        : _createCommentVNode("v-if", true),
+                                                      (item.threadId && item.cwd)
+                                                        ? (_openBlock(), _createElementBlock("span", { key: 1 }, " · "))
+                                                        : _createCommentVNode("v-if", true),
+                                                      (item.cwd)
+                                                        ? (_openBlock(), _createElementBlock("span", { key: 2 }, _toDisplayString(_ctx.t('orchestration.plan.summary.cwd')) + ": " + _toDisplayString(item.cwd), 1 /* TEXT */))
+                                                        : _createCommentVNode("v-if", true)
+                                                    ]))
+                                                  : _createCommentVNode("v-if", true),
+                                                (item.summary)
+                                                  ? (_openBlock(), _createElementBlock("div", {
+                                                      key: 1,
                                                       class: "task-runtime-item-summary"
                                                     }, _toDisplayString(item.summary), 1 /* TEXT */))
                                                   : _createCommentVNode("v-if", true)
@@ -4606,6 +4680,12 @@ return function render(_ctx, _cache) {
                                         onClick: $event => (_ctx.retryTaskRunFromUi(_ctx.taskOrchestration.selectedRunId)),
                                         disabled: !_ctx.taskOrchestration.selectedRunId || _ctx.taskOrchestration.retrying
                                       }, _toDisplayString(_ctx.taskOrchestration.retrying ? _ctx.t('orchestration.detail.retrying') : _ctx.t('orchestration.detail.retry')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                                      _createElementVNode("button", {
+                                        type: "button",
+                                        class: "btn-tool btn-tool-compact",
+                                        onClick: _ctx.continueTaskThreadFromUi,
+                                        disabled: !_ctx.taskOrchestrationSelectedRun
+                                      }, _toDisplayString(_ctx.t('orchestration.detail.continueThread')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
                                       (_ctx.taskOrchestrationSelectedRun && _ctx.taskOrchestrationSelectedRun.run && _ctx.isTaskRunActive(_ctx.taskOrchestrationSelectedRun.run.status))
                                         ? (_openBlock(), _createElementBlock("button", {
                                             key: 0,
@@ -4646,7 +4726,25 @@ return function render(_ctx, _cache) {
                                             _createElementVNode("div", { class: "task-plan-summary-item" }, [
                                               _createElementVNode("span", { class: "task-plan-summary-label" }, _toDisplayString(_ctx.t('orchestration.detail.summary.summary')), 1 /* TEXT */),
                                               _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestrationSelectedRun.run.summary || _ctx.t('common.none')), 1 /* TEXT */)
-                                            ])
+                                            ]),
+                                            (_ctx.taskOrchestrationSelectedRun.threadId)
+                                              ? (_openBlock(), _createElementBlock("div", {
+                                                  key: 0,
+                                                  class: "task-plan-summary-item"
+                                                }, [
+                                                  _createElementVNode("span", { class: "task-plan-summary-label" }, _toDisplayString(_ctx.t('orchestration.plan.summary.threadId')), 1 /* TEXT */),
+                                                  _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestrationSelectedRun.threadId), 1 /* TEXT */)
+                                                ]))
+                                              : _createCommentVNode("v-if", true),
+                                            (_ctx.taskOrchestrationSelectedRun.cwd)
+                                              ? (_openBlock(), _createElementBlock("div", {
+                                                  key: 1,
+                                                  class: "task-plan-summary-item"
+                                                }, [
+                                                  _createElementVNode("span", { class: "task-plan-summary-label" }, _toDisplayString(_ctx.t('orchestration.plan.summary.cwd')), 1 /* TEXT */),
+                                                  _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestrationSelectedRun.cwd), 1 /* TEXT */)
+                                                ]))
+                                              : _createCommentVNode("v-if", true)
                                           ]),
                                           (_ctx.taskOrchestrationSelectedRun.run.error)
                                             ? (_openBlock(), _createElementBlock("div", {
