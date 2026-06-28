@@ -45,24 +45,79 @@ function normalizeLines(text) {
         .filter(Boolean);
 }
 
+let taskOrchestrationScrollObserver = null;
+
 function scrollTaskOrchestrationThreadToEnd() {
     if (typeof document === 'undefined') {
         return;
     }
-    setTimeout(() => {
-        const thread = document.querySelector('#panel-orchestration .task-chat-thread');
-        if (!thread) {
+    const alignLatestCard = (remainingAttempts = 20) => {
+        const panel = document.querySelector('#panel-orchestration');
+        const thread = panel && panel.querySelector('.task-chat-thread');
+        if (!panel || !thread) {
             return;
         }
-        const latestCard = thread.querySelector('.task-thread-plan-request:last-of-type')
-            || thread.querySelector('.task-thread-message-card:last-of-type')
+        const latestCard = Array.from(panel.querySelectorAll('.task-thread-plan-request, .task-thread-message-card')).pop()
             || thread.lastElementChild;
         if (latestCard && Number.isFinite(latestCard.offsetTop)) {
-            thread.scrollTop = Math.max(0, latestCard.offsetTop - thread.offsetTop - 12);
+            if (thread.contains(latestCard)) {
+                thread.scrollTop = Math.max(0, latestCard.offsetTop - thread.offsetTop - 12);
+            }
+            const composer = document.querySelector('#panel-orchestration .task-thread-composer');
+            const composerRect = composer && typeof composer.getBoundingClientRect === 'function'
+                ? composer.getBoundingClientRect()
+                : null;
+            const latestRect = typeof latestCard.getBoundingClientRect === 'function'
+                ? latestCard.getBoundingClientRect()
+                : null;
+            if (composerRect && latestRect) {
+                const safeBottom = composerRect.top - 20;
+                const overlap = latestRect.bottom - safeBottom;
+                if (overlap > 0) {
+                    let scrollElement = latestCard.parentElement;
+                    while (scrollElement && scrollElement !== document.body) {
+                        const style = window.getComputedStyle(scrollElement);
+                        const canScroll = /(auto|scroll)/.test(style.overflowY) && scrollElement.scrollHeight > scrollElement.clientHeight;
+                        if (canScroll) {
+                            break;
+                        }
+                        scrollElement = scrollElement.parentElement;
+                    }
+                    if (!scrollElement || scrollElement === document.body) {
+                        scrollElement = document.scrollingElement || document.documentElement;
+                    }
+                    const maxScrollTop = Math.max(0, scrollElement.scrollHeight - scrollElement.clientHeight);
+                    const targetScrollTop = Math.min(maxScrollTop, scrollElement.scrollTop + overlap);
+                    if (targetScrollTop > scrollElement.scrollTop) {
+                        scrollElement.scrollTo({ top: targetScrollTop, behavior: 'auto' });
+                    }
+                }
+            }
+            if (remainingAttempts > 0) {
+                setTimeout(() => alignLatestCard(remainingAttempts - 1), 160);
+            }
             return;
         }
         thread.scrollTop = thread.scrollHeight;
-    }, 0);
+        if (remainingAttempts > 0) {
+            setTimeout(() => alignLatestCard(remainingAttempts - 1), 160);
+        }
+    };
+    setTimeout(() => alignLatestCard(), 0);
+    const panel = document.querySelector('#panel-orchestration');
+    if (panel && typeof MutationObserver !== 'undefined') {
+        if (taskOrchestrationScrollObserver) {
+            taskOrchestrationScrollObserver.disconnect();
+        }
+        taskOrchestrationScrollObserver = new MutationObserver(() => alignLatestCard(2));
+        taskOrchestrationScrollObserver.observe(panel, { childList: true, subtree: true });
+        setTimeout(() => {
+            if (taskOrchestrationScrollObserver) {
+                taskOrchestrationScrollObserver.disconnect();
+                taskOrchestrationScrollObserver = null;
+            }
+        }, 4000);
+    }
 }
 
 function normalizePositiveInteger(value, fallback, min = 1, max = 8) {
@@ -521,6 +576,7 @@ export function createTaskOrchestrationMethods(options = {}) {
                 }
                 state.selectedRunDetail = res;
                 state.selectedRunError = '';
+                scrollTaskOrchestrationThreadToEnd();
                 this.syncTaskOrchestrationPolling();
                 return res;
             } catch (error) {
