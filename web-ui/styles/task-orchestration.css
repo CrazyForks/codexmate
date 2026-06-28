@@ -1289,3 +1289,130 @@ body:has(#panel-orchestration[data-active="true"]) .side-item.nav-intent-active 
         width: 100%;
     }
 }
+
+/* Codex-style orchestration simplification: keep the chat thread as the main surface. */
+#panel-orchestration .task-hero-card {
+    max-width: 920px;
+    margin: -4px auto 14px;
+    padding: 16px 18px;
+    box-shadow: none;
+}
+
+#panel-orchestration .task-hero-main {
+    align-items: center;
+}
+
+#panel-orchestration .task-hero-copy,
+#panel-orchestration .task-hero-meta-strip,
+#panel-orchestration .task-quick-copy,
+#panel-orchestration .task-template-block,
+#panel-orchestration .task-quick-side-card,
+#panel-orchestration .task-stage-card {
+    display: none;
+}
+
+#panel-orchestration .task-layout-grid-primary,
+#panel-orchestration .task-layout-grid-secondary {
+    max-width: 920px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#panel-orchestration .task-quick-card {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+#panel-orchestration .task-quick-main {
+    display: block;
+    min-width: 0;
+}
+
+#panel-orchestration .task-chat-panel {
+    margin: 0;
+    padding: 14px;
+    border: 1px solid var(--color-border-soft);
+    border-radius: 18px;
+    background: var(--color-surface-raised, var(--color-surface));
+    box-shadow: none;
+}
+
+#panel-orchestration .task-chat-thread {
+    max-height: 280px;
+    margin-bottom: 10px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+#panel-orchestration .task-chat-composer .task-textarea-goal {
+    min-height: 116px;
+    resize: vertical;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    font-size: 15px;
+    line-height: 1.55;
+    box-shadow: none;
+}
+
+#panel-orchestration .task-chat-composer .task-textarea-goal:focus {
+    box-shadow: none;
+}
+
+#panel-orchestration .task-chat-send-row,
+#panel-orchestration .task-chat-context-row,
+#panel-orchestration .task-draft-inline,
+#panel-orchestration .task-action-row-prominent {
+    margin-top: 10px;
+}
+
+#panel-orchestration .task-chat-context-row,
+#panel-orchestration .task-config-strip {
+    opacity: 0.82;
+}
+
+#panel-orchestration .task-action-row-prominent {
+    padding-top: 10px;
+    border-top: 1px solid var(--color-border-soft);
+}
+
+#panel-orchestration .task-action-row-prominent .task-action-row-right {
+    margin-left: auto;
+}
+
+#panel-orchestration .task-codex-queue-action {
+    justify-content: flex-start;
+    margin: 0 0 12px;
+}
+
+#panel-orchestration .task-quick-advanced {
+    margin-top: 8px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+#panel-orchestration .task-plan-card,
+#panel-orchestration .task-workbench-card {
+    border-radius: 20px;
+    box-shadow: none;
+}
+
+@media (max-width: 760px) {
+    #panel-orchestration .task-hero-main,
+    #panel-orchestration .task-action-row-prominent,
+    #panel-orchestration .task-action-row-prominent .task-action-row-right {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    #panel-orchestration .task-action-row-prominent .btn-tool,
+    #panel-orchestration .task-action-row-prominent .task-action-row-right {
+        width: 100%;
+    }
+}

@@ -100,9 +100,6 @@
                                             <button type="button" class="btn-tool btn-primary" @click="planAndRunTaskOrchestration()" :disabled="taskOrchestration.running || taskOrchestration.planning || !taskOrchestration.target.trim()">
                                                 {{ (taskOrchestration.running || taskOrchestration.planning) ? t('orchestration.actions.preparing') : (taskOrchestration.runMode === 'dry-run' ? t('orchestration.actions.generatePlan') : t('orchestration.actions.planAndRun')) }}
                                             </button>
-                                            <button type="button" class="btn-tool" @click="queueTaskOrchestrationAndStart()" :disabled="taskOrchestration.queueAdding || taskOrchestration.queueStarting || taskOrchestration.planning || !taskOrchestration.target.trim()">
-                                                {{ (taskOrchestration.queueAdding || taskOrchestration.queueStarting) ? t('orchestration.actions.processing') : t('orchestration.actions.queueAndStart') }}
-                                            </button>
                                         </div>
                                     </div>
                                     <div class="task-action-caption">{{ t('orchestration.quick.caption') }}</div>
@@ -128,6 +125,11 @@
 
                                 <details class="task-advanced-panel task-quick-advanced">
                                     <summary class="task-advanced-summary">{{ t('orchestration.advanced.title') }}</summary>
+                                    <div class="task-action-row-right task-action-row-right-prominent task-codex-queue-action">
+                                        <button type="button" class="btn-tool" @click="queueTaskOrchestrationAndStart()" :disabled="taskOrchestration.queueAdding || taskOrchestration.queueStarting || taskOrchestration.planning || !taskOrchestration.target.trim()">
+                                            {{ (taskOrchestration.queueAdding || taskOrchestration.queueStarting) ? t('orchestration.actions.processing') : t('orchestration.actions.queueAndStart') }}
+                                        </button>
+                                    </div>
                                     <div class="selector-grid task-composer-grid task-composer-grid-secondary">
                                         <label class="selector-field task-field-wide">
                                             <span class="selector-label">{{ t('orchestration.fields.title') }}</span>

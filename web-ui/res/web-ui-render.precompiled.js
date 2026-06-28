@@ -4163,13 +4163,7 @@ return function render(_ctx, _cache) {
                               class: "btn-tool btn-primary",
                               onClick: $event => (_ctx.planAndRunTaskOrchestration()),
                               disabled: _ctx.taskOrchestration.running || _ctx.taskOrchestration.planning || !_ctx.taskOrchestration.target.trim()
-                            }, _toDisplayString((_ctx.taskOrchestration.running || _ctx.taskOrchestration.planning) ? _ctx.t('orchestration.actions.preparing') : (_ctx.taskOrchestration.runMode === 'dry-run' ? _ctx.t('orchestration.actions.generatePlan') : _ctx.t('orchestration.actions.planAndRun'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                            _createElementVNode("button", {
-                              type: "button",
-                              class: "btn-tool",
-                              onClick: $event => (_ctx.queueTaskOrchestrationAndStart()),
-                              disabled: _ctx.taskOrchestration.queueAdding || _ctx.taskOrchestration.queueStarting || _ctx.taskOrchestration.planning || !_ctx.taskOrchestration.target.trim()
-                            }, _toDisplayString((_ctx.taskOrchestration.queueAdding || _ctx.taskOrchestration.queueStarting) ? _ctx.t('orchestration.actions.processing') : _ctx.t('orchestration.actions.queueAndStart')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                            }, _toDisplayString((_ctx.taskOrchestration.running || _ctx.taskOrchestration.planning) ? _ctx.t('orchestration.actions.preparing') : (_ctx.taskOrchestration.runMode === 'dry-run' ? _ctx.t('orchestration.actions.generatePlan') : _ctx.t('orchestration.actions.planAndRun'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
                           ])
                         ]),
                         _createElementVNode("div", { class: "task-action-caption" }, _toDisplayString(_ctx.t('orchestration.quick.caption')), 1 /* TEXT */)
@@ -4205,6 +4199,14 @@ return function render(_ctx, _cache) {
                       ]),
                       _createElementVNode("details", { class: "task-advanced-panel task-quick-advanced" }, [
                         _createElementVNode("summary", { class: "task-advanced-summary" }, _toDisplayString(_ctx.t('orchestration.advanced.title')), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "task-action-row-right task-action-row-right-prominent task-codex-queue-action" }, [
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "btn-tool",
+                            onClick: $event => (_ctx.queueTaskOrchestrationAndStart()),
+                            disabled: _ctx.taskOrchestration.queueAdding || _ctx.taskOrchestration.queueStarting || _ctx.taskOrchestration.planning || !_ctx.taskOrchestration.target.trim()
+                          }, _toDisplayString((_ctx.taskOrchestration.queueAdding || _ctx.taskOrchestration.queueStarting) ? _ctx.t('orchestration.actions.processing') : _ctx.t('orchestration.actions.queueAndStart')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                        ]),
                         _createElementVNode("div", { class: "selector-grid task-composer-grid task-composer-grid-secondary" }, [
                           _createElementVNode("label", { class: "selector-field task-field-wide" }, [
                             _createElementVNode("span", { class: "selector-label" }, _toDisplayString(_ctx.t('orchestration.fields.title')), 1 /* TEXT */),
