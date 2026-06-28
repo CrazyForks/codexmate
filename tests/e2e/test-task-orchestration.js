@@ -484,7 +484,7 @@ module.exports = async function testTaskOrchestration(ctx) {
         assertOpenAiRunPayload(symlinkPlanRunPayload, 'OpenAI Chat symlink plan run');
         assert(!fs.existsSync(path.join(symlinkEscapeDir, 'index.html')), 'OpenAI Chat materialization must not follow symlinked parents outside cwd');
         const symlinkMaterializedFiles = symlinkPlanRunPayload.run.nodes.flatMap(item => item && item.output && Array.isArray(item.output.materializedFiles) ? item.output.materializedFiles : []);
-        assert.strictEqual(symlinkMaterializedFiles.length, 0, 'OpenAI Chat symlink materialization should not report escaped files');
+        assert(symlinkMaterializedFiles.length === 0, 'OpenAI Chat symlink materialization should not report escaped files');
         const symlinkLogs = JSON.stringify(symlinkPlanRunPayload.run.nodes.flatMap(item => Array.isArray(item && item.logs) ? item.logs : []));
         assert(symlinkLogs.includes('artifact parent is a symlink'), 'OpenAI Chat symlink rejection should be visible in run logs');
 
