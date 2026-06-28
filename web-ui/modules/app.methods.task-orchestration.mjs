@@ -361,6 +361,31 @@ export function createTaskOrchestrationMethods(options = {}) {
             return true;
         },
 
+        async submitTaskOrchestrationChatMessage() {
+            const state = this.ensureTaskOrchestrationState();
+            const rawMessage = String(state.chatDraft || '').trim();
+            if (!rawMessage) {
+                return false;
+            }
+            const planCommand = rawMessage.match(/^\/plan(?:\s+([\s\S]*))?$/i);
+            if (!planCommand) {
+                return this.appendTaskChatMessage();
+            }
+            const planTarget = String(planCommand[1] || '').trim();
+            if (planTarget) {
+                state.chatDraft = planTarget;
+                if (!this.appendTaskChatMessage()) {
+                    return false;
+                }
+            } else if (!String(state.target || '').trim()) {
+                this.showMessage('先输入任务需求，再发送 /plan', 'error');
+                return false;
+            } else {
+                state.chatDraft = '';
+            }
+            return this.previewTaskPlan({ silent: false });
+        },
+
         async previewTaskPlan(options = {}) {
             const state = this.ensureTaskOrchestrationState();
             if (state.planning) {

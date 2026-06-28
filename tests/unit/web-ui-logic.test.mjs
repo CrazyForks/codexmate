@@ -1298,6 +1298,49 @@ test('appendTaskChatMessage records sequential requests and invalidates stale pl
     assert.deepStrictEqual(req.followUps, ['Then finish requirement 2 with the prior context']);
 });
 
+test('submitTaskOrchestrationChatMessage treats /plan as chat preview command', async () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const previewCalls = [];
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        appendTaskChatMessage: methods.appendTaskChatMessage,
+        previewTaskPlan(options) {
+            previewCalls.push(options);
+            return Promise.resolve({ ok: true });
+        },
+        showMessage(message, tone) {
+            throw new Error(`unexpected message: ${tone}:${message}`);
+        },
+        taskOrchestration: {
+            chatDraft: '/plan Finish requirement 1',
+            target: '',
+            followUpsText: '',
+            selectedEngine: 'openai-chat',
+            runMode: 'write',
+            plan: null,
+            planFingerprint: '',
+            planIssues: [],
+            planWarnings: [],
+            lastError: ''
+        }
+    };
+
+    const result = await methods.submitTaskOrchestrationChatMessage.call(context);
+
+    assert.deepStrictEqual(result, { ok: true });
+    assert.strictEqual(context.taskOrchestration.target, 'Finish requirement 1');
+    assert.strictEqual(context.taskOrchestration.followUpsText, '');
+    assert.strictEqual(context.taskOrchestration.chatDraft, '');
+    assert.deepStrictEqual(previewCalls, [{ silent: false }]);
+
+    context.taskOrchestration.chatDraft = '/plan';
+    const secondResult = await methods.submitTaskOrchestrationChatMessage.call(context);
+    assert.deepStrictEqual(secondResult, { ok: true });
+    assert.strictEqual(context.taskOrchestration.target, 'Finish requirement 1');
+    assert.strictEqual(context.taskOrchestration.followUpsText, '');
+    assert.deepStrictEqual(previewCalls, [{ silent: false }, { silent: false }]);
+});
+
 test('taskOrchestrationConversationMessages renders assistant-left and user-right sequence model', () => {
     const computed = createMainTabsComputed();
     const translations = {

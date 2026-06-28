@@ -94,7 +94,8 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /t\('orchestration\.hero\.kicker'\)/);
     assert.match(orchestrationPanel, /t\('orchestration\.hero\.title'\)/);
     assert.doesNotMatch(orchestrationPanel, /@click="previewTaskPlan\(\)"/);
-    assert.match(orchestrationPanel, /@click="planAndRunTaskOrchestration\(\)"/);
+    assert.doesNotMatch(orchestrationPanel, /@click="planAndRunTaskOrchestration\(\)"/);
+    assert.doesNotMatch(orchestrationPanel, /orchestration\.actions\.generatePlan/);
     assert.match(orchestrationPanel, /@click="queueTaskOrchestrationAndStart\(\)"/);
     assert.match(orchestrationPanel, /@click="startTaskQueueRunner\(\)"/);
     assert.match(orchestrationPanel, /@click="retryTaskRunFromUi\(taskOrchestration.selectedRunId\)"/);
@@ -107,13 +108,14 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /class="[^\"]*task-thread-message-card[^\"]*task-thread-workbench-card[^\"]*"/);
     assert.match(orchestrationPanel, /class="task-thread-card-label">AI · \{\{ t\('orchestration\.plan\.title'\) \}\}/);
     assert.match(orchestrationPanel, /class="task-chat-bubble-row is-user task-thread-plan-request"/);
-    assert.match(orchestrationPanel, /You · latest request/);
+    assert.match(orchestrationPanel, /You · \/plan/);
+    assert.match(orchestrationPanel, /\/plan \{\{ taskOrchestration\.target \}\}/);
     assert.match(orchestrationPanel, /v-for="message in taskOrchestrationConversationMessages"/);
     assert.match(orchestrationPanel, /message\.role === 'user' \? 'is-user' : 'is-assistant'/);
     assert.match(orchestrationPanel, /class="[^"]*task-chat-composer[^"]*"/);
     assert.match(orchestrationPanel, /v-model="taskOrchestration\.chatDraft"/);
-    assert.match(orchestrationPanel, /@keydown\.enter\.exact\.prevent="appendTaskChatMessage\(\)"/);
-    assert.match(orchestrationPanel, /@click="appendTaskChatMessage\(\)"/);
+    assert.match(orchestrationPanel, /@keydown\.enter\.exact\.prevent="submitTaskOrchestrationChatMessage\(\)"/);
+    assert.match(orchestrationPanel, /@click="submitTaskOrchestrationChatMessage\(\)"/);
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.input\.label'\)/);
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.input\.placeholder'\)/);
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.context\.workspace\.auto'\)/);
@@ -140,7 +142,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /t\('orchestration\.stage\.title'\)/);
     assert.doesNotMatch(orchestrationPanel, /class="btn-tool task-action-preview" @click="previewTaskPlan\(\)"/);
     assert.doesNotMatch(orchestrationPanel, /orchestration\.actions\.previewOnly/);
-    assert.match(orchestrationPanel, /class="task-action-row-right task-action-row-right-prominent"/);
+    assert.doesNotMatch(orchestrationPanel, /class="task-action-row-right task-action-row-right-prominent"/);
     assert.match(orchestrationPanel, /class="task-action-caption"/);
     assert.match(orchestrationPanel, /class="task-empty-state"/);
     assert.match(orchestrationPanel, /taskOrchestration.selectedRunError/);

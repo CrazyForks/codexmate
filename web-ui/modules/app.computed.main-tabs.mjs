@@ -100,17 +100,7 @@ function createTaskConversationMessages(taskOrchestration, t = null) {
             meta: translateTaskText(t, 'orchestration.chat.meta.afterPrevious', '等待前一条完成后继续')
         });
     });
-    if (state.plan && typeof state.plan === 'object') {
-        const nodeCount = Array.isArray(state.plan.nodes) ? state.plan.nodes.length : 0;
-        const waveCount = Array.isArray(state.plan.waves) ? state.plan.waves.length : 0;
-        messages.push({
-            id: 'assistant-plan',
-            role: 'assistant',
-            label: translateTaskText(t, 'orchestration.chat.assistant.planLabel', '计划预览'),
-            text: translateTaskText(t, 'orchestration.chat.assistant.planSummary', '计划已生成：{nodes} 个节点，{waves} 个批次。', { nodes: nodeCount, waves: waveCount }),
-            meta: translateTaskText(t, 'orchestration.chat.meta.contextKept', '上下文会随线程保留')
-        });
-    } else if (target) {
+    if (!state.plan && target) {
         messages.push({
             id: 'assistant-next',
             role: 'assistant',
@@ -172,7 +162,7 @@ function createTaskDraftChecklist(metrics, t = null) {
             label: translateTaskText(t, 'orchestration.readiness.preview.label', '预览'),
             done: previewReady,
             detail: !metrics.hasPlan
-                ? translateTaskText(t, 'orchestration.readiness.preview.missing', '还没生成计划')
+                ? translateTaskText(t, 'orchestration.readiness.preview.missing', '还没发送 /plan')
                 : (metrics.planIssues.length > 0 ? translateTaskText(t, 'orchestration.readiness.preview.blocked', `有 ${metrics.planIssues.length} 个阻塞项`, { count: metrics.planIssues.length }) : translateTaskText(t, 'orchestration.readiness.preview.ready', `计划可用，${metrics.planNodeCount} 个节点`, { count: metrics.planNodeCount }))
         }
     ];
@@ -199,7 +189,7 @@ function createTaskDraftReadiness(metrics, t = null) {
             title: translateTaskText(t, 'orchestration.readiness.preview.title', '建议先预览'),
             summary: metrics.hasSequentialFollowUps
                 ? translateTaskText(t, 'orchestration.readiness.preview.sequenceSummary', '草稿已成形，已锁定 {count} 条顺序需求：先完成需求 1，再继续需求 2。', { count: metrics.requestCount })
-                : translateTaskText(t, 'orchestration.readiness.preview.summary', '草稿已成形，先生成一次计划，确认节点和依赖再执行。')
+                : translateTaskText(t, 'orchestration.readiness.preview.summary', '草稿已成形，发送 /plan 预览方案，确认节点和依赖再执行。')
         };
     }
     if (metrics.planIssues.length > 0) {
@@ -213,7 +203,7 @@ function createTaskDraftReadiness(metrics, t = null) {
         return {
             tone: 'warn',
             title: translateTaskText(t, 'orchestration.readiness.warn.title', '可以执行，但有提醒'),
-            summary: translateTaskText(t, 'orchestration.readiness.warn.summary', `计划已生成，但还有 ${metrics.planWarnings.length} 条提醒值得先看一眼。`, { count: metrics.planWarnings.length })
+            summary: translateTaskText(t, 'orchestration.readiness.warn.summary', `/plan 方案已生成，但还有 ${metrics.planWarnings.length} 条提醒值得先看一眼。`, { count: metrics.planWarnings.length })
         };
     }
     if (metrics.dryRun) {

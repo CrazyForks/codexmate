@@ -1071,16 +1071,6 @@
     background: rgba(255, 255, 255, 0.58);
 }
 
-.task-quick-actions {
-    justify-content: space-between;
-    gap: 12px;
-    margin-top: 16px;
-}
-
-.task-quick-actions > .task-action-row-right {
-    margin-left: auto;
-}
-
 .task-quick-template-block {
     padding: 14px;
 }
@@ -1241,18 +1231,6 @@
     .task-quick-template-grid,
     .task-quick-checklist {
         grid-template-columns: 1fr;
-    }
-
-    .task-quick-actions,
-    .task-quick-actions > .task-action-row-right {
-        align-items: stretch;
-        width: 100%;
-        margin-left: 0;
-    }
-
-    .task-quick-actions > .btn-tool,
-    .task-quick-actions > .task-action-row-right > .btn-tool {
-        width: 100%;
     }
 }
 
@@ -2327,6 +2305,15 @@
 
 #panel-orchestration .task-thread-run-details[open] > summary {
     margin-bottom: 8px;
+}
+
+#panel-orchestration .task-thread-detail-actions {
+    justify-content: flex-start;
+    margin-bottom: 8px;
+}
+
+#panel-orchestration .task-thread-plan-details .task-plan-summary-strip {
+    margin-top: 0;
 }
 
 #panel-orchestration .task-thread-workbench-card .task-runtime-list,

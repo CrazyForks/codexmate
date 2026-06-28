@@ -25,11 +25,6 @@
                                 </button>
                             </div>
                         </div>
-                        <div v-if="taskOrchestrationQueueStats.running || taskOrchestrationQueueStats.queued || taskOrchestration.runs.length" class="task-hero-meta-strip" :aria-label="t('orchestration.summary.aria')">
-                            <div class="task-hero-meta">{{ t('orchestration.summary.running') }} <strong>{{ taskOrchestrationQueueStats.running }}</strong></div>
-                            <div class="task-hero-meta">{{ t('orchestration.summary.queued') }} <strong>{{ taskOrchestrationQueueStats.queued }}</strong></div>
-                            <div class="task-hero-meta">{{ t('orchestration.summary.runs') }} <strong>{{ taskOrchestration.runs.length }}</strong></div>
-                        </div>
                     </section>
 
                     <div class="task-layout-grid task-layout-grid-primary task-quick-layout">
@@ -57,8 +52,8 @@
                                         v-if="taskOrchestration.plan || taskOrchestration.planIssues.length || taskOrchestration.planWarnings.length || taskOrchestration.lastError"
                                         class="task-chat-bubble-row is-user task-thread-plan-request">
                                         <div class="task-chat-bubble">
-                                            <div class="task-chat-bubble-label">You · latest request</div>
-                                            <div class="task-chat-bubble-text">{{ taskOrchestration.target }}</div>
+                                            <div class="task-chat-bubble-label">You · /plan</div>
+                                            <div class="task-chat-bubble-text">/plan {{ taskOrchestration.target }}</div>
                                             <div v-if="taskOrchestrationDraftMetrics.followUpCount" class="task-chat-bubble-meta">{{ t('orchestration.chat.input.sequenceHint', { count: taskOrchestrationDraftMetrics.followUpCount + 1 }) }}</div>
                                         </div>
                                     </div>
@@ -186,11 +181,9 @@
                                         class="selector-section task-plan-card task-thread-message-card task-thread-plan-card">
                                         <div class="task-thread-card-label">AI · {{ t('orchestration.plan.title') }}</div>
                                         <div v-if="taskOrchestration.lastError" class="task-issue-item">{{ taskOrchestration.lastError }}</div>
-                                        <div class="selector-header task-section-header">
-                                            <div>
-                                                <span class="selector-title">{{ t('orchestration.plan.title') }}</span>
-                                                <div class="skills-panel-note">{{ t('orchestration.plan.subtitle') }}</div>
-                                            </div>
+                                        <div v-if="taskOrchestration.plan" class="task-thread-run-summary task-thread-plan-summary">
+                                            <span class="pill configured">/plan</span>
+                                            <span class="task-thread-run-summary-copy">{{ t('orchestration.chat.assistant.planSummary', { nodes: taskOrchestration.plan.nodes.length, waves: taskOrchestration.plan.waves.length }) }}</span>
                                         </div>
                                         <div v-if="taskOrchestration.planIssues.length" class="task-issues-list">
                                             <div v-for="issue in taskOrchestration.planIssues" :key="issue.code + issue.message" class="task-issue-item">
@@ -203,6 +196,8 @@
                                             </div>
                                         </div>
                                         <template v-if="taskOrchestration.plan">
+                                            <details class="task-thread-run-details task-thread-plan-details">
+                                                <summary>Plan details</summary>
                                             <div class="task-plan-summary-strip">
                                                 <div class="task-plan-summary-item">
                                                     <span class="task-plan-summary-label">{{ t('orchestration.plan.summary.nodes') }}</span>
@@ -243,26 +238,13 @@
                                                     <div class="task-node-deps">{{ t('orchestration.labels.dependencies') }}{{ formatTaskNodeDependencies(node) }}</div>
                                                 </div>
                                             </div>
+                                            </details>
                                         </template>
                                     </section>
                                     <section
                                         v-if="taskOrchestrationActiveQueue.length || taskOrchestration.runs.length || taskOrchestration.selectedRunId || taskOrchestration.selectedRunError"
                                         class="selector-section task-workbench-card task-thread-message-card task-thread-workbench-card">
                                         <div class="task-thread-card-label">AI · {{ t('orchestration.workbench.title') }}</div>
-                                        <div class="selector-header task-section-header">
-                                            <div>
-                                                <span class="selector-title">{{ t('orchestration.workbench.title') }}</span>
-                                                <div class="skills-panel-note">{{ t('orchestration.workbench.subtitle') }}</div>
-                                            </div>
-                                            <div class="settings-tab-actions task-header-actions">
-                                                <button type="button" class="btn-tool btn-tool-compact" @click="loadTaskOrchestrationOverview({ forceRefresh: true, includeDetail: true })" :disabled="taskOrchestration.loading">
-                                                    {{ taskOrchestration.loading ? t('common.refreshing') : t('common.refresh') }}
-                                                </button>
-                                                <button v-if="taskOrchestrationActiveQueue.length" type="button" class="btn-tool btn-tool-compact" @click="startTaskQueueRunner()" :disabled="taskOrchestration.queueStarting">
-                                                    {{ taskOrchestration.queueStarting ? t('orchestration.queue.starting') : t('orchestration.queue.start') }}
-                                                </button>
-                                            </div>
-                                        </div>
                                         <div class="task-thread-run-summary">
                                             <span v-if="taskOrchestrationSelectedRun && taskOrchestrationSelectedRun.run" :class="['pill', taskRunStatusTone(taskOrchestrationSelectedRun.run.status)]">{{ taskOrchestrationSelectedRun.run.status }}</span>
                                             <span v-else-if="taskOrchestration.runs.length" :class="['pill', taskRunStatusTone(taskOrchestration.runs[0].status)]">{{ taskOrchestration.runs[0].status }}</span>
@@ -275,6 +257,15 @@
                                         </div>
                                         <details class="task-thread-run-details">
                                             <summary>Execution details</summary>
+
+                                        <div class="settings-tab-actions task-header-actions task-thread-detail-actions">
+                                            <button type="button" class="btn-tool btn-tool-compact" @click="loadTaskOrchestrationOverview({ forceRefresh: true, includeDetail: true })" :disabled="taskOrchestration.loading">
+                                                {{ taskOrchestration.loading ? t('common.refreshing') : t('common.refresh') }}
+                                            </button>
+                                            <button v-if="taskOrchestrationActiveQueue.length" type="button" class="btn-tool btn-tool-compact" @click="startTaskQueueRunner()" :disabled="taskOrchestration.queueStarting">
+                                                {{ taskOrchestration.queueStarting ? t('orchestration.queue.starting') : t('orchestration.queue.start') }}
+                                            </button>
+                                        </div>
 
                                         <div
                                             v-if="(taskOrchestrationActiveQueue.length ? 1 : 0) + (taskOrchestration.runs.length ? 1 : 0) + ((taskOrchestration.selectedRunId || taskOrchestration.selectedRunError) ? 1 : 0) > 1"
@@ -442,11 +433,11 @@
                                                 class="task-textarea task-textarea-goal task-quick-target"
                                                 rows="3"
                                                 :placeholder="t('orchestration.chat.input.placeholder')"
-                                                @keydown.enter.exact.prevent="appendTaskChatMessage()"></textarea>
+                                                @keydown.enter.exact.prevent="submitTaskOrchestrationChatMessage()"></textarea>
                                             <span class="task-field-hint">{{ t('orchestration.chat.input.hint') }}</span>
                                         </label>
                                         <div class="task-chat-send-row">
-                                            <button type="button" class="btn-tool btn-primary" @click="appendTaskChatMessage()" :disabled="!taskOrchestration.chatDraft.trim()">
+                                            <button type="button" class="btn-tool btn-primary" @click="submitTaskOrchestrationChatMessage()" :disabled="!taskOrchestration.chatDraft.trim()">
                                                 {{ t('orchestration.chat.input.send') }}
                                             </button>
                                             <span class="task-field-hint">{{ taskOrchestrationDraftMetrics.hasTarget ? t('orchestration.chat.input.sequenceHint', { count: taskOrchestrationDraftMetrics.followUpCount + 2 }) : t('orchestration.chat.input.firstHint') }}</span>
@@ -458,13 +449,6 @@
                                             <span class="task-chat-context-chip">{{ taskOrchestration.runMode === 'dry-run' ? t('orchestration.runMode.dryRun') : (taskOrchestration.runMode === 'read' ? t('orchestration.runMode.readOnly') : t('orchestration.runMode.write') ) }}</span>
                                         </div>
 
-                                        <div class="task-action-row task-action-row-prominent task-quick-actions">
-                                            <div class="task-action-row-right task-action-row-right-prominent">
-                                                <button type="button" class="btn-tool btn-primary" @click="planAndRunTaskOrchestration()" :disabled="taskOrchestration.running || taskOrchestration.planning || !taskOrchestration.target.trim()">
-                                                    {{ (taskOrchestration.running || taskOrchestration.planning) ? t('orchestration.actions.preparing') : (taskOrchestration.runMode === 'dry-run' ? t('orchestration.actions.generatePlan') : t('orchestration.actions.planAndRun')) }}
-                                                </button>
-                                            </div>
-                                        </div>
                                         <div class="task-action-caption">{{ t('orchestration.quick.caption') }}</div>
                                     </div>
                                 </div>

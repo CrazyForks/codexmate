@@ -635,6 +635,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'syncTaskOrchestrationPolling',
         'resetTaskOrchestrationDraft',
         'appendTaskChatMessage',
+        'submitTaskOrchestrationChatMessage',
         'appendTaskWorkflowId',
         'openClaudeMdEditor',
         'switchPromptsSubTab',
