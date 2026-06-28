@@ -451,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 opencodeMaxTokens: '',
                 opencodeReasoningEffort: '',
                 forceCompactLayout: false,
-                taskOrchestrationTabEnabled: true,
+                taskOrchestrationTabEnabled: false,
                 taskOrchestration: {
                     loading: false,
                     planning: false,
@@ -539,6 +539,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.agentsModalTitle = this.t('modal.agents.title');
                 this.agentsModalHint = this.t('modal.agents.hint');
             }
+            try {
+                const url = new URL(window.location.href);
+                const storedTaskOrchestrationFlag = localStorage.getItem('codexmateTaskOrchestrationTabEnabled');
+                const requestedTaskOrchestration = String(url.searchParams.get('taskOrchestration') || '').trim().toLowerCase();
+                if (storedTaskOrchestrationFlag === 'true' || requestedTaskOrchestration === '1' || requestedTaskOrchestration === 'true') {
+                    this.taskOrchestrationTabEnabled = true;
+                }
+            } catch (_) {}
             {
                 const NAV_STATE_STORAGE_KEY = 'codexmateNavState.v1';
                 const mainTabSet = new Set(['dashboard', 'config', 'sessions', 'usage', 'orchestration', 'market', 'plugins', 'docs', 'settings', 'trash', 'prompts']);
