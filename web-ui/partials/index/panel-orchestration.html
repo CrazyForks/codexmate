@@ -72,6 +72,7 @@
                                     <div class="task-chat-context-row" role="group" :aria-label="t('orchestration.chat.context.aria')">
                                         <span class="task-chat-context-chip">{{ taskOrchestration.workspacePath.trim() ? t('orchestration.chat.context.workspace.value', { value: taskOrchestration.workspacePath.trim() }) : t('orchestration.chat.context.workspace.auto') }}</span>
                                         <span class="task-chat-context-chip">{{ taskOrchestration.threadId.trim() ? t('orchestration.chat.context.thread.value', { value: taskOrchestration.threadId.trim() }) : t('orchestration.chat.context.thread.auto') }}</span>
+                                        <span class="task-chat-context-chip">{{ taskOrchestrationDraftMetrics.hasTarget ? t('orchestration.chat.context.sequence.value', { count: taskOrchestrationDraftMetrics.requestCount }) : t('orchestration.chat.context.sequence.empty') }}</span>
                                         <span class="task-chat-context-chip">{{ taskOrchestration.runMode === 'dry-run' ? t('orchestration.runMode.dryRun') : (taskOrchestration.runMode === 'read' ? t('orchestration.runMode.readOnly') : t('orchestration.runMode.write') ) }}</span>
                                     </div>
 
@@ -83,6 +84,7 @@
                                         <div class="task-config-strip">
                                             <div class="task-config-pill">{{ taskOrchestration.selectedEngine === 'workflow' ? t('orchestration.engine.workflow') : t('orchestration.engine.openaiChat') }}</div>
                                             <div class="task-config-pill">{{ taskOrchestration.runMode === 'dry-run' ? t('orchestration.runMode.dryRun') : (taskOrchestration.runMode === 'read' ? t('orchestration.runMode.readOnly') : t('orchestration.runMode.write') ) }}</div>
+                                            <div v-if="taskOrchestrationDraftMetrics.hasTarget" class="task-config-pill">{{ t('orchestration.pills.sequenceCount', { count: taskOrchestrationDraftMetrics.requestCount }) }}</div>
                                             <div v-if="taskOrchestration.title.trim()" class="task-config-pill">{{ t('orchestration.pills.hasTitle') }}</div>
                                             <div v-if="taskOrchestration.selectedEngine === 'workflow' && taskOrchestrationDraftMetrics.workflowCount > 0" class="task-config-pill">{{ t('orchestration.pills.workflowCount', { count: taskOrchestrationDraftMetrics.workflowCount }) }}</div>
                                             <div v-if="taskOrchestration.plan" class="task-config-pill">{{ t('orchestration.pills.planNodes', { count: taskOrchestrationDraftMetrics.planNodeCount }) }}</div>

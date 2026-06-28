@@ -1153,8 +1153,8 @@ test('taskOrchestrationDraftReadiness highlights missing workflow ids and previe
     assert.strictEqual(readiness.tone, 'warn');
     assert.strictEqual(readiness.title, '缺少 Workflow');
     assert.match(readiness.summary, /还没指定可复用流程/);
-    assert.strictEqual(context.taskOrchestrationDraftChecklist[1].done, false);
-    assert.match(context.taskOrchestrationDraftChecklist[2].detail, /建议补说明/);
+    assert.strictEqual(context.taskOrchestrationDraftChecklist.find((item) => item.key === 'engine').done, false);
+    assert.match(context.taskOrchestrationDraftChecklist.find((item) => item.key === 'scope').detail, /建议补说明/);
 });
 
 test('taskOrchestrationDraftReadiness marks ready plans as executable', () => {
@@ -1330,6 +1330,54 @@ test('taskOrchestrationConversationMessages renders assistant-left and user-righ
     assert.strictEqual(messages[0].meta, '先完成这一条');
     assert.strictEqual(messages[1].meta, '等待前一条完成后继续');
     assert.match(messages[3].text, /先完成需求 1/);
+});
+
+test('task orchestration draft status exposes sequential request order', () => {
+    const computed = createMainTabsComputed();
+    const translations = {
+        'orchestration.readiness.sequence.label': '顺序',
+        'orchestration.readiness.sequence.multiple': '{count} 条需求会按顺序执行：先完成需求 1，再继续需求 2。',
+        'orchestration.readiness.preview.title': '建议先预览',
+        'orchestration.readiness.preview.sequenceSummary': '草稿已成形，已锁定 {count} 条顺序需求：先完成需求 1，再继续需求 2。'
+    };
+    const context = {
+        t(key, params = {}) {
+            let value = translations[key] || key;
+            for (const [name, paramValue] of Object.entries(params || {})) {
+                value = value.replace(new RegExp(`\{${name}\}`, 'g'), String(paramValue));
+            }
+            return value;
+        },
+        taskOrchestration: {
+            target: '需求 1：先修复入口',
+            followUpsText: '需求 2：再补测试\n需求 3：最后汇报',
+            selectedEngine: 'openai-chat',
+            runMode: 'write',
+            notes: '',
+            workflowIdsText: '',
+            plan: null,
+            planIssues: [],
+            planWarnings: []
+        }
+    };
+
+    const metrics = computed.taskOrchestrationDraftMetrics.call(context);
+    context.taskOrchestrationDraftMetrics = metrics;
+    const checklist = computed.taskOrchestrationDraftChecklist.call(context);
+    const readiness = computed.taskOrchestrationDraftReadiness.call(context);
+
+    assert.strictEqual(metrics.requestCount, 3);
+    assert.strictEqual(metrics.hasSequentialFollowUps, true);
+    const sequenceItem = checklist.find((item) => item.key === 'sequence');
+    assert(sequenceItem);
+    assert.strictEqual(sequenceItem.done, true);
+    assert.match(sequenceItem.detail, /3 条需求/);
+    assert.match(sequenceItem.detail, /先完成需求 1/);
+    assert.match(sequenceItem.detail, /需求 2/);
+    assert.strictEqual(readiness.title, '建议先预览');
+    assert.match(readiness.summary, /3 条顺序需求/);
+    assert.match(readiness.summary, /先完成需求 1/);
+    assert.match(readiness.summary, /需求 2/);
 });
 
 test('buildTaskOrchestrationRequest clears stale workflow ids outside workflow mode', () => {

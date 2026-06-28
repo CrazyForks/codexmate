@@ -12,6 +12,7 @@ function readTaskOrchestrationDraftMetrics(taskOrchestration) {
     const title = String(state.title || '').trim();
     const workflowIds = normalizeTaskDraftLines(state.workflowIdsText);
     const followUps = normalizeTaskDraftLines(state.followUpsText);
+    const requestCount = target ? followUps.length + 1 : 0;
     const engine = String(state.selectedEngine || 'openai-chat').trim().toLowerCase() === 'workflow' ? 'workflow' : 'openai-chat';
     const runMode = String(state.runMode || 'write').trim().toLowerCase();
     const allowWrite = runMode === 'write';
@@ -37,6 +38,8 @@ function readTaskOrchestrationDraftMetrics(taskOrchestration) {
         planWarnings,
         workflowCount: workflowIds.length,
         followUpCount: followUps.length,
+        requestCount,
+        hasSequentialFollowUps: followUps.length > 0,
         planNodeCount: planNodes.length,
         allowWrite,
         dryRun
@@ -139,6 +142,16 @@ function createTaskDraftChecklist(metrics, t = null) {
             detail: metrics.hasTarget ? translateTaskText(t, 'orchestration.readiness.target.done', '已写目标') : translateTaskText(t, 'orchestration.readiness.target.missing', '还没写目标')
         },
         {
+            key: 'sequence',
+            label: translateTaskText(t, 'orchestration.readiness.sequence.label', '顺序'),
+            done: metrics.hasTarget,
+            detail: !metrics.hasTarget
+                ? translateTaskText(t, 'orchestration.readiness.sequence.missing', '先发送需求 1')
+                : (metrics.hasSequentialFollowUps
+                    ? translateTaskText(t, 'orchestration.readiness.sequence.multiple', '{count} 条需求会按顺序执行：先完成需求 1，再继续需求 2。', { count: metrics.requestCount })
+                    : translateTaskText(t, 'orchestration.readiness.sequence.single', '当前只有需求 1；继续发送会变成需求 2。'))
+        },
+        {
             key: 'engine',
             label: metrics.engine === 'workflow' ? 'Workflow' : translateTaskText(t, 'orchestration.readiness.engine.label', '执行策略'),
             done: workflowReady,
@@ -184,7 +197,9 @@ function createTaskDraftReadiness(metrics, t = null) {
         return {
             tone: 'warn',
             title: translateTaskText(t, 'orchestration.readiness.preview.title', '建议先预览'),
-            summary: translateTaskText(t, 'orchestration.readiness.preview.summary', '草稿已成形，先生成一次计划，确认节点和依赖再执行。')
+            summary: metrics.hasSequentialFollowUps
+                ? translateTaskText(t, 'orchestration.readiness.preview.sequenceSummary', '草稿已成形，已锁定 {count} 条顺序需求：先完成需求 1，再继续需求 2。', { count: metrics.requestCount })
+                : translateTaskText(t, 'orchestration.readiness.preview.summary', '草稿已成形，先生成一次计划，确认节点和依赖再执行。')
         };
     }
     if (metrics.planIssues.length > 0) {
@@ -212,7 +227,7 @@ function createTaskDraftReadiness(metrics, t = null) {
         tone: 'success',
         title: translateTaskText(t, 'orchestration.readiness.ready.title', '可以执行'),
         summary: metrics.followUpCount > 0
-            ? translateTaskText(t, 'orchestration.readiness.ready.withFollowUps', `主目标和收尾动作都已具备，可以直接执行或入队。`)
+            ? translateTaskText(t, 'orchestration.readiness.ready.withFollowUps', `已锁定 ${metrics.requestCount} 条顺序需求：先完成需求 1，再带上下文继续需求 2。`, { count: metrics.requestCount })
             : translateTaskText(t, 'orchestration.readiness.ready.summary', '主目标已经够清楚了，可以直接执行或入队。')
     };
 }

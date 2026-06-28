@@ -4110,6 +4110,7 @@ return function render(_ctx, _cache) {
                         }, [
                           _createElementVNode("span", { class: "task-chat-context-chip" }, _toDisplayString(_ctx.taskOrchestration.workspacePath.trim() ? _ctx.t('orchestration.chat.context.workspace.value', { value: _ctx.taskOrchestration.workspacePath.trim() }) : _ctx.t('orchestration.chat.context.workspace.auto')), 1 /* TEXT */),
                           _createElementVNode("span", { class: "task-chat-context-chip" }, _toDisplayString(_ctx.taskOrchestration.threadId.trim() ? _ctx.t('orchestration.chat.context.thread.value', { value: _ctx.taskOrchestration.threadId.trim() }) : _ctx.t('orchestration.chat.context.thread.auto')), 1 /* TEXT */),
+                          _createElementVNode("span", { class: "task-chat-context-chip" }, _toDisplayString(_ctx.taskOrchestrationDraftMetrics.hasTarget ? _ctx.t('orchestration.chat.context.sequence.value', { count: _ctx.taskOrchestrationDraftMetrics.requestCount }) : _ctx.t('orchestration.chat.context.sequence.empty')), 1 /* TEXT */),
                           _createElementVNode("span", { class: "task-chat-context-chip" }, _toDisplayString(_ctx.taskOrchestration.runMode === 'dry-run' ? _ctx.t('orchestration.runMode.dryRun') : (_ctx.taskOrchestration.runMode === 'read' ? _ctx.t('orchestration.runMode.readOnly') : _ctx.t('orchestration.runMode.write') )), 1 /* TEXT */)
                         ], 8 /* PROPS */, ["aria-label"]),
                         _createElementVNode("div", { class: "task-draft-overview task-draft-inline task-quick-readiness" }, [
@@ -4122,21 +4123,27 @@ return function render(_ctx, _cache) {
                           _createElementVNode("div", { class: "task-config-strip" }, [
                             _createElementVNode("div", { class: "task-config-pill" }, _toDisplayString(_ctx.taskOrchestration.selectedEngine === 'workflow' ? _ctx.t('orchestration.engine.workflow') : _ctx.t('orchestration.engine.openaiChat')), 1 /* TEXT */),
                             _createElementVNode("div", { class: "task-config-pill" }, _toDisplayString(_ctx.taskOrchestration.runMode === 'dry-run' ? _ctx.t('orchestration.runMode.dryRun') : (_ctx.taskOrchestration.runMode === 'read' ? _ctx.t('orchestration.runMode.readOnly') : _ctx.t('orchestration.runMode.write') )), 1 /* TEXT */),
-                            (_ctx.taskOrchestration.title.trim())
+                            (_ctx.taskOrchestrationDraftMetrics.hasTarget)
                               ? (_openBlock(), _createElementBlock("div", {
                                   key: 0,
+                                  class: "task-config-pill"
+                                }, _toDisplayString(_ctx.t('orchestration.pills.sequenceCount', { count: _ctx.taskOrchestrationDraftMetrics.requestCount })), 1 /* TEXT */))
+                              : _createCommentVNode("v-if", true),
+                            (_ctx.taskOrchestration.title.trim())
+                              ? (_openBlock(), _createElementBlock("div", {
+                                  key: 1,
                                   class: "task-config-pill"
                                 }, _toDisplayString(_ctx.t('orchestration.pills.hasTitle')), 1 /* TEXT */))
                               : _createCommentVNode("v-if", true),
                             (_ctx.taskOrchestration.selectedEngine === 'workflow' && _ctx.taskOrchestrationDraftMetrics.workflowCount > 0)
                               ? (_openBlock(), _createElementBlock("div", {
-                                  key: 1,
+                                  key: 2,
                                   class: "task-config-pill"
                                 }, _toDisplayString(_ctx.t('orchestration.pills.workflowCount', { count: _ctx.taskOrchestrationDraftMetrics.workflowCount })), 1 /* TEXT */))
                               : _createCommentVNode("v-if", true),
                             (_ctx.taskOrchestration.plan)
                               ? (_openBlock(), _createElementBlock("div", {
-                                  key: 2,
+                                  key: 3,
                                   class: "task-config-pill"
                                 }, _toDisplayString(_ctx.t('orchestration.pills.planNodes', { count: _ctx.taskOrchestrationDraftMetrics.planNodeCount })), 1 /* TEXT */))
                               : _createCommentVNode("v-if", true)
