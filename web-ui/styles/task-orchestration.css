@@ -869,10 +869,100 @@
 }
 
 .task-quick-target {
-    min-height: 150px;
+    min-height: 88px;
     border-radius: 18px;
     background: var(--color-surface);
     font-size: 15px;
+}
+
+
+.task-chat-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.task-chat-thread {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 320px;
+    overflow: auto;
+    padding: 12px;
+    border-radius: 20px;
+    border: 1px solid var(--color-border-soft);
+    background: rgba(255, 255, 255, 0.62);
+}
+
+.task-chat-bubble-row {
+    display: flex;
+    width: 100%;
+}
+
+.task-chat-bubble-row.is-assistant {
+    justify-content: flex-start;
+}
+
+.task-chat-bubble-row.is-user {
+    justify-content: flex-end;
+}
+
+.task-chat-bubble {
+    max-width: min(76%, 680px);
+    padding: 11px 13px;
+    border-radius: 18px;
+    border: 1px solid var(--color-border-soft);
+    background: var(--color-surface);
+    box-shadow: 0 8px 24px rgba(36, 24, 20, 0.06);
+}
+
+.task-chat-bubble-row.is-user .task-chat-bubble {
+    border-color: rgba(199, 116, 98, 0.28);
+    background: var(--color-brand-light);
+    color: var(--color-brand-dark);
+    border-bottom-right-radius: 6px;
+}
+
+.task-chat-bubble-row.is-assistant .task-chat-bubble {
+    border-bottom-left-radius: 6px;
+}
+
+.task-chat-bubble-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    margin-bottom: 5px;
+}
+
+.task-chat-bubble-text {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--color-text-primary);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.task-chat-bubble-row.is-user .task-chat-bubble-text,
+.task-chat-bubble-row.is-user .task-chat-bubble-label,
+.task-chat-bubble-row.is-user .task-chat-bubble-meta {
+    color: var(--color-brand-dark);
+}
+
+.task-chat-bubble-meta {
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--color-text-secondary);
+}
+
+.task-chat-send-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .task-chat-context-row {

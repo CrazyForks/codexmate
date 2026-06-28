@@ -40,12 +40,35 @@
                                     <div class="skills-panel-note task-hero-copy">{{ t('orchestration.quick.subtitle') }}</div>
                                 </div>
 
-                                <div class="task-quick-input-card">
+                                <div class="task-quick-input-card task-chat-panel">
+                                    <div class="task-chat-thread" role="log" :aria-label="t('orchestration.chat.thread.aria')">
+                                        <div
+                                            v-for="message in taskOrchestrationConversationMessages"
+                                            :key="message.id"
+                                            :class="['task-chat-bubble-row', message.role === 'user' ? 'is-user' : 'is-assistant']">
+                                            <div class="task-chat-bubble">
+                                                <div class="task-chat-bubble-label">{{ message.label }}</div>
+                                                <div class="task-chat-bubble-text">{{ message.text }}</div>
+                                                <div v-if="message.meta" class="task-chat-bubble-meta">{{ message.meta }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <label class="task-quick-target-field task-chat-composer">
                                         <span class="selector-label">{{ t('orchestration.chat.input.label') }}</span>
-                                        <textarea v-model="taskOrchestration.target" class="task-textarea task-textarea-goal task-quick-target" rows="5" :placeholder="t('orchestration.chat.input.placeholder')"></textarea>
+                                        <textarea
+                                            v-model="taskOrchestration.chatDraft"
+                                            class="task-textarea task-textarea-goal task-quick-target"
+                                            rows="3"
+                                            :placeholder="t('orchestration.chat.input.placeholder')"
+                                            @keydown.enter.exact.prevent="appendTaskChatMessage()"></textarea>
                                         <span class="task-field-hint">{{ t('orchestration.chat.input.hint') }}</span>
                                     </label>
+                                    <div class="task-chat-send-row">
+                                        <button type="button" class="btn-tool btn-primary" @click="appendTaskChatMessage()" :disabled="!taskOrchestration.chatDraft.trim()">
+                                            {{ t('orchestration.chat.input.send') }}
+                                        </button>
+                                        <span class="task-field-hint">{{ taskOrchestrationDraftMetrics.hasTarget ? t('orchestration.chat.input.sequenceHint', { count: taskOrchestrationDraftMetrics.followUpCount + 2 }) : t('orchestration.chat.input.firstHint') }}</span>
+                                    </div>
                                     <div class="task-chat-context-row" role="group" :aria-label="t('orchestration.chat.context.aria')">
                                         <span class="task-chat-context-chip">{{ taskOrchestration.workspacePath.trim() ? t('orchestration.chat.context.workspace.value', { value: taskOrchestration.workspacePath.trim() }) : t('orchestration.chat.context.workspace.auto') }}</span>
                                         <span class="task-chat-context-chip">{{ taskOrchestration.threadId.trim() ? t('orchestration.chat.context.thread.value', { value: taskOrchestration.threadId.trim() }) : t('orchestration.chat.context.thread.auto') }}</span>

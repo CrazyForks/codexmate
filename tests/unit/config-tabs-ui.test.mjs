@@ -95,7 +95,13 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /class="selector-section task-hero-card"/);
     assert.match(orchestrationPanel, /class="[^"]*task-layout-grid task-layout-grid-primary[^"]*"/);
     assert.match(orchestrationPanel, /class="[^"]*task-quick-card[^"]*"/);
+    assert.match(orchestrationPanel, /class="task-chat-thread" role="log" :aria-label="t\('orchestration\.chat\.thread\.aria'\)"/);
+    assert.match(orchestrationPanel, /v-for="message in taskOrchestrationConversationMessages"/);
+    assert.match(orchestrationPanel, /message\.role === 'user' \? 'is-user' : 'is-assistant'/);
     assert.match(orchestrationPanel, /class="[^"]*task-chat-composer[^"]*"/);
+    assert.match(orchestrationPanel, /v-model="taskOrchestration\.chatDraft"/);
+    assert.match(orchestrationPanel, /@keydown\.enter\.exact\.prevent="appendTaskChatMessage\(\)"/);
+    assert.match(orchestrationPanel, /@click="appendTaskChatMessage\(\)"/);
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.input\.label'\)/);
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.input\.placeholder'\)/);
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.context\.workspace\.auto'\)/);
@@ -130,6 +136,9 @@ test('config template keeps expected config tabs in top and side navigation', ()
         assert.match(styles, /\.task-hero-card,[\s\S]*\.task-empty-state\s*\{[\s\S]*border:\s*1px solid/);
         assert.match(styles, /\.task-template-chip-group,[\s\S]*\.task-workflow-suggestions\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-wrap:\s*wrap;/);
         assert.match(styles, /\.task-checklist-inline\s*\{[\s\S]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/);
+        assert.match(styles, /\.task-chat-thread\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*overflow:\s*auto;/);
+        assert.match(styles, /\.task-chat-bubble-row\.is-user\s*\{[\s\S]*justify-content:\s*flex-end;/);
+        assert.match(styles, /\.task-chat-bubble-row\.is-assistant\s*\{[\s\S]*justify-content:\s*flex-start;/);
         assert.match(styles, /\.task-chat-context-row\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-wrap:\s*wrap;/);
         assert.match(styles, /\.task-chat-context-chip\s*\{[\s\S]*border-radius:\s*999px;[\s\S]*text-overflow:\s*ellipsis;/);
         assert.match(styles, /\.task-stage-empty\s*\{[\s\S]*display:\s*flex;/);

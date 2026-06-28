@@ -190,7 +190,27 @@ test('task orchestration chat composer copy is localized in every locale', () =>
         'orchestration.chat.context.workspace.auto',
         'orchestration.chat.context.workspace.value',
         'orchestration.chat.context.thread.auto',
-        'orchestration.chat.context.thread.value'
+        'orchestration.chat.context.thread.value',
+        'orchestration.chat.thread.aria',
+        'orchestration.chat.input.send',
+        'orchestration.chat.input.firstHint',
+        'orchestration.chat.input.sequenceHint',
+        'orchestration.chat.assistant.contextLabel',
+        'orchestration.chat.assistant.contextFallback',
+        'orchestration.chat.assistant.readyLabel',
+        'orchestration.chat.assistant.empty',
+        'orchestration.chat.assistant.planLabel',
+        'orchestration.chat.assistant.planSummary',
+        'orchestration.chat.assistant.sequenceReady',
+        'orchestration.chat.assistant.singleReady',
+        'orchestration.chat.user.step',
+        'orchestration.chat.meta.thread',
+        'orchestration.chat.meta.workspace',
+        'orchestration.chat.meta.order',
+        'orchestration.chat.meta.first',
+        'orchestration.chat.meta.afterPrevious',
+        'orchestration.chat.meta.contextKept',
+        'orchestration.chat.meta.previewNext'
     ];
     for (const code of expectedLocales) {
         for (const key of keys) {

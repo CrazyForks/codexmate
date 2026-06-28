@@ -1262,6 +1262,76 @@ test('buildTaskOrchestrationRequest includes workspace path and thread id', () =
     assert.deepStrictEqual(req.followUps, ['Verify page']);
 });
 
+test('appendTaskChatMessage records sequential requests and invalidates stale plan', () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        taskOrchestration: {
+            chatDraft: 'Finish requirement 1',
+            target: '',
+            followUpsText: '',
+            selectedEngine: 'openai-chat',
+            runMode: 'write',
+            plan: { nodes: [{ id: 'stale' }] },
+            planFingerprint: 'stale-fingerprint',
+            planIssues: ['old issue'],
+            planWarnings: ['old warning'],
+            lastError: 'old error'
+        }
+    };
+
+    assert.strictEqual(methods.appendTaskChatMessage.call(context), true);
+    assert.strictEqual(context.taskOrchestration.target, 'Finish requirement 1');
+    assert.strictEqual(context.taskOrchestration.followUpsText, '');
+    assert.strictEqual(context.taskOrchestration.chatDraft, '');
+    assert.strictEqual(context.taskOrchestration.plan, null);
+    assert.strictEqual(context.taskOrchestration.planFingerprint, '');
+    assert.deepStrictEqual(context.taskOrchestration.planIssues, []);
+    assert.deepStrictEqual(context.taskOrchestration.planWarnings, []);
+    assert.strictEqual(context.taskOrchestration.lastError, '');
+
+    context.taskOrchestration.chatDraft = 'Then finish requirement 2 with the prior context';
+    assert.strictEqual(methods.appendTaskChatMessage.call(context), true);
+
+    const req = methods.buildTaskOrchestrationRequest.call(context);
+    assert.strictEqual(req.target, 'Finish requirement 1');
+    assert.deepStrictEqual(req.followUps, ['Then finish requirement 2 with the prior context']);
+});
+
+test('taskOrchestrationConversationMessages renders assistant-left and user-right sequence model', () => {
+    const computed = createMainTabsComputed();
+    const translations = {
+        'orchestration.chat.user.step': '需求 {count}',
+        'orchestration.chat.meta.first': '先完成这一条',
+        'orchestration.chat.meta.afterPrevious': '等待前一条完成后继续',
+        'orchestration.chat.assistant.sequenceReady': '已收到多条需求；执行时会先完成需求 1，再带着上下文继续后续需求。',
+        'orchestration.chat.meta.previewNext': '下一步：预览计划'
+    };
+    const context = {
+        t(key, params = {}) {
+            let value = translations[key] || key;
+            for (const [name, paramValue] of Object.entries(params || {})) {
+                value = value.replace(new RegExp(`\\{${name}\\}`, 'g'), String(paramValue));
+            }
+            return value;
+        },
+        taskOrchestration: {
+            target: '先做完需求 1',
+            followUpsText: '再做需求 2\n最后汇总结果',
+            selectedRunDetail: null,
+            plan: null
+        }
+    };
+
+    const messages = computed.taskOrchestrationConversationMessages.call(context);
+
+    assert.deepStrictEqual(messages.map((item) => item.role), ['user', 'user', 'user', 'assistant']);
+    assert.deepStrictEqual(messages.slice(0, 3).map((item) => item.label), ['需求 1', '需求 2', '需求 3']);
+    assert.strictEqual(messages[0].meta, '先完成这一条');
+    assert.strictEqual(messages[1].meta, '等待前一条完成后继续');
+    assert.match(messages[3].text, /先完成需求 1/);
+});
+
 test('buildTaskOrchestrationRequest clears stale workflow ids outside workflow mode', () => {
     const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
     const context = {
@@ -1517,6 +1587,7 @@ test('continueTaskThreadFromUi inherits selected run workspace and thread', () =
     assert.strictEqual(context.taskOrchestration.selectedEngine, 'openai-chat');
     assert.strictEqual(context.taskOrchestration.workflowIdsText, '');
     assert.strictEqual(context.taskOrchestration.runMode, 'write');
+    assert.strictEqual(context.taskOrchestration.chatDraft, '');
     assert.strictEqual(context.taskOrchestration.plan, null);
     assert.deepStrictEqual(context.taskOrchestration.planIssues, []);
     assert.deepStrictEqual(messages, [{ message: '已继承该任务的会话与工作区，可继续追加要求', tone: 'success' }]);

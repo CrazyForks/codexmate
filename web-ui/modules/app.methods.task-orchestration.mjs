@@ -7,6 +7,7 @@ function createDefaultTaskOrchestrationState() {
         queueStarting: false,
         retrying: false,
         target: '',
+        chatDraft: '',
         title: '',
         notes: '',
         workspacePath: '',
@@ -101,6 +102,7 @@ export function createTaskOrchestrationMethods(options = {}) {
                 }
                 current.runMode = normalizeTaskRunMode(current.runMode);
                 current.selectedEngine = normalizeTaskSelectedEngine(current.selectedEngine);
+                current.chatDraft = String(current.chatDraft || '');
                 return current;
             }
             this.taskOrchestration = createDefaultTaskOrchestrationState();
@@ -229,6 +231,27 @@ export function createTaskOrchestrationMethods(options = {}) {
             } finally {
                 state.loading = false;
             }
+        },
+
+        appendTaskChatMessage() {
+            const state = this.ensureTaskOrchestrationState();
+            const message = String(state.chatDraft || '').trim();
+            if (!message) {
+                return false;
+            }
+            if (!String(state.target || '').trim()) {
+                state.target = message;
+            } else {
+                const existing = normalizeLines(state.followUpsText);
+                state.followUpsText = existing.concat(message).join('\n');
+            }
+            state.chatDraft = '';
+            state.plan = null;
+            state.planFingerprint = '';
+            state.planIssues = [];
+            state.planWarnings = [];
+            state.lastError = '';
+            return true;
         },
 
         async previewTaskPlan(options = {}) {
@@ -544,6 +567,7 @@ export function createTaskOrchestrationMethods(options = {}) {
             state.runMode = detail.dryRun ? 'dry-run' : (detail.allowWrite ? 'write' : 'read');
             state.notes = '';
             state.followUpsText = '';
+            state.chatDraft = '';
             state.plan = null;
             state.planIssues = [];
             state.planWarnings = [];
@@ -592,6 +616,7 @@ export function createTaskOrchestrationMethods(options = {}) {
         resetTaskOrchestrationDraft() {
             const state = this.ensureTaskOrchestrationState();
             state.target = '';
+            state.chatDraft = '';
             state.title = '';
             state.notes = '';
             state.workspacePath = '';

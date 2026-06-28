@@ -43,6 +43,84 @@ function readTaskOrchestrationDraftMetrics(taskOrchestration) {
     };
 }
 
+
+function formatTaskConversationMeta(items) {
+    return items.filter(Boolean).join(' · ');
+}
+
+function createTaskConversationMessages(taskOrchestration, t = null) {
+    const state = taskOrchestration && typeof taskOrchestration === 'object' ? taskOrchestration : {};
+    const messages = [];
+    const target = String(state.target || '').trim();
+    const followUps = normalizeTaskDraftLines(state.followUpsText);
+    const detail = state.selectedRunDetail && typeof state.selectedRunDetail === 'object' ? state.selectedRunDetail : null;
+    const detailRun = detail && detail.run && typeof detail.run === 'object' ? detail.run : null;
+    if (detail) {
+        messages.push({
+            id: 'context-run',
+            role: 'assistant',
+            label: translateTaskText(t, 'orchestration.chat.assistant.contextLabel', '上一轮上下文'),
+            text: detailRun && detailRun.summary
+                ? detailRun.summary
+                : translateTaskText(t, 'orchestration.chat.assistant.contextFallback', '已选中一个历史任务，继续时会继承它的线程和工作区。'),
+            meta: formatTaskConversationMeta([
+                detail.threadId ? translateTaskText(t, 'orchestration.chat.meta.thread', `线程 ${detail.threadId}`, { value: detail.threadId }) : '',
+                detail.cwd ? translateTaskText(t, 'orchestration.chat.meta.workspace', `工作区 ${detail.cwd}`, { value: detail.cwd }) : '',
+                detailRun && detailRun.status ? detailRun.status : ''
+            ])
+        });
+    } else if (!target && followUps.length === 0) {
+        messages.push({
+            id: 'assistant-empty',
+            role: 'assistant',
+            label: translateTaskText(t, 'orchestration.chat.assistant.readyLabel', 'Codexmate'),
+            text: translateTaskText(t, 'orchestration.chat.assistant.empty', '先发第一个需求；如果还有第二个需求，继续发送，Codexmate 会按顺序处理并保留上下文。'),
+            meta: translateTaskText(t, 'orchestration.chat.meta.order', '顺序执行 · 保留上下文')
+        });
+    }
+    if (target) {
+        messages.push({
+            id: 'user-target',
+            role: 'user',
+            label: translateTaskText(t, 'orchestration.chat.user.step', '需求 {count}', { count: 1 }),
+            text: target,
+            meta: translateTaskText(t, 'orchestration.chat.meta.first', '先完成这一条')
+        });
+    }
+    followUps.forEach((item, index) => {
+        const step = index + 2;
+        messages.push({
+            id: `user-follow-up-${index}`,
+            role: 'user',
+            label: translateTaskText(t, 'orchestration.chat.user.step', '需求 {count}', { count: step }),
+            text: item,
+            meta: translateTaskText(t, 'orchestration.chat.meta.afterPrevious', '等待前一条完成后继续')
+        });
+    });
+    if (state.plan && typeof state.plan === 'object') {
+        const nodeCount = Array.isArray(state.plan.nodes) ? state.plan.nodes.length : 0;
+        const waveCount = Array.isArray(state.plan.waves) ? state.plan.waves.length : 0;
+        messages.push({
+            id: 'assistant-plan',
+            role: 'assistant',
+            label: translateTaskText(t, 'orchestration.chat.assistant.planLabel', '计划预览'),
+            text: translateTaskText(t, 'orchestration.chat.assistant.planSummary', '计划已生成：{nodes} 个节点，{waves} 个批次。', { nodes: nodeCount, waves: waveCount }),
+            meta: translateTaskText(t, 'orchestration.chat.meta.contextKept', '上下文会随线程保留')
+        });
+    } else if (target) {
+        messages.push({
+            id: 'assistant-next',
+            role: 'assistant',
+            label: translateTaskText(t, 'orchestration.chat.assistant.readyLabel', 'Codexmate'),
+            text: followUps.length > 0
+                ? translateTaskText(t, 'orchestration.chat.assistant.sequenceReady', '已收到多条需求；执行时会先完成需求 1，再带着上下文继续后续需求。')
+                : translateTaskText(t, 'orchestration.chat.assistant.singleReady', '已收到第一条需求。可以继续补需求 2，或直接预览并执行。'),
+            meta: translateTaskText(t, 'orchestration.chat.meta.previewNext', '下一步：预览计划')
+        });
+    }
+    return messages;
+}
+
 function translateTaskText(t, key, fallback, params = null) {
     if (typeof t !== 'function') return fallback;
     const translated = t(key, params);
@@ -221,6 +299,9 @@ export function createMainTabsComputed() {
         },
         taskOrchestrationDraftReadiness() {
             return createTaskDraftReadiness(this.taskOrchestrationDraftMetrics, this.t && this.t.bind(this));
+        },
+        taskOrchestrationConversationMessages() {
+            return createTaskConversationMessages(this.taskOrchestration, this.t && this.t.bind(this));
         }
     };
 }

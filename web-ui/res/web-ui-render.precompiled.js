@@ -4057,18 +4057,51 @@ return function render(_ctx, _cache) {
                         _createElementVNode("div", { class: "selector-title task-quick-title" }, _toDisplayString(_ctx.t('orchestration.quick.title')), 1 /* TEXT */),
                         _createElementVNode("div", { class: "skills-panel-note task-hero-copy" }, _toDisplayString(_ctx.t('orchestration.quick.subtitle')), 1 /* TEXT */)
                       ]),
-                      _createElementVNode("div", { class: "task-quick-input-card" }, [
+                      _createElementVNode("div", { class: "task-quick-input-card task-chat-panel" }, [
+                        _createElementVNode("div", {
+                          class: "task-chat-thread",
+                          role: "log",
+                          "aria-label": _ctx.t('orchestration.chat.thread.aria')
+                        }, [
+                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.taskOrchestrationConversationMessages, (message) => {
+                            return (_openBlock(), _createElementBlock("div", {
+                              key: message.id,
+                              class: _normalizeClass(['task-chat-bubble-row', message.role === 'user' ? 'is-user' : 'is-assistant'])
+                            }, [
+                              _createElementVNode("div", { class: "task-chat-bubble" }, [
+                                _createElementVNode("div", { class: "task-chat-bubble-label" }, _toDisplayString(message.label), 1 /* TEXT */),
+                                _createElementVNode("div", { class: "task-chat-bubble-text" }, _toDisplayString(message.text), 1 /* TEXT */),
+                                (message.meta)
+                                  ? (_openBlock(), _createElementBlock("div", {
+                                      key: 0,
+                                      class: "task-chat-bubble-meta"
+                                    }, _toDisplayString(message.meta), 1 /* TEXT */))
+                                  : _createCommentVNode("v-if", true)
+                              ])
+                            ], 2 /* CLASS */))
+                          }), 128 /* KEYED_FRAGMENT */))
+                        ], 8 /* PROPS */, ["aria-label"]),
                         _createElementVNode("label", { class: "task-quick-target-field task-chat-composer" }, [
                           _createElementVNode("span", { class: "selector-label" }, _toDisplayString(_ctx.t('orchestration.chat.input.label')), 1 /* TEXT */),
                           _withDirectives(_createElementVNode("textarea", {
-                            "onUpdate:modelValue": $event => ((_ctx.taskOrchestration.target) = $event),
+                            "onUpdate:modelValue": $event => ((_ctx.taskOrchestration.chatDraft) = $event),
                             class: "task-textarea task-textarea-goal task-quick-target",
-                            rows: "5",
-                            placeholder: _ctx.t('orchestration.chat.input.placeholder')
-                          }, null, 8 /* PROPS */, ["onUpdate:modelValue", "placeholder"]), [
-                            [_vModelText, _ctx.taskOrchestration.target]
+                            rows: "3",
+                            placeholder: _ctx.t('orchestration.chat.input.placeholder'),
+                            onKeydown: _withKeys(_withModifiers($event => (_ctx.appendTaskChatMessage()), ["exact","prevent"]), ["enter"])
+                          }, null, 40 /* PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "placeholder", "onKeydown"]), [
+                            [_vModelText, _ctx.taskOrchestration.chatDraft]
                           ]),
                           _createElementVNode("span", { class: "task-field-hint" }, _toDisplayString(_ctx.t('orchestration.chat.input.hint')), 1 /* TEXT */)
+                        ]),
+                        _createElementVNode("div", { class: "task-chat-send-row" }, [
+                          _createElementVNode("button", {
+                            type: "button",
+                            class: "btn-tool btn-primary",
+                            onClick: $event => (_ctx.appendTaskChatMessage()),
+                            disabled: !_ctx.taskOrchestration.chatDraft.trim()
+                          }, _toDisplayString(_ctx.t('orchestration.chat.input.send')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                          _createElementVNode("span", { class: "task-field-hint" }, _toDisplayString(_ctx.taskOrchestrationDraftMetrics.hasTarget ? _ctx.t('orchestration.chat.input.sequenceHint', { count: _ctx.taskOrchestrationDraftMetrics.followUpCount + 2 }) : _ctx.t('orchestration.chat.input.firstHint')), 1 /* TEXT */)
                         ]),
                         _createElementVNode("div", {
                           class: "task-chat-context-row",

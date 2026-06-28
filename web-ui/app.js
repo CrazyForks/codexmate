@@ -460,6 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     queueStarting: false,
                     retrying: false,
                     target: '',
+                    chatDraft: '',
                     title: '',
                     notes: '',
                     workspacePath: '',
