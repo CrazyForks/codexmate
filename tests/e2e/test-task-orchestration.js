@@ -43,10 +43,14 @@ const server = http.createServer((req, res) => {
     }
     if (req.method === 'POST' && requestPath === '/v1/chat/completions') {
       const model = parsedBody && parsedBody.model ? parsedBody.model : 'unknown-model';
+      const requestText = JSON.stringify(parsedBody || {});
+      const content = requestText.includes('index.html')
+        ? '输出文件：index.html\\n\`\`\`html\\n<!doctype html><html><head><meta charset="utf-8"><title>2048 Probe</title></head><body><h1>2048</h1><div id="grid">2 4 8 16</div></body></html>\\n\`\`\`'
+        : 'openai-chat-e2e-ok model=' + model + ' request=' + requestCount;
       const body = JSON.stringify({
         id: 'chatcmpl-task-e2e-' + requestCount,
         object: 'chat.completion',
-        choices: [{ index: 0, message: { role: 'assistant', content: 'openai-chat-e2e-ok model=' + model + ' request=' + requestCount }, finish_reason: 'stop' }],
+        choices: [{ index: 0, message: { role: 'assistant', content }, finish_reason: 'stop' }],
         usage: { prompt_tokens: 10, completion_tokens: 8, total_tokens: 18 }
       });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(body, 'utf-8') });
@@ -374,6 +378,48 @@ module.exports = async function testTaskOrchestration(ctx) {
         assert(openAiLogsResult.status === 0, `OpenAI Chat task logs failed: ${openAiLogsResult.stderr || openAiLogsResult.stdout}`);
         const openAiLogsPayload = parseJsonOutput(openAiLogsResult.stdout);
         assert(String(openAiLogsPayload.logs || '').includes('OpenAI Chat request provider=local-openai-chat'), 'OpenAI Chat logs should include provider request');
+
+        const directPlanPath = path.join(tmpHome, 'task-direct-openai-plan.json');
+        const directPlanCwd = path.join(tmpHome, 'task-direct-plan-workspace');
+        fs.mkdirSync(directPlanCwd, { recursive: true });
+        fs.writeFileSync(directPlanPath, JSON.stringify({
+            id: 'task-direct-openai-plan',
+            title: 'Direct OpenAI Chat plan',
+            target: 'Create index.html for direct OpenAI Chat plan execution',
+            notes: 'Write index.html only inside the provided cwd.',
+            cwd: directPlanCwd,
+            engine: 'openai-chat',
+            allowWrite: true,
+            dryRun: false,
+            concurrency: 1,
+            nodes: [
+                {
+                    id: 'direct-openai-node',
+                    title: 'Direct OpenAI node',
+                    kind: 'openai-chat',
+                    prompt: 'Create index.html with a tiny 2048 probe page and return the full file in an html fenced block.',
+                    dependsOn: []
+                }
+            ]
+        }, null, 2), 'utf-8');
+        const directPlanRunResult = runSync(node, [
+            cliPath,
+            'task',
+            'run',
+            '--plan',
+            `@${directPlanPath}`,
+            '--allow-write',
+            '--json'
+        ], { env });
+        assert(directPlanRunResult.status === 0, `OpenAI Chat direct plan run failed: ${directPlanRunResult.stderr || directPlanRunResult.stdout}`);
+        const directPlanRunPayload = parseJsonOutput(directPlanRunResult.stdout);
+        assertOpenAiRunPayload(directPlanRunPayload, 'OpenAI Chat direct plan run');
+        assert(Array.isArray(directPlanRunPayload.plan && directPlanRunPayload.plan.waves), 'OpenAI Chat direct plan run should compute waves');
+        const directPlanIndexPath = path.join(directPlanCwd, 'index.html');
+        assert(fs.existsSync(directPlanIndexPath), 'OpenAI Chat direct plan run should materialize index.html when allow-write is enabled');
+        assert(fs.readFileSync(directPlanIndexPath, 'utf-8').includes('2048'), 'materialized index.html should contain generated page content');
+        const materializedFiles = directPlanRunPayload.run.nodes.flatMap(item => item && item.output && Array.isArray(item.output.materializedFiles) ? item.output.materializedFiles : []);
+        assert(materializedFiles.some(item => item.relativePath === 'index.html'), 'OpenAI Chat direct plan run should report materialized index.html');
 
         const openAiQueueAddResult = runSync(node, [
             cliPath,

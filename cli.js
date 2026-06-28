@@ -73,7 +73,8 @@ const {
     truncateText: truncateTaskText,
     buildTaskPlan,
     validateTaskPlan,
-    executeTaskPlan
+    executeTaskPlan,
+    computePlanWaves
 } = require('./lib/task-orchestrator');
 const {
     readAutomationConfig,
@@ -16226,6 +16227,106 @@ function postOpenAiChatCompletion(requestConfig, body, options = {}) {
     });
 }
 
+const TASK_OPENAI_MATERIALIZED_ARTIFACT_MAX_BYTES = 512 * 1024;
+const TASK_OPENAI_MATERIALIZED_ARTIFACT_EXTENSIONS = new Set(['.html', '.htm', '.css', '.js', '.mjs', '.json', '.md', '.txt', '.svg']);
+
+function normalizeTaskMaterializedArtifactPath(rawPath, cwd) {
+    const baseDir = path.resolve(typeof cwd === 'string' && cwd.trim() ? cwd.trim() : process.cwd());
+    const text = typeof rawPath === 'string' ? rawPath.trim() : '';
+    if (!text || text.length > 200) {
+        return { error: 'artifact path is empty or too long' };
+    }
+    if (path.isAbsolute(text) || text.includes('\\')) {
+        return { error: `artifact path must be a safe relative path: ${text}` };
+    }
+    const normalized = path.normalize(text);
+    if (!normalized || normalized === '.' || normalized.startsWith('..') || normalized.split(path.sep).includes('..')) {
+        return { error: `artifact path escapes cwd: ${text}` };
+    }
+    const ext = path.extname(normalized).toLowerCase();
+    if (!TASK_OPENAI_MATERIALIZED_ARTIFACT_EXTENSIONS.has(ext)) {
+        return { error: `artifact extension is not allowed: ${ext || '(none)'}` };
+    }
+    const targetPath = path.resolve(baseDir, normalized);
+    const relative = path.relative(baseDir, targetPath);
+    if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) {
+        return { error: `artifact path escapes cwd: ${text}` };
+    }
+    return { path: targetPath, relativePath: normalized, baseDir };
+}
+
+function inferTaskMaterializedArtifactPath(info, prefix, hints) {
+    const sources = [info, prefix, hints].map((item) => String(item || '')).filter(Boolean);
+    const explicitPatterns = [
+        /(?:file|filename|path)\s*[:=]\s*[`"']?([A-Za-z0-9._/-]+\.[A-Za-z0-9]+)[`"']?/i,
+        /(?:文件|路径|保存为|写入到?|输出到?)\s*[:：]?\s*[`"']?([A-Za-z0-9._/-]+\.[A-Za-z0-9]+)[`"']?/i,
+        /[`"']([A-Za-z0-9._/-]+\.[A-Za-z0-9]+)[`"']/i
+    ];
+    for (const source of sources) {
+        for (const pattern of explicitPatterns) {
+            const match = source.match(pattern);
+            if (match && match[1]) {
+                return match[1];
+            }
+        }
+    }
+    const normalizedInfo = String(info || '').trim().toLowerCase();
+    const hintText = sources.join('\n').toLowerCase();
+    if ((normalizedInfo === 'html' || normalizedInfo.startsWith('html ')) && hintText.includes('index.html')) {
+        return 'index.html';
+    }
+    return '';
+}
+
+function materializeOpenAiChatTaskArtifacts(text, options = {}) {
+    const content = typeof text === 'string' ? text : '';
+    if (!content.trim()) {
+        return { files: [], warnings: [] };
+    }
+    const cwd = typeof options.cwd === 'string' && options.cwd.trim() ? options.cwd.trim() : process.cwd();
+    const hints = [options.target, options.notes, options.prompt]
+        .map((item) => String(item || '').trim())
+        .filter(Boolean)
+        .join('\n');
+    const files = [];
+    const warnings = [];
+    const seen = new Set();
+    const fencePattern = /```([^\n`]*)\n([\s\S]*?)```/g;
+    let match = null;
+    while ((match = fencePattern.exec(content)) !== null) {
+        const info = String(match[1] || '').trim();
+        const body = String(match[2] || '');
+        const prefix = content.slice(Math.max(0, match.index - 240), match.index);
+        const inferredPath = inferTaskMaterializedArtifactPath(info, prefix, hints);
+        if (!inferredPath) {
+            continue;
+        }
+        if (Buffer.byteLength(body, 'utf-8') > TASK_OPENAI_MATERIALIZED_ARTIFACT_MAX_BYTES) {
+            warnings.push(`artifact too large and skipped: ${inferredPath}`);
+            continue;
+        }
+        const normalized = normalizeTaskMaterializedArtifactPath(inferredPath, cwd);
+        if (normalized.error) {
+            warnings.push(normalized.error);
+            continue;
+        }
+        if (seen.has(normalized.path)) {
+            warnings.push(`duplicate artifact skipped: ${normalized.relativePath}`);
+            continue;
+        }
+        seen.add(normalized.path);
+        try {
+            const fileContent = body.trimStart();
+            ensureDir(path.dirname(normalized.path));
+            fs.writeFileSync(normalized.path, fileContent, { encoding: 'utf-8', mode: 0o600 });
+            files.push({ path: normalized.path, relativePath: normalized.relativePath, bytes: Buffer.byteLength(fileContent, 'utf-8') });
+        } catch (error) {
+            warnings.push(`failed to write artifact ${normalized.relativePath}: ${error && error.message ? error.message : String(error)}`);
+        }
+    }
+    return { files, warnings };
+}
+
 async function runOpenAiChatTaskNode(node, context = {}) {
     const requestConfig = resolveTaskOpenAiChatConfig();
     if (requestConfig.error) {
@@ -16237,7 +16338,7 @@ async function runOpenAiChatTaskNode(node, context = {}) {
             logs: [{ at: toIsoTime(Date.now()), level: 'error', message: requestConfig.error }]
         };
     }
-    const allowWrite = context.allowWrite === true && node.write === true;
+    const allowWrite = context.allowWrite === true && node.write !== false && context.dryRun !== true;
     const dependencyResults = Array.isArray(context.dependencyResults) ? context.dependencyResults : [];
     const dependencyLines = dependencyResults
         .map((item) => {
@@ -16261,7 +16362,7 @@ async function runOpenAiChatTaskNode(node, context = {}) {
         '你是 codexmate 任务编排中的 OpenAI Chat-compatible 执行节点。',
         '基于用户给出的目标、前置节点摘要和当前节点范围，输出可执行、可验证、事实谨慎的结果。',
         allowWrite
-            ? '当前任务允许写入，但本 OpenAI Chat 节点没有直接本地工具能力；如果需要改文件，请输出精确改动方案、补丁建议、验证命令与风险说明，不要声称已经实际写入。'
+            ? '当前任务允许写入；如果需要创建或更新文件，请明确写出安全的相对文件名，并用 fenced code block 给出完整文件内容。codexmate 只会物化明确、安全、位于任务工作目录内的文本类 artifact。'
             : '当前任务是只读/验证节点，不要声称修改了文件。',
         '回答使用中文，避免空泛总结。'
     ].join('\n');
@@ -16283,6 +16384,14 @@ async function runOpenAiChatTaskNode(node, context = {}) {
     const errorMessage = success ? '' : (result.error || 'OpenAI Chat response did not contain text');
     const summary = truncateTaskText(text || errorMessage, 400);
     const safeEndpoint = requestConfig.endpointUrl.replace(/([?&](?:key|api_key|token)=)[^&]+/ig, '$1***');
+    const materialized = success && allowWrite
+        ? materializeOpenAiChatTaskArtifacts(text, {
+            cwd: context.cwd || process.cwd(),
+            target: context.plan && context.plan.target ? context.plan.target : '',
+            notes: context.plan && context.plan.notes ? context.plan.notes : '',
+            prompt: node.prompt || ''
+        })
+        : { files: [], warnings: [] };
     return {
         success,
         error: errorMessage,
@@ -16294,11 +16403,14 @@ async function runOpenAiChatTaskNode(node, context = {}) {
             status: result.status || 0,
             text,
             response: result.payload || null,
-            durationMs: Date.now() - startedAt
+            durationMs: Date.now() - startedAt,
+            materializedFiles: materialized.files
         },
         logs: [
             { at: toIsoTime(Date.now()), level: 'info', message: `OpenAI Chat request provider=${requestConfig.providerName} model=${requestConfig.model} status=${result.status || 0}` },
-            ...(success ? [{ at: toIsoTime(Date.now()), level: 'info', message: truncateTaskText(text, 1200) }] : [{ at: toIsoTime(Date.now()), level: 'error', message: errorMessage }])
+            ...(success ? [{ at: toIsoTime(Date.now()), level: 'info', message: truncateTaskText(text, 1200) }] : [{ at: toIsoTime(Date.now()), level: 'error', message: errorMessage }]),
+            ...materialized.files.map((file) => ({ at: toIsoTime(Date.now()), level: 'info', message: `materialized artifact ${file.relativePath} (${file.bytes} bytes)` })),
+            ...materialized.warnings.map((warning) => ({ at: toIsoTime(Date.now()), level: 'warn', message: warning }))
         ]
     };
 }
