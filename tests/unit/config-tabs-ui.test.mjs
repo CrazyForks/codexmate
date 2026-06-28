@@ -133,10 +133,18 @@ test('config template keeps expected config tabs in top and side navigation', ()
     for (const styles of [taskOrchestrationStyles, bundledStyles]) {
         assert.match(styles, /\.task-layout-grid-primary\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\);/);
         assert.match(styles, /\.task-layout-grid-secondary\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\);/);
+        assert.match(styles, /body:has\(#panel-orchestration:not\(\[style\*="display: none"\]\)\)\s*\{[\s\S]*background:\s*#F6F8FB;/);
+        assert.match(styles, /body:has\(#panel-orchestration:not\(\[style\*="display: none"\]\)\)::before\s*\{[\s\S]*background:\s*none;/);
+        assert.match(styles, /body:has\(#panel-orchestration:not\(\[style\*="display: none"\]\)\) \.side-rail\s*\{[\s\S]*background:\s*#F8FAFC;[\s\S]*box-shadow:\s*none;/);
+        assert.match(styles, /body:has\(#panel-orchestration:not\(\[style\*="display: none"\]\)\) \.side-item\.active,[\s\S]*\.side-item\.nav-intent-active\s*\{[\s\S]*background:\s*#FFFFFF;/);
         assert.match(styles, /\.task-hero-card,[\s\S]*\.task-empty-state\s*\{[\s\S]*border:\s*1px solid/);
+        assert.match(styles, /\.task-hero-card\s*\{[\s\S]*background:\s*var\(--color-surface\);/);
+        assert.match(styles, /\.task-quick-input-card\s*\{[\s\S]*background:\s*#F8FAFC;/);
         assert.match(styles, /\.task-template-chip-group,[\s\S]*\.task-workflow-suggestions\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-wrap:\s*wrap;/);
         assert.match(styles, /\.task-checklist-inline\s*\{[\s\S]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/);
-        assert.match(styles, /\.task-chat-thread\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*overflow:\s*auto;/);
+        assert.match(styles, /\.task-chat-thread\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*overflow-y:\s*auto;[\s\S]*scrollbar-width:\s*thin;/);
+        assert.match(styles, /\.task-chat-thread:hover,[\s\S]*\.task-chat-thread:focus-within\s*\{[\s\S]*scrollbar-color:\s*rgba\(100, 116, 139, 0\.28\) transparent;/);
+        assert.match(styles, /\.task-chat-thread::-webkit-scrollbar-thumb\s*\{[\s\S]*background:\s*transparent;/);
         assert.match(styles, /\.task-chat-bubble-row\.is-user\s*\{[\s\S]*justify-content:\s*flex-end;/);
         assert.match(styles, /\.task-chat-bubble-row\.is-assistant\s*\{[\s\S]*justify-content:\s*flex-start;/);
         assert.match(styles, /\.task-chat-context-row\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-wrap:\s*wrap;/);
