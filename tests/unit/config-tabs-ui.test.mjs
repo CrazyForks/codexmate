@@ -116,6 +116,8 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /class="task-chat-context-chip"/);
     assert.match(orchestrationPanel, /@change="taskOrchestration\.selectedEngine === 'workflow' \? null : taskOrchestration\.workflowIdsText = ''"/);
     assert.match(orchestrationPanel, /class="task-quick-template-grid"/);
+    assert.match(orchestrationPanel, /taskOrchestration\.planFingerprint = ''/);
+    assert.match(orchestrationPanel, /taskOrchestration\.lastError = ''/);
     assert.match(orchestrationPanel, /class="task-workflow-suggestions"/);
     assert.match(orchestrationPanel, /@click="appendTaskWorkflowId\(workflow.id \|\| workflow.name\)"/);
     assert.match(orchestrationPanel, /class="[^"]*task-draft-overview[^"]*"/);

@@ -214,7 +214,7 @@ export function createTaskOrchestrationMethods(options = {}) {
                 : null;
             if (provider && typeof this.openEditModal === 'function') {
                 this.openEditModal(provider);
-            } else if (!providerName && typeof this.openAddProviderModal === 'function') {
+            } else if (typeof this.openAddProviderModal === 'function') {
                 this.openAddProviderModal();
             }
         },

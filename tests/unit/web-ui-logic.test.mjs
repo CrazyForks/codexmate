@@ -1579,6 +1579,27 @@ test('task orchestration detail helpers surface AI output and open OpenAI Chat c
         ['switchMainTab', 'config'],
         ['openEditModal', 'mock-openai']
     ]);
+
+    const fallbackCalls = [];
+    methods.openTaskOpenAiChatConfig.call({
+        mainTab: 'orchestration',
+        configMode: 'openclaw',
+        providersList: [{ name: 'different-provider', hasKey: true }],
+        taskOrchestration: {
+            openAiChatStatus: { providerName: 'missing-provider' }
+        },
+        switchMainTab(tab) {
+            fallbackCalls.push(['switchMainTab', tab]);
+            this.mainTab = tab;
+        },
+        openAddProviderModal() {
+            fallbackCalls.push(['openAddProviderModal']);
+        }
+    });
+    assert.deepStrictEqual(fallbackCalls, [
+        ['switchMainTab', 'config'],
+        ['openAddProviderModal']
+    ]);
 });
 
 test('selectTaskRun switches workbench to detail and keeps latest detail response only', async () => {

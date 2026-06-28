@@ -4679,7 +4679,7 @@ return function render(_ctx, _cache) {
                           _createElementVNode("button", {
                             type: "button",
                             class: "task-quick-template-card",
-                            onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.reviewFix.target'); _ctx.taskOrchestration.selectedEngine = 'openai-chat'; _ctx.taskOrchestration.workflowIdsText = ''; _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.reviewFix.notes'); _ctx.taskOrchestration.followUpsText = _ctx.t('orchestration.templates.reviewFix.followUps')}
+                            onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.reviewFix.target'); _ctx.taskOrchestration.selectedEngine = 'openai-chat'; _ctx.taskOrchestration.workflowIdsText = ''; _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.reviewFix.notes'); _ctx.taskOrchestration.followUpsText = _ctx.t('orchestration.templates.reviewFix.followUps'); _ctx.taskOrchestration.plan = null; _ctx.taskOrchestration.planIssues = []; _ctx.taskOrchestration.planWarnings = []; _ctx.taskOrchestration.planFingerprint = ''; _ctx.taskOrchestration.lastError = ''}
                           }, [
                             _createElementVNode("strong", null, _toDisplayString(_ctx.t('orchestration.templates.reviewFix.label')), 1 /* TEXT */),
                             _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.quick.templates.reviewFix.meta')), 1 /* TEXT */)
@@ -4687,7 +4687,7 @@ return function render(_ctx, _cache) {
                           _createElementVNode("button", {
                             type: "button",
                             class: "task-quick-template-card",
-                            onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.planOnly.target'); _ctx.taskOrchestration.selectedEngine = 'openai-chat'; _ctx.taskOrchestration.workflowIdsText = ''; _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.planOnly.notes'); _ctx.taskOrchestration.followUpsText = ''}
+                            onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.planOnly.target'); _ctx.taskOrchestration.selectedEngine = 'openai-chat'; _ctx.taskOrchestration.workflowIdsText = ''; _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.planOnly.notes'); _ctx.taskOrchestration.followUpsText = ''; _ctx.taskOrchestration.plan = null; _ctx.taskOrchestration.planIssues = []; _ctx.taskOrchestration.planWarnings = []; _ctx.taskOrchestration.planFingerprint = ''; _ctx.taskOrchestration.lastError = ''}
                           }, [
                             _createElementVNode("strong", null, _toDisplayString(_ctx.t('orchestration.templates.planOnly.label')), 1 /* TEXT */),
                             _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.quick.templates.planOnly.meta')), 1 /* TEXT */)
@@ -4695,7 +4695,7 @@ return function render(_ctx, _cache) {
                           _createElementVNode("button", {
                             type: "button",
                             class: "task-quick-template-card",
-                            onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.workflowBatch.target'); _ctx.taskOrchestration.selectedEngine = 'workflow'; _ctx.taskOrchestration.workflowIdsText = _ctx.t('orchestration.templates.workflowBatch.workflowIds'); _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.workflowBatch.notes'); _ctx.taskOrchestration.followUpsText = ''}
+                            onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.workflowBatch.target'); _ctx.taskOrchestration.selectedEngine = 'workflow'; _ctx.taskOrchestration.workflowIdsText = _ctx.t('orchestration.templates.workflowBatch.workflowIds'); _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.workflowBatch.notes'); _ctx.taskOrchestration.followUpsText = ''; _ctx.taskOrchestration.plan = null; _ctx.taskOrchestration.planIssues = []; _ctx.taskOrchestration.planWarnings = []; _ctx.taskOrchestration.planFingerprint = ''; _ctx.taskOrchestration.lastError = ''}
                           }, [
                             _createElementVNode("strong", null, _toDisplayString(_ctx.t('orchestration.templates.workflowBatch.label')), 1 /* TEXT */),
                             _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.quick.templates.workflowBatch.meta')), 1 /* TEXT */)
