@@ -94,6 +94,16 @@ test('buildTaskPlan keeps workflowIds requests in workflow mode without explicit
     assert.deepStrictEqual(plan.nodes[0].input.followUps, ['总结风险']);
 });
 
+test('validateTaskPlan rejects external nodes with missing kind', () => {
+    const result = validateTaskPlan({
+        engine: 'openai-chat',
+        nodes: [{ id: 'missing-kind', prompt: 'Do work' }]
+    });
+
+    assert.strictEqual(result.ok, false);
+    assert.ok(result.issues.some((issue) => issue.code === 'task-node-kind-invalid'));
+});
+
 test('buildTaskPlan keeps workflow follow-ups inside the final workflow node payload', () => {
     const plan = buildTaskPlan({
         target: '诊断并整理结果',

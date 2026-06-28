@@ -206,7 +206,7 @@ export function createMainTabsComputed() {
                 : [];
             const stats = { queued: 0, running: 0, failed: 0 };
             for (const item of queue) {
-                const status = String(item && item.status || '').trim().toLowerCase();
+                const status = String((item && (item.status || item.runStatus)) || '').trim().toLowerCase();
                 if (status === 'queued') stats.queued += 1;
                 else if (status === 'running') stats.running += 1;
                 else if (status === 'failed') stats.failed += 1;

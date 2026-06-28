@@ -4171,8 +4171,7 @@ return function render(_ctx, _cache) {
                             _createElementVNode("span", { class: "selector-label" }, _toDisplayString(_ctx.t('orchestration.fields.engine')), 1 /* TEXT */),
                             _withDirectives(_createElementVNode("select", {
                               "onUpdate:modelValue": $event => ((_ctx.taskOrchestration.selectedEngine) = $event),
-                              class: "provider-fast-switch-select",
-                              disabled: ""
+                              class: "provider-fast-switch-select"
                             }, [
                               _createElementVNode("option", { value: "openai-chat" }, _toDisplayString(_ctx.t('orchestration.engine.openaiChat')), 1 /* TEXT */),
                               _createElementVNode("option", { value: "workflow" }, _toDisplayString(_ctx.t('orchestration.engine.workflow')), 1 /* TEXT */)
@@ -4184,8 +4183,7 @@ return function render(_ctx, _cache) {
                             _createElementVNode("span", { class: "selector-label" }, _toDisplayString(_ctx.t('orchestration.fields.runMode')), 1 /* TEXT */),
                             _withDirectives(_createElementVNode("select", {
                               "onUpdate:modelValue": $event => ((_ctx.taskOrchestration.runMode) = $event),
-                              class: "provider-fast-switch-select",
-                              disabled: ""
+                              class: "provider-fast-switch-select"
                             }, [
                               _createElementVNode("option", { value: "write" }, _toDisplayString(_ctx.t('orchestration.runMode.write')), 1 /* TEXT */),
                               _createElementVNode("option", { value: "read" }, _toDisplayString(_ctx.t('orchestration.runMode.readOnly')), 1 /* TEXT */),
@@ -4589,9 +4587,9 @@ return function render(_ctx, _cache) {
                                             ]),
                                             _createElementVNode("div", { class: "task-runtime-item-actions" }, [
                                               _createElementVNode("span", {
-                                                class: _normalizeClass(['pill', _ctx.taskRunStatusTone(item.status)])
-                                              }, _toDisplayString(item.status), 3 /* TEXT, CLASS */),
-                                              (_ctx.isTaskRunActive(item.status))
+                                                class: _normalizeClass(['pill', _ctx.taskRunStatusTone(item.status || item.runStatus)])
+                                              }, _toDisplayString(item.status || item.runStatus), 3 /* TEXT, CLASS */),
+                                              (_ctx.isTaskRunActive(item.status || item.runStatus))
                                                 ? (_openBlock(), _createElementBlock("button", {
                                                     key: 0,
                                                     type: "button",

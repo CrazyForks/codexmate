@@ -71,6 +71,12 @@ function normalizeTaskRunMode(value) {
     return 'write';
 }
 
+function normalizeTaskSelectedEngine(value) {
+    const normalized = String(value || '').trim().toLowerCase().replace(/[\s_]+/g, '-');
+    if (normalized === 'workflow') return 'workflow';
+    return 'openai-chat';
+}
+
 function buildRunModeFlags(runMode) {
     const normalized = normalizeTaskRunMode(runMode);
     return {
@@ -94,6 +100,7 @@ export function createTaskOrchestrationMethods(options = {}) {
                     }
                 }
                 current.runMode = normalizeTaskRunMode(current.runMode);
+                current.selectedEngine = normalizeTaskSelectedEngine(current.selectedEngine);
                 return current;
             }
             this.taskOrchestration = createDefaultTaskOrchestrationState();
@@ -111,7 +118,7 @@ export function createTaskOrchestrationMethods(options = {}) {
                 threadId: String(state.threadId || '').trim(),
                 followUps: normalizeLines(state.followUpsText),
                 workflowIds: normalizeLines(state.workflowIdsText),
-                engine: String(state.selectedEngine || 'openai-chat').trim().toLowerCase() === 'workflow' ? 'workflow' : 'openai-chat',
+                engine: normalizeTaskSelectedEngine(state.selectedEngine),
                 allowWrite: flags.allowWrite,
                 dryRun: flags.dryRun,
                 concurrency: normalizePositiveInteger(state.concurrency, 2, 1, 8),

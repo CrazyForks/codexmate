@@ -104,14 +104,14 @@
                                         </label>
                                         <label class="selector-field">
                                             <span class="selector-label">{{ t('orchestration.fields.engine') }}</span>
-                                            <select v-model="taskOrchestration.selectedEngine" class="provider-fast-switch-select" disabled>
+                                            <select v-model="taskOrchestration.selectedEngine" class="provider-fast-switch-select">
                                                 <option value="openai-chat">{{ t('orchestration.engine.openaiChat') }}</option>
                                                 <option value="workflow">{{ t('orchestration.engine.workflow') }}</option>
                                             </select>
                                         </label>
                                         <label class="selector-field">
                                             <span class="selector-label">{{ t('orchestration.fields.runMode') }}</span>
-                                            <select v-model="taskOrchestration.runMode" class="provider-fast-switch-select" disabled>
+                                            <select v-model="taskOrchestration.runMode" class="provider-fast-switch-select">
                                                 <option value="write">{{ t('orchestration.runMode.write') }}</option>
                                                 <option value="read">{{ t('orchestration.runMode.readOnly') }}</option>
                                                 <option value="dry-run">{{ t('orchestration.runMode.dryRun') }}</option>
@@ -326,8 +326,8 @@
                                                 <div v-if="item.lastSummary" class="task-runtime-item-summary">{{ item.lastSummary }}</div>
                                             </div>
                                         <div class="task-runtime-item-actions">
-                                            <span :class="['pill', taskRunStatusTone(item.status)]">{{ item.status }}</span>
-                                            <button v-if="isTaskRunActive(item.status)" type="button" class="btn-mini" @click.stop="cancelTaskRunFromUi(item.taskId)">{{ t('common.cancel') }}</button>
+                                            <span :class="['pill', taskRunStatusTone(item.status || item.runStatus)]">{{ item.status || item.runStatus }}</span>
+                                            <button v-if="isTaskRunActive(item.status || item.runStatus)" type="button" class="btn-mini" @click.stop="cancelTaskRunFromUi(item.taskId)">{{ t('common.cancel') }}</button>
                                         </div>
                                     </div>
                                 </div>

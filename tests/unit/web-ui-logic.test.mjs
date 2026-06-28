@@ -1286,6 +1286,8 @@ test('taskOrchestrationQueueStats counts queue statuses in one pass without chan
                 { status: 'queued' },
                 { status: ' queued ' },
                 { status: 'running' },
+                { runStatus: 'running' },
+                { runStatus: 'queued' },
                 { status: 'FAILED' },
                 { status: 'ignored' }
             ]
@@ -1295,8 +1297,8 @@ test('taskOrchestrationQueueStats counts queue statuses in one pass without chan
     const stats = computed.taskOrchestrationQueueStats.call(context);
 
     assert.deepStrictEqual(stats, {
-        queued: 2,
-        running: 1,
+        queued: 3,
+        running: 2,
         failed: 1
     });
 });

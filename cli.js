@@ -16131,6 +16131,27 @@ function buildOpenAiChatEndpointUrl(baseUrl) {
     return joinApiUrl(trimmed, 'chat/completions');
 }
 
+function redactTaskEndpointUrl(endpointUrl = '') {
+    const raw = String(endpointUrl || '').trim();
+    if (!raw) return '';
+    try {
+        const parsed = new URL(raw);
+        if (parsed.username) parsed.username = '***';
+        if (parsed.password) parsed.password = '***';
+        const secretKeyPattern = /(?:^|[_-])(?:key|api[-_]?key|token|access[-_]?token|refresh[-_]?token|secret|password|passwd|pwd|credential|credentials|signature|sig)(?:$|[_-])/i;
+        for (const key of [...parsed.searchParams.keys()]) {
+            if (secretKeyPattern.test(key)) {
+                parsed.searchParams.set(key, '***');
+            }
+        }
+        return parsed.toString();
+    } catch (_) {
+        return raw
+            .replace(/\/\/([^/@:]+):([^/@]+)@/g, '//***:***@')
+            .replace(/([?&][^=&]*(?:key|token|secret|password|passwd|pwd|credential|signature|sig)[^=]*=)[^&]*/ig, '$1***');
+    }
+}
+
 function pickTaskProviderModel(providerName, provider, config) {
     const currentModels = readCurrentModels();
     const savedModel = currentModels && typeof currentModels[providerName] === 'string'
@@ -16314,6 +16335,40 @@ function normalizeTaskMaterializedArtifactPath(rawPath, cwd) {
     return { path: targetPath, relativePath: normalized, baseDir };
 }
 
+function validateTaskMaterializedArtifactParents(targetPath, baseDir) {
+    const resolvedBase = fs.realpathSync.native(baseDir);
+    let current = path.dirname(targetPath);
+    const pending = [];
+    while (true) {
+        if (current === resolvedBase) {
+            return { ok: true };
+        }
+        if (current === path.dirname(current)) {
+            return { ok: false, error: 'artifact parent escapes cwd' };
+        }
+        if (fs.existsSync(current)) {
+            const stats = fs.lstatSync(current);
+            if (stats.isSymbolicLink()) {
+                return { ok: false, error: `artifact parent is a symlink: ${path.relative(baseDir, current) || current}` };
+            }
+            const resolvedCurrent = fs.realpathSync.native(current);
+            const relative = path.relative(resolvedBase, resolvedCurrent);
+            if (relative.startsWith('..') || path.isAbsolute(relative)) {
+                return { ok: false, error: 'artifact parent resolves outside cwd' };
+            }
+            for (const child of pending) {
+                const childRelative = path.relative(resolvedBase, child);
+                if (childRelative.startsWith('..') || path.isAbsolute(childRelative)) {
+                    return { ok: false, error: 'artifact parent escapes cwd' };
+                }
+            }
+            return { ok: true };
+        }
+        pending.push(current);
+        current = path.dirname(current);
+    }
+}
+
 function inferTaskMaterializedArtifactPath(info, prefix, hints) {
     const sources = [info, prefix, hints].map((item) => String(item || '')).filter(Boolean);
     const explicitPatterns = [
@@ -16376,6 +16431,11 @@ function materializeOpenAiChatTaskArtifacts(text, options = {}) {
         seen.add(normalized.path);
         try {
             const fileContent = body.trimStart();
+            const parentValidation = validateTaskMaterializedArtifactParents(normalized.path, normalized.baseDir);
+            if (!parentValidation.ok) {
+                warnings.push(parentValidation.error || `artifact parent is unsafe: ${normalized.relativePath}`);
+                continue;
+            }
             ensureDir(path.dirname(normalized.path));
             fs.writeFileSync(normalized.path, fileContent, { encoding: 'utf-8', mode: 0o600 });
             files.push({ path: normalized.path, relativePath: normalized.relativePath, bytes: Buffer.byteLength(fileContent, 'utf-8') });
@@ -16442,7 +16502,7 @@ async function runOpenAiChatTaskNode(node, context = {}) {
     const success = result.ok && !!text;
     const errorMessage = success ? '' : (result.error || 'OpenAI Chat response did not contain text');
     const summary = truncateTaskText(text || errorMessage, 400);
-    const safeEndpoint = requestConfig.endpointUrl.replace(/([?&](?:key|api_key|token)=)[^&]+/ig, '$1***');
+    const safeEndpoint = redactTaskEndpointUrl(requestConfig.endpointUrl);
     const materialized = success && allowWrite
         ? materializeOpenAiChatTaskArtifacts(text, {
             cwd: context.cwd || process.cwd(),

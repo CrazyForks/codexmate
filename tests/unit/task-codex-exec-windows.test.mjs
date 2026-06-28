@@ -113,6 +113,9 @@ test('runOpenAiChatTaskNode uses configured OpenAI Chat provider without spawnin
         truncateTaskText(text, limit) {
             return String(text || '').slice(0, limit || 1000);
         },
+        redactTaskEndpointUrl(endpointUrl) {
+            return String(endpointUrl || '').replace(/sk-unit-secret/g, '***');
+        },
         toIsoTime() {
             return '2026-06-27T15:30:00.000Z';
         },
