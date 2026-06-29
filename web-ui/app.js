@@ -451,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 opencodeMaxTokens: '',
                 opencodeReasoningEffort: '',
                 forceCompactLayout: false,
-                taskOrchestrationTabEnabled: false,
+                taskOrchestrationTabEnabled: true,
                 taskOrchestration: {
                     loading: false,
                     planning: false,

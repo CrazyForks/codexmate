@@ -75,7 +75,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(html, /v-if="taskOrchestrationTabEnabled" class="side-section" role="navigation" :aria-label="t\('side\.orchestration'\)"/);
     assert.match(html, /v-if="taskOrchestrationTabEnabled"[\s\S]*id="panel-orchestration"/);
     assert.match(html, /taskOrchestrationTabEnabled && mainTab === 'orchestration'/);
-    assert.match(bundledScript, /taskOrchestrationTabEnabled:\s*false/);
+    assert.match(bundledScript, /taskOrchestrationTabEnabled:\s*true/);
     assert.match(bundledScript, /codexmateTaskOrchestrationTabEnabled/);
     assert.match(bundledScript, /taskOrchestration/);
     const webUiRedirectBlock = bundledScript.match(/pathname === '\/web-ui'[\s\S]*?window\.location\.replace\(url\.toString\(\)\);/)?.[0] || '';
