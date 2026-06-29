@@ -1796,53 +1796,11 @@
     line-height: 1.2;
 }
 
-#panel-orchestration .task-thread-suggestion-card,
-#panel-orchestration .task-thread-readiness-card {
-    display: block;
-    width: min(100%, 660px);
-}
-
-#panel-orchestration .task-thread-suggestion-card .task-template-label,
 #panel-orchestration .task-side-settings-card .task-advanced-summary {
     margin: 0 0 8px;
     color: var(--color-text-primary);
     font-size: 0.86rem;
     font-weight: 750;
-}
-
-#panel-orchestration .task-thread-suggestion-card .task-quick-template-grid {
-    grid-template-columns: 1fr;
-    gap: 6px;
-}
-
-#panel-orchestration .task-thread-suggestion-card .task-quick-template-card {
-    padding: 8px 10px;
-    border-radius: 12px;
-    background: rgba(248, 250, 252, 0.68);
-    box-shadow: none;
-}
-
-#panel-orchestration .task-thread-readiness-card .task-draft-overview,
-#panel-orchestration .task-thread-readiness-card .task-readiness-grid {
-    margin: 0;
-}
-
-#panel-orchestration .task-thread-readiness-card .task-config-strip {
-    margin-top: 8px;
-}
-
-#panel-orchestration .task-thread-checklist {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-    margin-top: 8px;
-}
-
-#panel-orchestration .task-thread-checklist .task-readiness-item {
-    padding: 7px 8px;
-    border-radius: 11px;
-    background: rgba(248, 250, 252, 0.66);
-    box-shadow: none;
 }
 
 #panel-orchestration .task-side-settings-card:not([open]) {

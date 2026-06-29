@@ -57,45 +57,6 @@
                                             <div v-if="taskOrchestrationDraftMetrics.followUpCount" class="task-chat-bubble-meta">{{ t('orchestration.chat.input.sequenceHint', { count: taskOrchestrationDraftMetrics.followUpCount + 1 }) }}</div>
                                         </div>
                                     </div>
-                                        <section v-if="!taskOrchestrationDraftMetrics.hasTarget" class="selector-section task-thread-message-card task-thread-suggestion-card task-template-block task-quick-template-block">
-                                            <div class="task-thread-card-label">AI · suggestions</div>
-                                    <div class="task-template-label">{{ t('orchestration.templates.title') }}</div>
-                                    <div class="task-quick-template-grid">
-                                        <button type="button" class="task-quick-template-card" @click="taskOrchestration.target = t('orchestration.templates.reviewFix.target'); taskOrchestration.selectedEngine = 'openai-chat'; taskOrchestration.workflowIdsText = ''; taskOrchestration.notes = t('orchestration.templates.reviewFix.notes'); taskOrchestration.followUpsText = t('orchestration.templates.reviewFix.followUps'); taskOrchestration.plan = null; taskOrchestration.planIssues = []; taskOrchestration.planWarnings = []; taskOrchestration.planFingerprint = ''; taskOrchestration.lastError = ''">
-                                            <strong>{{ t('orchestration.templates.reviewFix.label') }}</strong>
-                                            <span>{{ t('orchestration.quick.templates.reviewFix.meta') }}</span>
-                                        </button>
-                                        <button type="button" class="task-quick-template-card" @click="taskOrchestration.target = t('orchestration.templates.planOnly.target'); taskOrchestration.selectedEngine = 'openai-chat'; taskOrchestration.workflowIdsText = ''; taskOrchestration.notes = t('orchestration.templates.planOnly.notes'); taskOrchestration.followUpsText = ''; taskOrchestration.plan = null; taskOrchestration.planIssues = []; taskOrchestration.planWarnings = []; taskOrchestration.planFingerprint = ''; taskOrchestration.lastError = ''">
-                                            <strong>{{ t('orchestration.templates.planOnly.label') }}</strong>
-                                            <span>{{ t('orchestration.quick.templates.planOnly.meta') }}</span>
-                                        </button>
-                                        <button type="button" class="task-quick-template-card" @click="taskOrchestration.target = t('orchestration.templates.workflowBatch.target'); taskOrchestration.selectedEngine = 'workflow'; taskOrchestration.workflowIdsText = t('orchestration.templates.workflowBatch.workflowIds'); taskOrchestration.notes = t('orchestration.templates.workflowBatch.notes'); taskOrchestration.followUpsText = ''; taskOrchestration.plan = null; taskOrchestration.planIssues = []; taskOrchestration.planWarnings = []; taskOrchestration.planFingerprint = ''; taskOrchestration.lastError = ''">
-                                            <strong>{{ t('orchestration.templates.workflowBatch.label') }}</strong>
-                                            <span>{{ t('orchestration.quick.templates.workflowBatch.meta') }}</span>
-                                        </button>
-                                    </div>
-                                        </section>
-
-                                        <section
-                                            v-if="taskOrchestrationDraftMetrics.hasTarget && !(taskOrchestration.plan || taskOrchestration.planIssues.length || taskOrchestration.planWarnings.length || taskOrchestration.lastError)"
-                                            class="selector-section task-thread-message-card task-thread-readiness-card">
-                                            <div class="task-thread-card-label">AI · next step</div>
-                                            <div class="task-draft-overview task-draft-inline task-quick-readiness">
-                                                <div class="task-draft-inline-head">
-                                                    <span :class="['pill', taskOrchestrationDraftReadiness.tone]">{{ taskOrchestrationDraftReadiness.title }}</span>
-                                                    <div class="task-readiness-copy task-draft-inline-copy">{{ taskOrchestrationDraftReadiness.summary }}</div>
-                                                </div>
-                                            </div>
-                                            <div class="task-readiness-grid task-quick-checklist task-thread-checklist">
-                                                <div v-for="item in taskOrchestrationDraftChecklist" :key="item.key" :class="['task-readiness-item', { done: item.done }]">
-                                                    <strong>{{ item.label }}</strong>
-                                                    <span>{{ item.detail }}</span>
-                                                </div>
-                                            </div>
-                                        </section>
-
-
-
                                     <section
                                         v-if="taskOrchestration.plan || taskOrchestration.planIssues.length || taskOrchestration.planWarnings.length || taskOrchestration.lastError"
                                         class="selector-section task-plan-card task-thread-message-card task-thread-plan-card">

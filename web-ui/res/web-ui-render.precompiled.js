@@ -4078,71 +4078,9 @@ return function render(_ctx, _cache) {
                                 ])
                               ]))
                             : _createCommentVNode("v-if", true),
-                          (!_ctx.taskOrchestrationDraftMetrics.hasTarget)
-                            ? (_openBlock(), _createElementBlock("section", {
-                                key: 1,
-                                class: "selector-section task-thread-message-card task-thread-suggestion-card task-template-block task-quick-template-block"
-                              }, [
-                                _createElementVNode("div", { class: "task-thread-card-label" }, "AI · suggestions"),
-                                _createElementVNode("div", { class: "task-template-label" }, _toDisplayString(_ctx.t('orchestration.templates.title')), 1 /* TEXT */),
-                                _createElementVNode("div", { class: "task-quick-template-grid" }, [
-                                  _createElementVNode("button", {
-                                    type: "button",
-                                    class: "task-quick-template-card",
-                                    onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.reviewFix.target'); _ctx.taskOrchestration.selectedEngine = 'openai-chat'; _ctx.taskOrchestration.workflowIdsText = ''; _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.reviewFix.notes'); _ctx.taskOrchestration.followUpsText = _ctx.t('orchestration.templates.reviewFix.followUps'); _ctx.taskOrchestration.plan = null; _ctx.taskOrchestration.planIssues = []; _ctx.taskOrchestration.planWarnings = []; _ctx.taskOrchestration.planFingerprint = ''; _ctx.taskOrchestration.lastError = ''}
-                                  }, [
-                                    _createElementVNode("strong", null, _toDisplayString(_ctx.t('orchestration.templates.reviewFix.label')), 1 /* TEXT */),
-                                    _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.quick.templates.reviewFix.meta')), 1 /* TEXT */)
-                                  ], 8 /* PROPS */, ["onClick"]),
-                                  _createElementVNode("button", {
-                                    type: "button",
-                                    class: "task-quick-template-card",
-                                    onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.planOnly.target'); _ctx.taskOrchestration.selectedEngine = 'openai-chat'; _ctx.taskOrchestration.workflowIdsText = ''; _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.planOnly.notes'); _ctx.taskOrchestration.followUpsText = ''; _ctx.taskOrchestration.plan = null; _ctx.taskOrchestration.planIssues = []; _ctx.taskOrchestration.planWarnings = []; _ctx.taskOrchestration.planFingerprint = ''; _ctx.taskOrchestration.lastError = ''}
-                                  }, [
-                                    _createElementVNode("strong", null, _toDisplayString(_ctx.t('orchestration.templates.planOnly.label')), 1 /* TEXT */),
-                                    _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.quick.templates.planOnly.meta')), 1 /* TEXT */)
-                                  ], 8 /* PROPS */, ["onClick"]),
-                                  _createElementVNode("button", {
-                                    type: "button",
-                                    class: "task-quick-template-card",
-                                    onClick: $event => {_ctx.taskOrchestration.target = _ctx.t('orchestration.templates.workflowBatch.target'); _ctx.taskOrchestration.selectedEngine = 'workflow'; _ctx.taskOrchestration.workflowIdsText = _ctx.t('orchestration.templates.workflowBatch.workflowIds'); _ctx.taskOrchestration.notes = _ctx.t('orchestration.templates.workflowBatch.notes'); _ctx.taskOrchestration.followUpsText = ''; _ctx.taskOrchestration.plan = null; _ctx.taskOrchestration.planIssues = []; _ctx.taskOrchestration.planWarnings = []; _ctx.taskOrchestration.planFingerprint = ''; _ctx.taskOrchestration.lastError = ''}
-                                  }, [
-                                    _createElementVNode("strong", null, _toDisplayString(_ctx.t('orchestration.templates.workflowBatch.label')), 1 /* TEXT */),
-                                    _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.quick.templates.workflowBatch.meta')), 1 /* TEXT */)
-                                  ], 8 /* PROPS */, ["onClick"])
-                                ])
-                              ]))
-                            : _createCommentVNode("v-if", true),
-                          (_ctx.taskOrchestrationDraftMetrics.hasTarget && !(_ctx.taskOrchestration.plan || _ctx.taskOrchestration.planIssues.length || _ctx.taskOrchestration.planWarnings.length || _ctx.taskOrchestration.lastError))
-                            ? (_openBlock(), _createElementBlock("section", {
-                                key: 2,
-                                class: "selector-section task-thread-message-card task-thread-readiness-card"
-                              }, [
-                                _createElementVNode("div", { class: "task-thread-card-label" }, "AI · next step"),
-                                _createElementVNode("div", { class: "task-draft-overview task-draft-inline task-quick-readiness" }, [
-                                  _createElementVNode("div", { class: "task-draft-inline-head" }, [
-                                    _createElementVNode("span", {
-                                      class: _normalizeClass(['pill', _ctx.taskOrchestrationDraftReadiness.tone])
-                                    }, _toDisplayString(_ctx.taskOrchestrationDraftReadiness.title), 3 /* TEXT, CLASS */),
-                                    _createElementVNode("div", { class: "task-readiness-copy task-draft-inline-copy" }, _toDisplayString(_ctx.taskOrchestrationDraftReadiness.summary), 1 /* TEXT */)
-                                  ])
-                                ]),
-                                _createElementVNode("div", { class: "task-readiness-grid task-quick-checklist task-thread-checklist" }, [
-                                  (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.taskOrchestrationDraftChecklist, (item) => {
-                                    return (_openBlock(), _createElementBlock("div", {
-                                      key: item.key,
-                                      class: _normalizeClass(['task-readiness-item', { done: item.done }])
-                                    }, [
-                                      _createElementVNode("strong", null, _toDisplayString(item.label), 1 /* TEXT */),
-                                      _createElementVNode("span", null, _toDisplayString(item.detail), 1 /* TEXT */)
-                                    ], 2 /* CLASS */))
-                                  }), 128 /* KEYED_FRAGMENT */))
-                                ])
-                              ]))
-                            : _createCommentVNode("v-if", true),
                           (_ctx.taskOrchestration.plan || _ctx.taskOrchestration.planIssues.length || _ctx.taskOrchestration.planWarnings.length || _ctx.taskOrchestration.lastError)
                             ? (_openBlock(), _createElementBlock("section", {
-                                key: 3,
+                                key: 1,
                                 class: "selector-section task-plan-card task-thread-message-card task-thread-plan-card"
                               }, [
                                 _createElementVNode("div", { class: "task-thread-card-label" }, "AI · " + _toDisplayString(_ctx.t('orchestration.plan.title')), 1 /* TEXT */),
