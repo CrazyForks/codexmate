@@ -1157,6 +1157,8 @@ const zhTw = Object.freeze({
     'orchestration.workbench.tabs.queue': '隊列 {count}',
     'orchestration.workbench.tabs.runs': '運行記錄 {count}',
     'orchestration.workbench.tabs.detail': '運行詳情',
+    'orchestration.workbench.queueCount': '{count} 個排隊中',
+    'orchestration.workbench.ready': '就緒',
     'orchestration.queue.empty.title': '目前沒有排隊任務',
     'orchestration.queue.empty.subtitle': '批量任務可先入隊，再啟動隊列。',
     'orchestration.runs.empty.title': '還沒有運行記錄',

@@ -39,12 +39,13 @@
                                         {{ taskOrchestration.loading ? t('common.refreshing') : t('common.refresh') }}
                                     </button>
                                 </div>
-                                <div class="task-project-list" role="listbox" :aria-label="t('orchestration.workspace.selector')">
+                                <div class="task-project-list" :aria-label="t('orchestration.workspace.selector')">
                                     <button
                                         v-for="workspace in taskOrchestrationWorkspaceItems"
                                         :key="workspace.key"
                                         type="button"
                                         :class="['task-project-item', { active: workspace.active }]"
+                                        :aria-selected="workspace.active ? 'true' : 'false'"
                                         :title="workspace.path || workspace.meta"
                                         @click="selectTaskWorkspace(workspace.path)">
                                         <span class="task-project-item-title">{{ workspace.label }}</span>
@@ -252,8 +253,8 @@
                                         <div class="task-thread-run-summary">
                                             <span v-if="taskOrchestrationSelectedRun && taskOrchestrationSelectedRun.run" :class="['pill', taskRunStatusTone(taskOrchestrationSelectedRun.run.status)]">{{ taskOrchestrationSelectedRun.run.status }}</span>
                                             <span v-else-if="taskOrchestrationWorkspaceRuns.length" :class="['pill', taskRunStatusTone(taskOrchestrationWorkspaceRuns[0].status)]">{{ taskOrchestrationWorkspaceRuns[0].status }}</span>
-                                            <span v-else-if="taskOrchestrationWorkspaceQueue.length" class="pill neutral">{{ taskOrchestrationWorkspaceQueue.length }} queued</span>
-                                            <span v-else class="pill empty">Ready</span>
+                                            <span v-else-if="taskOrchestrationWorkspaceQueue.length" class="pill neutral">{{ t('orchestration.workbench.queueCount', { count: taskOrchestrationWorkspaceQueue.length }) }}</span>
+                                            <span v-else class="pill empty">{{ t('orchestration.workbench.ready') }}</span>
                                             <span v-if="taskOrchestrationSelectedRun && taskOrchestrationSelectedRun.run" class="task-thread-run-summary-copy">{{ taskOrchestrationSelectedRun.run.summary || taskOrchestrationSelectedRun.run.runId || taskOrchestration.selectedRunId }}</span>
                                             <span v-else-if="taskOrchestrationWorkspaceRuns.length" class="task-thread-run-summary-copy">{{ taskOrchestrationWorkspaceRuns[0].summary || taskOrchestrationWorkspaceRuns[0].runId }}</span>
                                             <span v-else-if="taskOrchestrationWorkspaceQueue.length" class="task-thread-run-summary-copy">{{ taskOrchestrationWorkspaceQueue[0].title || taskOrchestrationWorkspaceQueue[0].target || taskOrchestrationWorkspaceQueue[0].taskId }}</span>

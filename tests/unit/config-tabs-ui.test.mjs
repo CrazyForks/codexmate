@@ -122,7 +122,10 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /class="[^\"]*task-thread-message-card[^\"]*task-thread-plan-card[^\"]*"/);
     assert.doesNotMatch(orchestrationPanel, /class="[^\"]*task-thread-message-card[^\"]*task-thread-workbench-card[^\"]*"/);
     assert.match(orchestrationPanel, /class="task-project-sidebar" :aria-label="t\('orchestration\.workspace\.aria'\)"/);
+    assert.match(orchestrationPanel, /<div class="task-project-list" :aria-label="t\('orchestration\.workspace\.selector'\)">/);
+    assert.doesNotMatch(orchestrationPanel, /class="task-project-list" role="listbox"/);
     assert.match(orchestrationPanel, /v-for="workspace in taskOrchestrationWorkspaceItems"/);
+    assert.match(orchestrationPanel, /:aria-selected="workspace\.active \? 'true' : 'false'"/);
     assert.match(orchestrationPanel, /@click="selectTaskWorkspace\(workspace\.path\)"/);
     assert.match(orchestrationPanel, /@click="startNewTaskWorkspaceSession\(\)"/);
     assert.match(orchestrationPanel, /v-for="session in taskOrchestrationWorkspaceSessions\.slice\(0, 8\)"/);
@@ -165,6 +168,10 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.doesNotMatch(orchestrationPanel, /class="task-config-strip"/);
     assert.match(orchestrationPanel, /taskOrchestrationWorkspaceQueue/);
     assert.match(orchestrationPanel, /taskOrchestrationWorkspaceRuns/);
+    assert.match(orchestrationPanel, /t\('orchestration\.workbench\.queueCount', \{ count: taskOrchestrationWorkspaceQueue\.length \}\)/);
+    assert.match(orchestrationPanel, /t\('orchestration\.workbench\.ready'\)/);
+    assert.doesNotMatch(orchestrationPanel, />\{\{ taskOrchestrationWorkspaceQueue\.length \}\} queued</);
+    assert.doesNotMatch(orchestrationPanel, />Ready</);
     assert.match(orchestrationPanel, /taskOrchestration.workspaceTab === 'queue'/);
     assert.match(orchestrationPanel, /taskOrchestration.workspaceTab === 'runs'/);
     assert.match(orchestrationPanel, /taskOrchestration.workspaceTab === 'detail'/);

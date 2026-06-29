@@ -4050,7 +4050,6 @@ return function render(_ctx, _cache) {
                       ]),
                       _createElementVNode("div", {
                         class: "task-project-list",
-                        role: "listbox",
                         "aria-label": _ctx.t('orchestration.workspace.selector')
                       }, [
                         (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.taskOrchestrationWorkspaceItems, (workspace) => {
@@ -4058,13 +4057,14 @@ return function render(_ctx, _cache) {
                             key: workspace.key,
                             type: "button",
                             class: _normalizeClass(['task-project-item', { active: workspace.active }]),
+                            "aria-selected": workspace.active ? 'true' : 'false',
                             title: workspace.path || workspace.meta,
                             onClick: $event => (_ctx.selectTaskWorkspace(workspace.path))
                           }, [
                             _createElementVNode("span", { class: "task-project-item-title" }, _toDisplayString(workspace.label), 1 /* TEXT */),
                             _createElementVNode("span", { class: "task-project-item-meta" }, _toDisplayString(workspace.meta), 1 /* TEXT */),
                             _createElementVNode("span", { class: "task-project-item-stats" }, _toDisplayString(_ctx.t('orchestration.workspace.counts', { runs: workspace.runCount, queue: workspace.queueCount })), 1 /* TEXT */)
-                          ], 10 /* CLASS, PROPS */, ["title", "onClick"]))
+                          ], 10 /* CLASS, PROPS */, ["aria-selected", "title", "onClick"]))
                         }), 128 /* KEYED_FRAGMENT */))
                       ], 8 /* PROPS */, ["aria-label"]),
                       _createElementVNode("button", {
@@ -4383,11 +4383,11 @@ return function render(_ctx, _cache) {
                                 ? (_openBlock(), _createElementBlock("span", {
                                     key: 2,
                                     class: "pill neutral"
-                                  }, _toDisplayString(_ctx.taskOrchestrationWorkspaceQueue.length) + " queued", 1 /* TEXT */))
+                                  }, _toDisplayString(_ctx.t('orchestration.workbench.queueCount', { count: _ctx.taskOrchestrationWorkspaceQueue.length })), 1 /* TEXT */))
                                 : (_openBlock(), _createElementBlock("span", {
                                     key: 3,
                                     class: "pill empty"
-                                  }, "Ready")),
+                                  }, _toDisplayString(_ctx.t('orchestration.workbench.ready')), 1 /* TEXT */)),
                           (_ctx.taskOrchestrationSelectedRun && _ctx.taskOrchestrationSelectedRun.run)
                             ? (_openBlock(), _createElementBlock("span", {
                                 key: 4,

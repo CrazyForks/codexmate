@@ -1228,6 +1228,8 @@ const vi = Object.freeze({
     'orchestration.workbench.tabs.queue': 'Hàng đợi {count}',
     'orchestration.workbench.tabs.runs': 'Lần chạy {count}',
     'orchestration.workbench.tabs.detail': 'Chi tiết lần chạy',
+    'orchestration.workbench.queueCount': '{count} đang chờ',
+    'orchestration.workbench.ready': 'Sẵn sàng',
     'orchestration.queue.empty.title': 'Không có tác vụ trong hàng đợi',
     'orchestration.queue.empty.subtitle': 'Xếp hàng tác vụ hàng loạt trước, rồi bắt đầu runner.',
     'orchestration.runs.empty.title': 'Chưa có lần chạy nào',

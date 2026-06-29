@@ -1157,6 +1157,8 @@ const zh = Object.freeze({
     'orchestration.workbench.tabs.queue': '队列 {count}',
     'orchestration.workbench.tabs.runs': '运行记录 {count}',
     'orchestration.workbench.tabs.detail': '运行详情',
+    'orchestration.workbench.queueCount': '{count} 个排队中',
+    'orchestration.workbench.ready': '就绪',
     'orchestration.queue.empty.title': '当前没有排队任务',
     'orchestration.queue.empty.subtitle': '批量任务可先入队，再启动队列。',
     'orchestration.runs.empty.title': '还没有运行记录',

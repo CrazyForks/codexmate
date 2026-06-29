@@ -1158,6 +1158,8 @@ const en = Object.freeze({
     'orchestration.workbench.tabs.queue': 'Queue {count}',
     'orchestration.workbench.tabs.runs': 'Runs {count}',
     'orchestration.workbench.tabs.detail': 'Run detail',
+    'orchestration.workbench.queueCount': '{count} queued',
+    'orchestration.workbench.ready': 'Ready',
     'orchestration.queue.empty.title': 'No queued tasks',
     'orchestration.queue.empty.subtitle': 'Queue batch tasks first, then start the runner.',
     'orchestration.runs.empty.title': 'No runs yet',

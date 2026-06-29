@@ -1116,6 +1116,8 @@ const ja = Object.freeze({
     'orchestration.workbench.tabs.queue': 'キュー {count}',
     'orchestration.workbench.tabs.runs': '実行記録 {count}',
     'orchestration.workbench.tabs.detail': '詳細',
+    'orchestration.workbench.queueCount': 'キュー {count} 件',
+    'orchestration.workbench.ready': '準備完了',
     'orchestration.queue.empty.title': 'キューは空です',
     'orchestration.queue.empty.subtitle': 'キューにタスクがありません。',
     'orchestration.runs.empty.title': '実行記録なし',
