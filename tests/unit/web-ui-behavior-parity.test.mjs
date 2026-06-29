@@ -889,6 +889,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'taskOrchestrationSelectedRun',
         'taskOrchestrationSelectedRunNodes',
         'taskOrchestrationActiveQueue',
+        'taskOrchestrationWorkbenchVisible',
         'taskOrchestrationQueueStats',
         'taskOrchestrationDraftMetrics',
         'taskOrchestrationDraftChecklist',

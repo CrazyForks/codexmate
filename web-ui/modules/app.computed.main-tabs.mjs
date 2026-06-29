@@ -283,6 +283,17 @@ export function createMainTabsComputed() {
                 return status === 'queued' || status === 'running';
             });
         },
+        taskOrchestrationWorkbenchVisible() {
+            const state = this.taskOrchestration && typeof this.taskOrchestration === 'object'
+                ? this.taskOrchestration
+                : {};
+            const activeQueue = Array.isArray(this.taskOrchestrationActiveQueue)
+                ? this.taskOrchestrationActiveQueue
+                : [];
+            return activeQueue.length > 0
+                || !!String(state.selectedRunId || '').trim()
+                || !!String(state.selectedRunError || '').trim();
+        },
         taskOrchestrationQueueStats() {
             const queue = this.taskOrchestration && Array.isArray(this.taskOrchestration.queue)
                 ? this.taskOrchestration.queue

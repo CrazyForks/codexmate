@@ -4446,7 +4446,7 @@ return function render(_ctx, _cache) {
                                   : _createCommentVNode("v-if", true)
                               ]))
                             : _createCommentVNode("v-if", true),
-                          (_ctx.taskOrchestrationActiveQueue.length || _ctx.taskOrchestration.runs.length || _ctx.taskOrchestration.selectedRunId || _ctx.taskOrchestration.selectedRunError)
+                          (_ctx.taskOrchestrationWorkbenchVisible)
                             ? (_openBlock(), _createElementBlock("section", {
                                 key: 4,
                                 class: "selector-section task-workbench-card task-thread-message-card task-thread-workbench-card"

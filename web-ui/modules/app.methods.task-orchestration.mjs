@@ -163,6 +163,17 @@ function buildRunModeFlags(runMode) {
     };
 }
 
+function clearTaskRunSelectionForDraft(state) {
+    if (!state || typeof state !== 'object') {
+        return;
+    }
+    state.selectedRunId = '';
+    state.selectedRunDetail = null;
+    state.selectedRunError = '';
+    state.selectedRunLoading = false;
+    state.workspaceTab = 'queue';
+}
+
 export function createTaskOrchestrationMethods(options = {}) {
     const { api } = options;
 
@@ -316,9 +327,6 @@ export function createTaskOrchestrationMethods(options = {}) {
                     : null;
                 state.overviewWarnings = Array.isArray(res && res.warnings) ? res.warnings : [];
                 state.lastLoadedAt = new Date().toISOString();
-                if (!state.selectedRunId && state.runs.length > 0) {
-                    state.selectedRunId = state.runs[0].runId || '';
-                }
                 const shouldRefreshSelectedDetail = !!state.selectedRunId
                     && (options.includeDetail !== false
                         || (state.selectedRunDetail && this.isTaskRunActive(state.selectedRunDetail && state.selectedRunDetail.run && state.selectedRunDetail.run.status)));
@@ -357,6 +365,7 @@ export function createTaskOrchestrationMethods(options = {}) {
             state.planIssues = [];
             state.planWarnings = [];
             state.lastError = '';
+            clearTaskRunSelectionForDraft(state);
             scrollTaskOrchestrationThreadToEnd();
             return true;
         },
@@ -391,6 +400,7 @@ export function createTaskOrchestrationMethods(options = {}) {
             if (state.planning) {
                 return null;
             }
+            clearTaskRunSelectionForDraft(state);
             state.planning = true;
             try {
                 const res = await api('task-plan', {

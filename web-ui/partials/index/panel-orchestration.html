@@ -242,7 +242,7 @@
                                         </template>
                                     </section>
                                     <section
-                                        v-if="taskOrchestrationActiveQueue.length || taskOrchestration.runs.length || taskOrchestration.selectedRunId || taskOrchestration.selectedRunError"
+                                        v-if="taskOrchestrationWorkbenchVisible"
                                         class="selector-section task-workbench-card task-thread-message-card task-thread-workbench-card">
                                         <div class="task-thread-card-label">AI · {{ t('orchestration.workbench.title') }}</div>
                                         <div class="task-thread-run-summary">

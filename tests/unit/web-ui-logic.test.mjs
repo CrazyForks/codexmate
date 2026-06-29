@@ -1341,6 +1341,46 @@ test('submitTaskOrchestrationChatMessage treats /plan as chat preview command', 
     assert.deepStrictEqual(previewCalls, [{ silent: false }, { silent: false }]);
 });
 
+test('submitTaskOrchestrationChatMessage clears stale failed run detail before /plan preview', async () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        appendTaskChatMessage: methods.appendTaskChatMessage,
+        previewTaskPlan(options) {
+            const state = this.ensureTaskOrchestrationState();
+            assert.strictEqual(state.selectedRunId, '');
+            assert.strictEqual(state.selectedRunDetail, null);
+            assert.strictEqual(state.selectedRunError, '');
+            assert.strictEqual(state.workspaceTab, 'queue');
+            return Promise.resolve({ ok: true, options });
+        },
+        showMessage(message, tone) {
+            throw new Error(`unexpected message: ${tone}:${message}`);
+        },
+        taskOrchestration: {
+            chatDraft: '/plan Fix the orchestration preview',
+            target: '',
+            followUpsText: '',
+            selectedEngine: 'openai-chat',
+            runMode: 'write',
+            plan: null,
+            planFingerprint: '',
+            planIssues: [],
+            planWarnings: [],
+            selectedRunId: 'run-failed',
+            selectedRunDetail: { run: { status: 'failed', summary: '前置节点失败，已阻塞' } },
+            selectedRunError: '前置节点失败，已阻塞',
+            workspaceTab: 'detail',
+            lastError: ''
+        }
+    };
+
+    const result = await methods.submitTaskOrchestrationChatMessage.call(context);
+
+    assert.deepStrictEqual(result, { ok: true, options: { silent: false } });
+    assert.strictEqual(context.taskOrchestration.target, 'Fix the orchestration preview');
+});
+
 test('previewTaskPlan sends previewOnly without mutating normal run semantics', async () => {
     const apiCalls = [];
     const methods = createTaskOrchestrationMethods({
@@ -1562,6 +1602,55 @@ test('taskOrchestrationActiveQueue hides completed and failed queue history from
     const activeQueue = computed.taskOrchestrationActiveQueue.call(context);
 
     assert.deepStrictEqual(activeQueue, [queued, running, runStatusOnly]);
+});
+
+test('taskOrchestrationWorkbenchVisible ignores passive failed run history', () => {
+    const computed = createMainTabsComputed();
+    const context = {
+        taskOrchestrationActiveQueue: [],
+        taskOrchestration: {
+            runs: [
+                { runId: 'run-failed', status: 'failed', summary: '前置节点失败，已阻塞' }
+            ],
+            selectedRunId: '',
+            selectedRunError: ''
+        }
+    };
+
+    assert.strictEqual(computed.taskOrchestrationWorkbenchVisible.call(context), false);
+
+    context.taskOrchestration.selectedRunId = 'run-failed';
+    assert.strictEqual(computed.taskOrchestrationWorkbenchVisible.call(context), true);
+});
+
+test('loadTaskOrchestrationOverview does not auto-select latest failed run history', async () => {
+    const methods = createTaskOrchestrationMethods({
+        api: async (name) => {
+            assert.strictEqual(name, 'task-overview');
+            return {
+                runs: [{ runId: 'run-failed', status: 'failed', summary: '前置节点失败，已阻塞' }],
+                queue: [],
+                workflows: [],
+                warnings: []
+            };
+        }
+    });
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        loadTaskRunDetail() {
+            throw new Error('should not load detail for passive history');
+        },
+        isTaskRunActive: () => false,
+        showMessage() {},
+        syncTaskOrchestrationPolling() {}
+    };
+    context.taskOrchestration = methods.ensureTaskOrchestrationState.call(context);
+
+    await methods.loadTaskOrchestrationOverview.call(context, { silent: true, includeDetail: false });
+
+    assert.strictEqual(context.taskOrchestration.runs.length, 1);
+    assert.strictEqual(context.taskOrchestration.selectedRunId, '');
+    assert.strictEqual(context.taskOrchestration.selectedRunDetail, null);
 });
 
 test('startTaskQueueRunner surfaces already-running queue state distinctly', async () => {
