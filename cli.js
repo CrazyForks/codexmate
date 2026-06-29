@@ -15677,6 +15677,7 @@ function normalizeTaskPlanRequest(params = {}) {
         dryRun: source.dryRun === true,
         concurrency: Number.isFinite(source.concurrency) ? source.concurrency : parseInt(source.concurrency, 10),
         autoFixRounds: Number.isFinite(source.autoFixRounds) ? source.autoFixRounds : parseInt(source.autoFixRounds, 10),
+        previewOnly: source.previewOnly === true,
         workflowIds: rawWorkflowIds,
         followUps: normalizeTaskFollowUps(rawFollowUps)
     };
@@ -15685,7 +15686,7 @@ function normalizeTaskPlanRequest(params = {}) {
 function coerceTaskPlanPayload(params = {}) {
     if (params && params.plan && typeof params.plan === 'object' && !Array.isArray(params.plan)) {
         const plan = cloneJson(params.plan, {});
-        const overrideKeys = ['id', 'threadId', 'conversationId', 'sessionId', 'title', 'target', 'notes', 'cwd', 'engine', 'allowWrite', 'dryRun', 'concurrency', 'autoFixRounds', 'workflowIds', 'followUps'];
+        const overrideKeys = ['id', 'threadId', 'conversationId', 'sessionId', 'title', 'target', 'notes', 'cwd', 'engine', 'allowWrite', 'dryRun', 'concurrency', 'autoFixRounds', 'previewOnly', 'workflowIds', 'followUps'];
         for (const key of overrideKeys) {
             if (Object.prototype.hasOwnProperty.call(params, key) && params[key] !== undefined) {
                 if (key === 'conversationId' || key === 'sessionId') {

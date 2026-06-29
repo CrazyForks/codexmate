@@ -393,7 +393,10 @@ export function createTaskOrchestrationMethods(options = {}) {
             }
             state.planning = true;
             try {
-                const res = await api('task-plan', this.buildTaskOrchestrationRequest());
+                const res = await api('task-plan', {
+                    ...this.buildTaskOrchestrationRequest(),
+                    previewOnly: true
+                });
                 state.plan = res && res.plan ? res.plan : null;
                 if (state.plan && state.plan.threadId && !state.threadId) {
                     state.threadId = state.plan.threadId;

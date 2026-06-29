@@ -47,6 +47,26 @@ test('buildTaskPlan generates OpenAI Chat orchestration nodes and follow-ups', (
     assert.strictEqual(plan.nodes[plan.nodes.length - 1].kind, 'openai-chat');
 });
 
+test('buildTaskPlan creates a dependency-free preview node for /plan drafts', () => {
+    const plan = buildTaskPlan({
+        target: '实现任务编排聊天式预览',
+        allowWrite: true,
+        previewOnly: true
+    });
+
+    assert.strictEqual(plan.engine, 'openai-chat');
+    assert.strictEqual(plan.nodes.length, 1);
+    assert.strictEqual(plan.nodes[0].id, 'plan-01');
+    assert.strictEqual(plan.nodes[0].title, '方案草拟');
+    assert.strictEqual(plan.nodes[0].kind, 'openai-chat');
+    assert.deepStrictEqual(plan.nodes[0].dependsOn, []);
+    assert.strictEqual(plan.nodes[0].write, false);
+    assert.strictEqual(plan.nodes[0].autoFixRounds, 0);
+    assert.match(plan.nodes[0].prompt, /任务需求:\n我们先探讨方案，在我让你生成之前不要生成\n\n实现任务编排聊天式预览/);
+    assert.doesNotMatch(plan.nodes[0].prompt, /前置节点/);
+    assert.doesNotMatch(plan.nodes[0].prompt, /前置执行节点/);
+});
+
 test('buildTaskPlan carries workspace and thread context into OpenAI Chat nodes', () => {
     const plan = buildTaskPlan({
         target: '在指定工作区创建 2048 页面',

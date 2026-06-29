@@ -1341,6 +1341,57 @@ test('submitTaskOrchestrationChatMessage treats /plan as chat preview command', 
     assert.deepStrictEqual(previewCalls, [{ silent: false }, { silent: false }]);
 });
 
+test('previewTaskPlan sends previewOnly without mutating normal run semantics', async () => {
+    const apiCalls = [];
+    const methods = createTaskOrchestrationMethods({
+        api: async (name, payload) => {
+            apiCalls.push({ name, payload });
+            return {
+                plan: { threadId: 'thread-preview', nodes: [{ id: 'plan-01' }], waves: [{ nodeIds: ['plan-01'] }] },
+                issues: [],
+                warnings: []
+            };
+        }
+    });
+    const messages = [];
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        buildTaskOrchestrationRequest: methods.buildTaskOrchestrationRequest,
+        buildTaskOrchestrationFingerprint: methods.buildTaskOrchestrationFingerprint,
+        showMessage(message, tone) {
+            messages.push({ message, tone });
+        },
+        taskOrchestration: {
+            target: 'Finish requirement 1',
+            followUpsText: '',
+            chatDraft: '',
+            selectedEngine: 'openai-chat',
+            runMode: 'write',
+            concurrency: 2,
+            autoFixRounds: 1,
+            workspacePath: '',
+            threadId: '',
+            plan: null,
+            planIssues: [],
+            planWarnings: [],
+            planFingerprint: '',
+            planning: false
+        }
+    };
+
+    const result = await methods.previewTaskPlan.call(context, { silent: false });
+
+    assert.strictEqual(result.plan.threadId, 'thread-preview');
+    assert.strictEqual(apiCalls.length, 1);
+    assert.strictEqual(apiCalls[0].name, 'task-plan');
+    assert.strictEqual(apiCalls[0].payload.target, 'Finish requirement 1');
+    assert.strictEqual(apiCalls[0].payload.previewOnly, true);
+    assert.strictEqual(apiCalls[0].payload.allowWrite, true);
+    assert.strictEqual(context.taskOrchestration.threadId, 'thread-preview');
+    assert.strictEqual(context.taskOrchestration.planFingerprint.includes('previewOnly'), false);
+    assert.deepStrictEqual(messages, [{ message: '任务计划已更新', tone: 'success' }]);
+});
+
 test('taskOrchestrationConversationMessages renders assistant-left and user-right sequence model', () => {
     const computed = createMainTabsComputed();
     const translations = {
