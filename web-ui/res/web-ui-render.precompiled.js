@@ -4030,6 +4030,24 @@ return function render(_ctx, _cache) {
                     ])
                   ])
                 ]),
+                _createElementVNode("div", {
+                  class: "task-panel-toolbar",
+                  role: "navigation",
+                  "aria-label": "任务编排配置与运行状态"
+                }, [
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: "task-panel-toolbar-action task-panel-config-action",
+                    onClick: $event => (_ctx.taskOrchestration.settingsOpen = true)
+                  }, " 配置 " + _toDisplayString(_ctx.taskOrchestrationEngineLabel) + " · " + _toDisplayString(_ctx.taskOrchestration.runMode === 'dry-run' ? _ctx.t('orchestration.runMode.dryRun') : (_ctx.taskOrchestration.runMode === 'read' ? _ctx.t('orchestration.runMode.readOnly') : _ctx.t('orchestration.runMode.write') )) + " · 并发 " + _toDisplayString(_ctx.taskOrchestration.concurrency || 2), 9 /* TEXT, PROPS */, ["onClick"]),
+                  _createElementVNode("span", null, "运行中 " + _toDisplayString(_ctx.taskOrchestrationQueueStats.running), 1 /* TEXT */),
+                  _createElementVNode("span", null, "排队中 " + _toDisplayString(_ctx.taskOrchestrationQueueStats.queued), 1 /* TEXT */),
+                  _createElementVNode("button", {
+                    type: "button",
+                    class: "task-panel-toolbar-action",
+                    onClick: $event => (_ctx.taskOrchestration.workspaceTab = 'runs')
+                  }, "历史 RUNS " + _toDisplayString(_ctx.taskOrchestration.runs.length), 9 /* TEXT, PROPS */, ["onClick"])
+                ]),
                 _createElementVNode("div", { class: "task-layout-grid task-layout-grid-primary task-quick-layout" }, [
                   _createElementVNode("section", { class: "selector-section task-compose-flow-card task-quick-card" }, [
                     _createElementVNode("div", { class: "task-quick-main" }, [
@@ -4039,21 +4057,6 @@ return function render(_ctx, _cache) {
                         _createElementVNode("div", { class: "skills-panel-note task-hero-copy" }, _toDisplayString(_ctx.t('orchestration.quick.subtitle')), 1 /* TEXT */)
                       ]),
                       _createElementVNode("div", { class: "task-quick-input-card task-chat-panel" }, [
-                        _createElementVNode("div", {
-                          class: "task-chat-status-strip",
-                          role: "status",
-                          "aria-label": "任务编排状态"
-                        }, [
-                          _createElementVNode("span", null, "引擎 " + _toDisplayString(_ctx.taskOrchestrationEngineLabel), 1 /* TEXT */),
-                          _createElementVNode("span", null, "并发度 " + _toDisplayString(_ctx.taskOrchestration.concurrency || 2), 1 /* TEXT */),
-                          _createElementVNode("span", null, "运行中 " + _toDisplayString(_ctx.taskOrchestrationQueueStats.running), 1 /* TEXT */),
-                          _createElementVNode("span", null, "排队中 " + _toDisplayString(_ctx.taskOrchestrationQueueStats.queued), 1 /* TEXT */),
-                          _createElementVNode("button", {
-                            type: "button",
-                            class: "task-chat-status-link",
-                            onClick: $event => (_ctx.taskOrchestration.workspaceTab = 'runs')
-                          }, "历史 RUNS " + _toDisplayString(_ctx.taskOrchestration.runs.length), 9 /* TEXT, PROPS */, ["onClick"])
-                        ]),
                         _createElementVNode("div", {
                           class: "task-chat-thread",
                           role: "log",
@@ -4724,7 +4727,11 @@ return function render(_ctx, _cache) {
                             ])
                           ]))
                         : _createCommentVNode("v-if", true),
-                      _createElementVNode("details", { class: "selector-section task-side-settings-card task-advanced-panel task-quick-advanced" }, [
+                      _createElementVNode("details", {
+                        class: "selector-section task-side-settings-card task-advanced-panel task-quick-advanced",
+                        open: _ctx.taskOrchestration.settingsOpen,
+                        onToggle: $event => (_ctx.taskOrchestration.settingsOpen = $event.target.open)
+                      }, [
                         _createElementVNode("summary", { class: "task-advanced-summary" }, _toDisplayString(_ctx.t('orchestration.advanced.title')), 1 /* TEXT */),
                         _createElementVNode("div", { class: "task-action-row-right task-action-row-right-prominent task-codex-queue-action" }, [
                           _createElementVNode("button", {
@@ -4883,7 +4890,7 @@ return function render(_ctx, _cache) {
                               ]))
                             : _createCommentVNode("v-if", true)
                         ])
-                      ]),
+                      ], 40 /* PROPS, NEED_HYDRATION */, ["open", "onToggle"]),
                       _createElementVNode("div", { class: "task-provider-status-card" }, [
                         _createElementVNode("div", { class: "task-readiness-title" }, _toDisplayString(_ctx.t('orchestration.openai.status.title')), 1 /* TEXT */),
                         _createElementVNode("div", { class: "task-readiness-copy" }, _toDisplayString(_ctx.t('orchestration.openai.status.subtitle')), 1 /* TEXT */),

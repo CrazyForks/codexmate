@@ -27,6 +27,15 @@
                         </div>
                     </section>
 
+                    <div class="task-panel-toolbar" role="navigation" aria-label="任务编排配置与运行状态">
+                        <button type="button" class="task-panel-toolbar-action task-panel-config-action" @click="taskOrchestration.settingsOpen = true">
+                            配置 {{ taskOrchestrationEngineLabel }} · {{ taskOrchestration.runMode === 'dry-run' ? t('orchestration.runMode.dryRun') : (taskOrchestration.runMode === 'read' ? t('orchestration.runMode.readOnly') : t('orchestration.runMode.write') ) }} · 并发 {{ taskOrchestration.concurrency || 2 }}
+                        </button>
+                        <span>运行中 {{ taskOrchestrationQueueStats.running }}</span>
+                        <span>排队中 {{ taskOrchestrationQueueStats.queued }}</span>
+                        <button type="button" class="task-panel-toolbar-action" @click="taskOrchestration.workspaceTab = 'runs'">历史 RUNS {{ taskOrchestration.runs.length }}</button>
+                    </div>
+
                     <div class="task-layout-grid task-layout-grid-primary task-quick-layout">
                         <section class="selector-section task-compose-flow-card task-quick-card">
                             <div class="task-quick-main">
@@ -37,13 +46,6 @@
                                 </div>
 
                                 <div class="task-quick-input-card task-chat-panel">
-                                    <div class="task-chat-status-strip" role="status" aria-label="任务编排状态">
-                                        <span>引擎 {{ taskOrchestrationEngineLabel }}</span>
-                                        <span>并发度 {{ taskOrchestration.concurrency || 2 }}</span>
-                                        <span>运行中 {{ taskOrchestrationQueueStats.running }}</span>
-                                        <span>排队中 {{ taskOrchestrationQueueStats.queued }}</span>
-                                        <button type="button" class="task-chat-status-link" @click="taskOrchestration.workspaceTab = 'runs'">历史 RUNS {{ taskOrchestration.runs.length }}</button>
-                                    </div>
                                     <div class="task-chat-thread" role="log" :aria-label="t('orchestration.chat.thread.aria')">
                                         <div
                                             v-for="message in taskOrchestrationConversationMessages"
@@ -383,7 +385,7 @@
                                         </div>
                                         </details>
                                     </section>
-                                        <details class="selector-section task-side-settings-card task-advanced-panel task-quick-advanced">
+                                    <details class="selector-section task-side-settings-card task-advanced-panel task-quick-advanced" :open="taskOrchestration.settingsOpen" @toggle="taskOrchestration.settingsOpen = $event.target.open">
                                             <summary class="task-advanced-summary">{{ t('orchestration.advanced.title') }}</summary>
                                     <div class="task-action-row-right task-action-row-right-prominent task-codex-queue-action">
                                         <button type="button" class="btn-tool" @click="queueTaskOrchestrationAndStart()" :disabled="taskOrchestration.queueAdding || taskOrchestration.queueStarting || taskOrchestration.planning || !taskOrchestration.target.trim()">

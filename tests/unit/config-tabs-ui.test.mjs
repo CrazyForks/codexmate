@@ -102,9 +102,13 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /class="selector-section task-hero-card"/);
     assert.match(orchestrationPanel, /class="[^"]*task-layout-grid task-layout-grid-primary[^"]*"/);
     assert.match(orchestrationPanel, /class="[^"]*task-quick-card[^"]*"/);
-    assert.match(orchestrationPanel, /class="task-chat-status-strip" role="status" aria-label="任务编排状态"/);
-    assert.match(orchestrationPanel, /引擎 \{\{ taskOrchestrationEngineLabel \}\}/);
-    assert.match(orchestrationPanel, /并发度 \{\{ taskOrchestration\.concurrency \|\| 2 \}\}/);
+    assert.match(orchestrationPanel, /class="task-panel-toolbar" role="navigation" aria-label="任务编排配置与运行状态"/);
+    assert.match(orchestrationPanel, /class="task-panel-toolbar-action task-panel-config-action"/);
+    assert.doesNotMatch(orchestrationPanel, /class="task-quick-input-card task-chat-panel"[\s\S]*class="task-panel-toolbar"/);
+    assert.doesNotMatch(orchestrationPanel, /class="task-quick-input-card task-chat-panel"[\s\S]*class="task-chat-status-strip"/);
+    assert.match(orchestrationPanel, /配置 \{\{ taskOrchestrationEngineLabel \}\}/);
+    assert.match(orchestrationPanel, /并发 \{\{ taskOrchestration\.concurrency \|\| 2 \}\}/);
+    assert.match(orchestrationPanel, /@click="taskOrchestration\.settingsOpen = true"/);
     assert.match(orchestrationPanel, /运行中 \{\{ taskOrchestrationQueueStats\.running \}\}/);
     assert.match(orchestrationPanel, /排队中 \{\{ taskOrchestrationQueueStats\.queued \}\}/);
     assert.match(orchestrationPanel, /历史 RUNS \{\{ taskOrchestration\.runs\.length \}\}/);
@@ -136,7 +140,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /class="task-workflow-suggestions"/);
     assert.match(orchestrationPanel, /@click="appendTaskWorkflowId\(workflow.id \|\| workflow.name\)"/);
     assert.match(orchestrationPanel, /class="[^"]*task-draft-overview[^"]*"/);
-    assert.match(orchestrationPanel, /class="[^"]*task-side-settings-card[^"]*task-advanced-panel[^"]*"/);
+    assert.match(orchestrationPanel, /class="[^"]*task-side-settings-card[^"]*task-advanced-panel[^"]*" :open="taskOrchestration\.settingsOpen" @toggle="taskOrchestration\.settingsOpen = \$event\.target\.open"/);
     assert.doesNotMatch(orchestrationPanel, /class="[^"]*task-thread-message-card[^"]*task-thread-settings-card[^"]*"/);
     assert.match(orchestrationPanel, /taskOrchestrationDraftReadiness.summary/);
     assert.match(orchestrationPanel, /taskOrchestrationDraftReadiness.title/);
@@ -181,6 +185,10 @@ test('config template keeps expected config tabs in top and side navigation', ()
         assert.match(styles, /#panel-orchestration \.task-chat-thread\s*\{[\s\S]*padding:\s*8px 8px 188px;[\s\S]*scroll-padding-bottom:\s*188px;/);
         assert.match(styles, /#panel-orchestration \.task-thread-composer\s*\{[\s\S]*position:\s*fixed;[\s\S]*bottom:\s*16px;[\s\S]*width:\s*min\(872px, calc\(100vw - 48px\)\);/);
         assert.match(styles, /#panel-orchestration \.task-thread-message-card\s*\{[\s\S]*width:\s*min\(100%, 660px\);/);
+        assert.match(styles, /#panel-orchestration \.task-panel-toolbar\s*\{[\s\S]*width:\s*min\(100%, var\(--task-orchestration-main-width\)\);/);
+        assert.match(styles, /#panel-orchestration \.task-panel-config-action\s*\{[\s\S]*flex:\s*1 1 260px;[\s\S]*background:\s*var\(--color-brand-light\);/);
+        assert.doesNotMatch(styles, /task-chat-status-strip/);
+        assert.doesNotMatch(styles, /task-chat-config-link/);
         assert.doesNotMatch(styles, /#panel-orchestration \.task-quick-side-card\s*\{\s*display:\s*none;\s*\}/);
         assert.match(styles, /#panel-orchestration \.task-side-workbench-card,[\s\S]*#panel-orchestration \.task-side-settings-card\s*\{[\s\S]*max-height:\s*min\(560px, calc\(100vh - 220px\)\);[\s\S]*overflow:\s*auto;/);
         assert.match(styles, /#panel-orchestration \.task-side-workbench-card \.task-node-list\s*\{[\s\S]*max-height:\s*320px;[\s\S]*overflow:\s*auto;/);

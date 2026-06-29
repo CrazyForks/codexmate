@@ -1703,7 +1703,7 @@
     scroll-padding-bottom: 188px;
 }
 
-#panel-orchestration .task-chat-status-strip {
+#panel-orchestration .task-panel-toolbar {
     position: sticky;
     top: 0;
     z-index: 5;
@@ -1711,8 +1711,8 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
-    width: min(100%, 760px);
-    margin: 0 auto 4px;
+    width: min(100%, var(--task-orchestration-main-width));
+    margin: 0 auto 10px;
     padding: 7px 10px;
     border: 1px solid rgba(148, 163, 184, 0.18);
     border-radius: 999px;
@@ -1724,8 +1724,8 @@
     backdrop-filter: blur(12px);
 }
 
-#panel-orchestration .task-chat-status-strip span,
-#panel-orchestration .task-chat-status-link {
+#panel-orchestration .task-panel-toolbar span,
+#panel-orchestration .task-panel-toolbar-action {
     display: inline-flex;
     align-items: center;
     min-height: 24px;
@@ -1735,15 +1735,22 @@
     white-space: nowrap;
 }
 
-#panel-orchestration .task-chat-status-link {
+#panel-orchestration .task-panel-toolbar-action {
     border: 0;
     color: var(--color-brand-dark);
     font: inherit;
     cursor: pointer;
 }
 
-#panel-orchestration .task-chat-status-link:hover,
-#panel-orchestration .task-chat-status-link:focus-visible {
+#panel-orchestration .task-panel-config-action {
+    flex: 1 1 260px;
+    justify-content: center;
+    background: var(--color-brand-light);
+    color: var(--color-brand-dark);
+}
+
+#panel-orchestration .task-panel-toolbar-action:hover,
+#panel-orchestration .task-panel-toolbar-action:focus-visible {
     background: var(--color-brand-light);
     outline: none;
 }
