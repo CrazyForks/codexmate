@@ -27,15 +27,6 @@
                         </div>
                     </section>
 
-                    <div class="task-panel-toolbar" role="navigation" aria-label="任务编排配置与运行状态">
-                        <button type="button" class="task-panel-toolbar-action task-panel-config-action" @click="taskOrchestration.settingsOpen = true">
-                            配置 {{ taskOrchestrationEngineLabel }} · {{ taskOrchestration.runMode === 'dry-run' ? t('orchestration.runMode.dryRun') : (taskOrchestration.runMode === 'read' ? t('orchestration.runMode.readOnly') : t('orchestration.runMode.write') ) }} · 并发 {{ taskOrchestration.concurrency || 2 }}
-                        </button>
-                        <span>运行中 {{ taskOrchestrationQueueStats.running }}</span>
-                        <span>排队中 {{ taskOrchestrationQueueStats.queued }}</span>
-                        <button type="button" class="task-panel-toolbar-action" @click="taskOrchestration.workspaceTab = 'runs'">历史 RUNS {{ taskOrchestration.runs.length }}</button>
-                    </div>
-
                     <div class="task-layout-grid task-layout-grid-primary task-quick-layout">
                         <section class="selector-section task-compose-flow-card task-quick-card">
                             <div class="task-quick-main">
@@ -194,6 +185,7 @@
                                             <span class="task-chat-context-chip">{{ taskOrchestration.threadId.trim() ? t('orchestration.chat.context.thread.value', { value: taskOrchestration.threadId.trim() }) : t('orchestration.chat.context.thread.auto') }}</span>
                                             <span class="task-chat-context-chip">{{ taskOrchestrationDraftMetrics.hasTarget ? t('orchestration.chat.context.sequence.value', { count: taskOrchestrationDraftMetrics.requestCount }) : t('orchestration.chat.context.sequence.empty') }}</span>
                                             <span class="task-chat-context-chip">{{ taskOrchestration.runMode === 'dry-run' ? t('orchestration.runMode.dryRun') : (taskOrchestration.runMode === 'read' ? t('orchestration.runMode.readOnly') : t('orchestration.runMode.write') ) }}</span>
+                                            <button type="button" class="task-chat-context-chip task-chat-context-action" @click="taskOrchestration.settingsOpen = true">配置</button>
                                         </div>
 
                                         <div class="task-action-caption">{{ t('orchestration.quick.caption') }}</div>
@@ -201,7 +193,7 @@
                                 </div>
                             </div>
 
-                            <aside class="task-quick-side-card">
+                            <aside v-if="taskOrchestrationWorkbenchVisible || taskOrchestration.settingsOpen" class="task-quick-side-card">
                                     <section
                                         v-if="taskOrchestrationWorkbenchVisible"
                                         class="selector-section task-workbench-card task-side-workbench-card">
