@@ -1042,6 +1042,19 @@
     flex-wrap: wrap;
 }
 
+.task-chat-action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.task-chat-execute-caption {
+    margin-top: 8px;
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
 .task-chat-context-row {
     display: flex;
     flex-wrap: wrap;

@@ -110,6 +110,10 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /class="task-quick-input-card task-chat-panel"\s*>\s*<div class="task-chat-thread" role="log" :aria-label="t\('orchestration\.chat\.thread\.aria'\)"/);
     assert.match(orchestrationPanel, /class="task-chat-thread" role="log" :aria-label="t\('orchestration\.chat\.thread\.aria'\)"/);
     assert.match(orchestrationPanel, /class="task-thread-composer"/);
+    assert.match(orchestrationPanel, /class="task-chat-action-buttons"/);
+    assert.match(orchestrationPanel, /@click="planAndRunTaskOrchestrationFromChat\(\)"/);
+    assert.match(orchestrationPanel, /t\('orchestration\.chat\.input\.work'\)/);
+    assert.match(orchestrationPanel, /t\('orchestration\.chat\.input\.workCaption'\)/);
     assert.match(orchestrationPanel, /class="[^\"]*task-thread-message-card[^\"]*task-thread-plan-card[^\"]*"/);
     assert.doesNotMatch(orchestrationPanel, /class="[^\"]*task-thread-message-card[^\"]*task-thread-workbench-card[^\"]*"/);
     assert.match(orchestrationPanel, /class="task-project-sidebar" :aria-label="t\('orchestration\.workspace\.aria'\)"/);

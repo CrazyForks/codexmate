@@ -1381,6 +1381,77 @@ test('submitTaskOrchestrationChatMessage clears stale failed run detail before /
     assert.strictEqual(context.taskOrchestration.target, 'Fix the orchestration preview');
 });
 
+test('planAndRunTaskOrchestrationFromChat absorbs the current chat draft before starting work', async () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const calls = [];
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        appendTaskChatMessage: methods.appendTaskChatMessage,
+        async planAndRunTaskOrchestration() {
+            calls.push({
+                target: this.taskOrchestration.target,
+                followUpsText: this.taskOrchestration.followUpsText,
+                chatDraft: this.taskOrchestration.chatDraft
+            });
+            return { runId: 'run-started' };
+        },
+        showMessage(message, tone) {
+            throw new Error(`unexpected message: ${tone}:${message}`);
+        },
+        taskOrchestration: {
+            target: 'Finish requirement 1',
+            followUpsText: '',
+            chatDraft: 'Then execute requirement 2',
+            plan: { nodes: [{ id: 'stale' }] },
+            planFingerprint: 'stale',
+            planIssues: ['old issue'],
+            planWarnings: ['old warning'],
+            lastError: 'old error'
+        }
+    };
+
+    const result = await methods.planAndRunTaskOrchestrationFromChat.call(context);
+
+    assert.deepStrictEqual(result, { runId: 'run-started' });
+    assert.deepStrictEqual(calls, [
+        {
+            target: 'Finish requirement 1',
+            followUpsText: 'Then execute requirement 2',
+            chatDraft: ''
+        }
+    ]);
+    assert.strictEqual(context.taskOrchestration.plan, null);
+    assert.deepStrictEqual(context.taskOrchestration.planIssues, []);
+    assert.deepStrictEqual(context.taskOrchestration.planWarnings, []);
+});
+
+test('planAndRunTaskOrchestrationFromChat rejects empty chat and empty task target', async () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const messages = [];
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        appendTaskChatMessage: methods.appendTaskChatMessage,
+        planAndRunTaskOrchestration() {
+            throw new Error('should not start without a task');
+        },
+        showMessage(message, tone) {
+            messages.push({ message, tone });
+        },
+        taskOrchestration: {
+            target: '',
+            followUpsText: '',
+            chatDraft: '   ',
+            running: false,
+            planning: false
+        }
+    };
+
+    const result = await methods.planAndRunTaskOrchestrationFromChat.call(context);
+
+    assert.strictEqual(result, null);
+    assert.deepStrictEqual(messages, [{ message: '先输入任务需求，再开始执行', tone: 'error' }]);
+});
+
 test('previewTaskPlan sends previewOnly without mutating normal run semantics', async () => {
     const apiCalls = [];
     const methods = createTaskOrchestrationMethods({

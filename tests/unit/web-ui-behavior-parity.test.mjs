@@ -794,7 +794,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'openTaskOpenAiChatConfig',
         'selectTaskWorkspace',
         'startNewTaskWorkspaceSession',
-        'continueTaskWorkspaceSession'
+        'continueTaskWorkspaceSession',
+        'planAndRunTaskOrchestrationFromChat'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',

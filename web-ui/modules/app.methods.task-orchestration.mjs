@@ -541,6 +541,24 @@ export function createTaskOrchestrationMethods(options = {}) {
             return this.runTaskOrchestration();
         },
 
+        async planAndRunTaskOrchestrationFromChat() {
+            const state = this.ensureTaskOrchestrationState();
+            if (state.running || state.planning) {
+                return null;
+            }
+            if (String(state.chatDraft || '').trim()) {
+                const appended = this.appendTaskChatMessage();
+                if (!appended) {
+                    return null;
+                }
+            }
+            if (!String(state.target || '').trim()) {
+                this.showMessage('先输入任务需求，再开始执行', 'error');
+                return null;
+            }
+            return this.planAndRunTaskOrchestration();
+        },
+
         async queueTaskOrchestrationAndStart() {
             const state = this.ensureTaskOrchestrationState();
             if (state.queueAdding || state.queueStarting || state.planning || state.running) {

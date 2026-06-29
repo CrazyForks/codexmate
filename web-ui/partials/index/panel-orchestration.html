@@ -185,10 +185,18 @@
                                             <span class="task-field-hint">{{ t('orchestration.chat.input.hint') }}</span>
                                         </label>
                                         <div class="task-chat-send-row">
-                                            <button type="button" class="btn-tool btn-primary" @click="submitTaskOrchestrationChatMessage()" :disabled="!taskOrchestration.chatDraft.trim()">
-                                                {{ t('orchestration.chat.input.send') }}
-                                            </button>
-                                            <span class="task-field-hint">{{ taskOrchestrationDraftMetrics.hasTarget ? t('orchestration.chat.input.sequenceHint', { count: taskOrchestrationDraftMetrics.followUpCount + 2 }) : t('orchestration.chat.input.firstHint') }}</span>
+                                            <div class="task-chat-action-buttons">
+                                                <button type="button" class="btn-tool" @click="submitTaskOrchestrationChatMessage()" :disabled="!taskOrchestration.chatDraft.trim()">
+                                                    {{ t('orchestration.chat.input.send') }}
+                                                </button>
+                                                <button type="button" class="btn-tool btn-primary" @click="planAndRunTaskOrchestrationFromChat()" :disabled="taskOrchestration.running || taskOrchestration.planning || (!taskOrchestration.target.trim() && !taskOrchestration.chatDraft.trim())">
+                                                    {{ taskOrchestration.running ? t('orchestration.actions.processing') : (taskOrchestration.planning ? t('orchestration.actions.planning') : t('orchestration.chat.input.work')) }}
+                                                </button>
+                                            </div>
+                                            <span class="task-field-hint">{{ taskOrchestrationDraftMetrics.hasTarget ? t('orchestration.chat.input.sequenceHint', { count: taskOrchestrationDraftMetrics.followUpCount + 2 }) : t('orchestration.chat.input.workHint') }}</span>
+                                        </div>
+                                        <div class="task-chat-execute-caption">
+                                            {{ t('orchestration.chat.input.workCaption') }}
                                         </div>
                                         <div class="task-chat-context-row" role="group" :aria-label="t('orchestration.chat.context.aria')">
                                             <span class="task-chat-context-chip">{{ taskOrchestration.workspacePath.trim() ? t('orchestration.chat.context.workspace.value', { value: taskOrchestration.workspacePath.trim() }) : t('orchestration.chat.context.workspace.auto') }}</span>

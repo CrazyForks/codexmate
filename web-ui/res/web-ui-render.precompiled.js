@@ -4290,14 +4290,23 @@ return function render(_ctx, _cache) {
                             _createElementVNode("span", { class: "task-field-hint" }, _toDisplayString(_ctx.t('orchestration.chat.input.hint')), 1 /* TEXT */)
                           ]),
                           _createElementVNode("div", { class: "task-chat-send-row" }, [
-                            _createElementVNode("button", {
-                              type: "button",
-                              class: "btn-tool btn-primary",
-                              onClick: $event => (_ctx.submitTaskOrchestrationChatMessage()),
-                              disabled: !_ctx.taskOrchestration.chatDraft.trim()
-                            }, _toDisplayString(_ctx.t('orchestration.chat.input.send')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                            _createElementVNode("span", { class: "task-field-hint" }, _toDisplayString(_ctx.taskOrchestrationDraftMetrics.hasTarget ? _ctx.t('orchestration.chat.input.sequenceHint', { count: _ctx.taskOrchestrationDraftMetrics.followUpCount + 2 }) : _ctx.t('orchestration.chat.input.firstHint')), 1 /* TEXT */)
+                            _createElementVNode("div", { class: "task-chat-action-buttons" }, [
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-tool",
+                                onClick: $event => (_ctx.submitTaskOrchestrationChatMessage()),
+                                disabled: !_ctx.taskOrchestration.chatDraft.trim()
+                              }, _toDisplayString(_ctx.t('orchestration.chat.input.send')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-tool btn-primary",
+                                onClick: $event => (_ctx.planAndRunTaskOrchestrationFromChat()),
+                                disabled: _ctx.taskOrchestration.running || _ctx.taskOrchestration.planning || (!_ctx.taskOrchestration.target.trim() && !_ctx.taskOrchestration.chatDraft.trim())
+                              }, _toDisplayString(_ctx.taskOrchestration.running ? _ctx.t('orchestration.actions.processing') : (_ctx.taskOrchestration.planning ? _ctx.t('orchestration.actions.planning') : _ctx.t('orchestration.chat.input.work'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                            ]),
+                            _createElementVNode("span", { class: "task-field-hint" }, _toDisplayString(_ctx.taskOrchestrationDraftMetrics.hasTarget ? _ctx.t('orchestration.chat.input.sequenceHint', { count: _ctx.taskOrchestrationDraftMetrics.followUpCount + 2 }) : _ctx.t('orchestration.chat.input.workHint')), 1 /* TEXT */)
                           ]),
+                          _createElementVNode("div", { class: "task-chat-execute-caption" }, _toDisplayString(_ctx.t('orchestration.chat.input.workCaption')), 1 /* TEXT */),
                           _createElementVNode("div", {
                             class: "task-chat-context-row",
                             role: "group",
