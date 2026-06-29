@@ -791,7 +791,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'persistWebUiPreferences',
         'copySessionWorkspaceBrief',
         'formatTaskNodeOutputText',
-        'openTaskOpenAiChatConfig'
+        'openTaskOpenAiChatConfig',
+        'selectTaskWorkspace',
+        'startNewTaskWorkspaceSession',
+        'continueTaskWorkspaceSession'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',
@@ -891,6 +894,11 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'taskOrchestrationActiveQueue',
         'taskOrchestrationEngineLabel',
         'taskOrchestrationWorkbenchVisible',
+        'taskOrchestrationWorkspacePath',
+        'taskOrchestrationWorkspaceItems',
+        'taskOrchestrationWorkspaceQueue',
+        'taskOrchestrationWorkspaceRuns',
+        'taskOrchestrationWorkspaceSessions',
         'taskOrchestrationQueueStats',
         'taskOrchestrationDraftMetrics',
         'taskOrchestrationDraftChecklist',

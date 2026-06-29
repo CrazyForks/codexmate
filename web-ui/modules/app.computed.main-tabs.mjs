@@ -51,6 +51,123 @@ function formatTaskConversationMeta(items) {
     return items.filter(Boolean).join(' · ');
 }
 
+function normalizeTaskWorkspacePath(value) {
+    return String(value || '').trim().replace(/\\+/g, '/').replace(/\/$/, '');
+}
+
+function readTaskWorkspacePathFromItem(item) {
+    if (!item || typeof item !== 'object') return '';
+    return normalizeTaskWorkspacePath(item.cwd || item.workspacePath || item.projectPath || item.path);
+}
+
+function formatTaskWorkspaceLabel(workspacePath, fallback = 'Auto workspace') {
+    const normalized = normalizeTaskWorkspacePath(workspacePath);
+    if (!normalized) return fallback;
+    const parts = normalized.split('/').filter(Boolean);
+    return parts.length ? parts[parts.length - 1] : normalized;
+}
+
+function readTaskItemTimestamp(item) {
+    if (!item || typeof item !== 'object') return '';
+    return String(item.updatedAt || item.completedAt || item.startedAt || item.createdAt || item.enqueuedAt || '').trim();
+}
+
+function addTaskWorkspaceCandidate(workspaces, workspacePath, source, timestamp = '') {
+    const normalized = normalizeTaskWorkspacePath(workspacePath);
+    if (!normalized) return;
+    const key = normalized.toLowerCase();
+    const current = workspaces.get(key) || {
+        key,
+        path: normalized,
+        label: formatTaskWorkspaceLabel(normalized),
+        meta: normalized,
+        queueCount: 0,
+        runCount: 0,
+        lastActivity: ''
+    };
+    if (source === 'queue') current.queueCount += 1;
+    if (source === 'run') current.runCount += 1;
+    if (timestamp && (!current.lastActivity || timestamp > current.lastActivity)) {
+        current.lastActivity = timestamp;
+    }
+    workspaces.set(key, current);
+}
+
+function taskItemMatchesWorkspace(item, workspacePath) {
+    const selectedWorkspacePath = normalizeTaskWorkspacePath(workspacePath);
+    if (!selectedWorkspacePath) return true;
+    return readTaskWorkspacePathFromItem(item) === selectedWorkspacePath;
+}
+
+function createTaskWorkspaceItems(taskOrchestration) {
+    const state = taskOrchestration && typeof taskOrchestration === 'object' ? taskOrchestration : {};
+    const workspaces = new Map();
+    addTaskWorkspaceCandidate(workspaces, state.workspacePath, 'draft');
+    const detail = state.selectedRunDetail && typeof state.selectedRunDetail === 'object' ? state.selectedRunDetail : null;
+    if (detail) addTaskWorkspaceCandidate(workspaces, detail.cwd, 'detail');
+    const queue = Array.isArray(state.queue) ? state.queue : [];
+    const runs = Array.isArray(state.runs) ? state.runs : [];
+    queue.forEach((item) => addTaskWorkspaceCandidate(workspaces, readTaskWorkspacePathFromItem(item), 'queue', readTaskItemTimestamp(item)));
+    runs.forEach((item) => addTaskWorkspaceCandidate(workspaces, readTaskWorkspacePathFromItem(item), 'run', readTaskItemTimestamp(item)));
+    const items = Array.from(workspaces.values()).sort((a, b) => {
+        const byActivity = String(b.lastActivity || '').localeCompare(String(a.lastActivity || ''));
+        if (byActivity !== 0) return byActivity;
+        return a.label.localeCompare(b.label);
+    });
+    if (items.length === 0) {
+        items.push({
+            key: '__auto__',
+            path: '',
+            label: 'Auto workspace',
+            meta: 'Server default cwd',
+            queueCount: queue.length,
+            runCount: runs.length,
+            lastActivity: ''
+        });
+    }
+    return items;
+}
+
+function createTaskWorkspaceSessions(taskOrchestration, workspacePath) {
+    const state = taskOrchestration && typeof taskOrchestration === 'object' ? taskOrchestration : {};
+    const queue = Array.isArray(state.queue) ? state.queue : [];
+    const runs = Array.isArray(state.runs) ? state.runs : [];
+    const queueSessions = queue
+        .filter((item) => taskItemMatchesWorkspace(item, workspacePath))
+        .map((item) => ({
+            id: item.taskId || item.lastRunId || `queue-${readTaskItemTimestamp(item)}`,
+            type: 'queue',
+            status: item.status || item.runStatus || 'queued',
+            title: item.title || item.target || item.taskId || 'Queued task',
+            meta: item.threadId || item.cwd || item.taskId || '',
+            taskId: item.taskId || '',
+            runId: item.lastRunId || '',
+            threadId: item.threadId || '',
+            cwd: readTaskWorkspacePathFromItem(item),
+            timestamp: readTaskItemTimestamp(item),
+            active: true
+        }));
+    const runSessions = runs
+        .filter((item) => taskItemMatchesWorkspace(item, workspacePath))
+        .map((item) => ({
+            id: item.runId || item.taskId || `run-${readTaskItemTimestamp(item)}`,
+            type: 'run',
+            status: item.status || 'completed',
+            title: item.title || item.summary || item.taskId || item.runId || 'Run',
+            meta: item.threadId || item.cwd || `${item.durationMs || 0}ms`,
+            taskId: item.taskId || '',
+            runId: item.runId || '',
+            threadId: item.threadId || '',
+            cwd: readTaskWorkspacePathFromItem(item),
+            timestamp: readTaskItemTimestamp(item),
+            active: false
+        }));
+    return queueSessions.concat(runSessions).sort((a, b) => {
+        if (a.active !== b.active) return a.active ? -1 : 1;
+        return String(b.timestamp || '').localeCompare(String(a.timestamp || ''));
+    });
+}
+
 function createTaskConversationMessages(taskOrchestration, t = null) {
     const state = taskOrchestration && typeof taskOrchestration === 'object' ? taskOrchestration : {};
     const messages = [];
@@ -300,6 +417,38 @@ export function createMainTabsComputed() {
                 || !!String(state.selectedRunId || '').trim()
                 || !!String(state.selectedRunError || '').trim()
                 || (state.workspaceTab === 'runs' && Array.isArray(state.runs) && state.runs.length > 0);
+        },
+        taskOrchestrationWorkspacePath() {
+            const state = this.taskOrchestration && typeof this.taskOrchestration === 'object'
+                ? this.taskOrchestration
+                : {};
+            const detail = state.selectedRunDetail && typeof state.selectedRunDetail === 'object'
+                ? state.selectedRunDetail
+                : null;
+            return normalizeTaskWorkspacePath(state.workspacePath || (detail && detail.cwd) || '');
+        },
+        taskOrchestrationWorkspaceItems() {
+            const items = createTaskWorkspaceItems(this.taskOrchestration);
+            const selectedPath = this.taskOrchestrationWorkspacePath;
+            return items.map((item) => ({
+                ...item,
+                active: normalizeTaskWorkspacePath(item.path) === selectedPath || (!selectedPath && !item.path)
+            }));
+        },
+        taskOrchestrationWorkspaceQueue() {
+            const queue = this.taskOrchestration && Array.isArray(this.taskOrchestration.queue)
+                ? this.taskOrchestration.queue
+                : [];
+            return queue.filter((item) => taskItemMatchesWorkspace(item, this.taskOrchestrationWorkspacePath));
+        },
+        taskOrchestrationWorkspaceRuns() {
+            const runs = this.taskOrchestration && Array.isArray(this.taskOrchestration.runs)
+                ? this.taskOrchestration.runs
+                : [];
+            return runs.filter((item) => taskItemMatchesWorkspace(item, this.taskOrchestrationWorkspacePath));
+        },
+        taskOrchestrationWorkspaceSessions() {
+            return createTaskWorkspaceSessions(this.taskOrchestration, this.taskOrchestrationWorkspacePath);
         },
         taskOrchestrationQueueStats() {
             const queue = this.taskOrchestration && Array.isArray(this.taskOrchestration.queue)

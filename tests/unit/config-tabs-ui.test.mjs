@@ -112,7 +112,13 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /class="task-thread-composer"/);
     assert.match(orchestrationPanel, /class="[^\"]*task-thread-message-card[^\"]*task-thread-plan-card[^\"]*"/);
     assert.doesNotMatch(orchestrationPanel, /class="[^\"]*task-thread-message-card[^\"]*task-thread-workbench-card[^\"]*"/);
-    assert.match(orchestrationPanel, /<aside v-if="taskOrchestrationWorkbenchVisible \|\| taskOrchestration\.settingsOpen" class="task-quick-side-card">/);
+    assert.match(orchestrationPanel, /class="task-project-sidebar" :aria-label="t\('orchestration\.workspace\.aria'\)"/);
+    assert.match(orchestrationPanel, /v-for="workspace in taskOrchestrationWorkspaceItems"/);
+    assert.match(orchestrationPanel, /@click="selectTaskWorkspace\(workspace\.path\)"/);
+    assert.match(orchestrationPanel, /@click="startNewTaskWorkspaceSession\(\)"/);
+    assert.match(orchestrationPanel, /v-for="session in taskOrchestrationWorkspaceSessions\.slice\(0, 8\)"/);
+    assert.match(orchestrationPanel, /@click="continueTaskWorkspaceSession\(session\)"/);
+    assert.match(orchestrationPanel, /<aside class="task-quick-side-card">/);
     assert.match(orchestrationPanel, /class="[^\"]*task-side-workbench-card[^\"]*"/);
     assert.match(orchestrationPanel, /class="task-thread-card-label">AI · \{\{ t\('orchestration\.plan\.title'\) \}\}/);
     assert.match(orchestrationPanel, /class="task-chat-bubble-row is-user task-thread-plan-request"/);
@@ -146,10 +152,12 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /taskOrchestrationDraftReadiness.summary/);
     assert.match(orchestrationPanel, /taskOrchestrationDraftReadiness.title/);
     assert.doesNotMatch(orchestrationPanel, /class="task-config-strip"/);
+    assert.match(orchestrationPanel, /taskOrchestrationWorkspaceQueue/);
+    assert.match(orchestrationPanel, /taskOrchestrationWorkspaceRuns/);
     assert.match(orchestrationPanel, /taskOrchestration.workspaceTab === 'queue'/);
     assert.match(orchestrationPanel, /taskOrchestration.workspaceTab === 'runs'/);
     assert.match(orchestrationPanel, /taskOrchestration.workspaceTab === 'detail'/);
-    assert.match(orchestrationPanel, /taskOrchestrationWorkbenchVisible/);
+    assert.match(orchestrationPanel, /taskOrchestrationWorkspaceSessions\.length/);
     assert.match(orchestrationPanel, /taskOrchestration\.plan \|\| taskOrchestration\.planIssues\.length \|\| taskOrchestration\.planWarnings\.length \|\| taskOrchestration\.lastError/);
     assert.match(orchestrationPanel, /class="selector-section task-stage-card"/);
     assert.match(orchestrationPanel, /t\('orchestration\.stage\.title'\)/);
@@ -177,11 +185,13 @@ test('config template keeps expected config tabs in top and side navigation', ()
     for (const styles of [taskOrchestrationStyles, bundledStyles]) {
         assert.match(styles, /\.task-layout-grid-primary\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\);/);
         assert.match(styles, /\.task-layout-grid-secondary\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\);/);
-        assert.match(styles, /#panel-orchestration\s*\{[\s\S]*--task-orchestration-main-width:\s*920px;[\s\S]*--task-orchestration-context-width:\s*0px;/);
+        assert.match(styles, /#panel-orchestration\s*\{[\s\S]*--task-orchestration-main-width:\s*1360px;[\s\S]*--task-orchestration-project-width:\s*260px;[\s\S]*--task-orchestration-records-width:\s*320px;/);
         assert.match(styles, /#panel-orchestration \.task-hero-card,[\s\S]*#panel-orchestration \.task-quick-copy,[\s\S]*#panel-orchestration \.task-stage-card\s*\{[\s\S]*display:\s*none;/);
         assert.doesNotMatch(styles, /#panel-orchestration \.task-hero-card,[\s\S]*#panel-orchestration \.task-quick-side-card,[\s\S]*#panel-orchestration \.task-quick-advanced,[\s\S]*#panel-orchestration \.task-template-block,[\s\S]*display:\s*none;/);
         assert.match(styles, /#panel-orchestration \.task-layout-grid,[\s\S]*#panel-orchestration \.task-layout-grid-primary,[\s\S]*#panel-orchestration \.task-layout-grid-secondary,[\s\S]*#panel-orchestration \.task-quick-card\s*\{[\s\S]*width:\s*min\(100%, var\(--task-orchestration-main-width\)\);/);
-        assert.match(styles, /#panel-orchestration \.task-quick-card\s*\{[\s\S]*display:\s*block;/);
+        assert.match(styles, /#panel-orchestration \.task-quick-card\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-template-columns:\s*var\(--task-orchestration-project-width\) minmax\(0, 1fr\) var\(--task-orchestration-records-width\);/);
+        assert.match(styles, /#panel-orchestration \.task-project-sidebar,[\s\S]*#panel-orchestration \.task-quick-side-card\s*\{[\s\S]*position:\s*sticky;[\s\S]*max-height:\s*calc\(100vh - 112px\);/);
+        assert.match(styles, /#panel-orchestration \.task-project-item\.active\s*\{[\s\S]*box-shadow:\s*inset 3px 0 0 rgba\(199, 116, 98, 0\.56\);/);
         assert.match(styles, /#panel-orchestration \.task-chat-panel\s*\{[\s\S]*border:\s*0;[\s\S]*background:\s*transparent;[\s\S]*box-shadow:\s*none;/);
         assert.match(styles, /#panel-orchestration \.task-chat-thread\s*\{[\s\S]*padding:\s*8px 8px 188px;[\s\S]*scroll-padding-bottom:\s*188px;/);
         assert.match(styles, /#panel-orchestration \.task-thread-composer\s*\{[\s\S]*position:\s*fixed;[\s\S]*bottom:\s*16px;[\s\S]*width:\s*min\(872px, calc\(100vw - 48px\)\);/);
@@ -201,7 +211,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
         assert.match(styles, /#panel-orchestration \.task-thread-plan-card \.task-wave-list\s*\{[\s\S]*display:\s*none;/);
         assert.match(styles, /#panel-orchestration \.task-thread-plan-card \.task-node-list\s*\{[\s\S]*display:\s*none;/);
         assert.match(styles, /@media \(max-width:\s*760px\)\s*\{[\s\S]*#panel-orchestration\s*\{[\s\S]*--task-orchestration-main-width:\s*100%;/);
-        assert.match(styles, /@media \(max-width:\s*760px\)\s*\{[\s\S]*#panel-orchestration \.task-template-block,[\s\S]*#panel-orchestration \.task-quick-advanced,[\s\S]*#panel-orchestration \.task-quick-side-card\s*\{[\s\S]*display:\s*block;/);
+        assert.match(styles, /@media \(max-width:\s*760px\)\s*\{[\s\S]*#panel-orchestration \.task-quick-card,[\s\S]*#panel-orchestration \.task-quick-side-card\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;/);
         assert.match(styles, /@media \(max-width:\s*760px\)\s*\{[\s\S]*#panel-orchestration \.task-chat-thread\s*\{[\s\S]*padding-bottom:\s*208px;[\s\S]*scroll-padding-bottom:\s*208px;/);
         assert.match(styles, /@media \(max-width:\s*760px\)\s*\{[\s\S]*#panel-orchestration \.task-thread-composer\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) auto;[\s\S]*right:\s*10px;[\s\S]*bottom:\s*calc\(env\(safe-area-inset-bottom, 0px\) \+ 8px\);[\s\S]*left:\s*10px;/);
         assert.match(styles, /#panel-orchestration \.task-thread-composer \.task-chat-send-row\s*\{[\s\S]*grid-row:\s*1 \/ span 2;[\s\S]*align-self:\s*center;/);

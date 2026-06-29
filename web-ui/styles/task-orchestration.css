@@ -2335,3 +2335,239 @@
         bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
     }
 }
+
+
+/* Workspace selector + records rail: project context belongs beside the chat, not inside it. */
+#panel-orchestration {
+    --task-orchestration-main-width: 1360px;
+    --task-orchestration-project-width: 260px;
+    --task-orchestration-records-width: 320px;
+}
+
+#panel-orchestration .task-layout-grid,
+#panel-orchestration .task-layout-grid-primary,
+#panel-orchestration .task-layout-grid-secondary,
+#panel-orchestration .task-quick-card {
+    max-width: var(--task-orchestration-main-width);
+    width: min(100%, var(--task-orchestration-main-width));
+}
+
+#panel-orchestration .task-quick-card {
+    display: grid;
+    grid-template-columns: var(--task-orchestration-project-width) minmax(0, 1fr) var(--task-orchestration-records-width);
+    align-items: start;
+    gap: 16px;
+}
+
+#panel-orchestration .task-project-sidebar,
+#panel-orchestration .task-quick-side-card {
+    position: sticky;
+    top: 84px;
+    align-self: start;
+    max-height: calc(100vh - 112px);
+    overflow: auto;
+    scrollbar-width: thin;
+}
+
+#panel-orchestration .task-project-sidebar,
+#panel-orchestration .task-quick-side-card > .selector-section,
+#panel-orchestration .task-quick-side-card > details,
+#panel-orchestration .task-provider-status-card {
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.62);
+    box-shadow: none;
+}
+
+#panel-orchestration .task-project-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+}
+
+#panel-orchestration .task-project-sidebar-head,
+#panel-orchestration .task-session-inbox-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+#panel-orchestration .task-project-sidebar .skills-panel-note {
+    margin-top: 2px;
+    font-size: 0.76rem;
+    line-height: 1.4;
+}
+
+#panel-orchestration .task-project-list,
+#panel-orchestration .task-session-inbox {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+#panel-orchestration .task-project-item,
+#panel-orchestration .task-session-inbox-item {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 14px;
+    background: rgba(248, 250, 252, 0.58);
+    color: var(--color-text-primary);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+
+#panel-orchestration .task-project-item {
+    display: grid;
+    gap: 3px;
+    padding: 9px 10px;
+}
+
+#panel-orchestration .task-project-item:hover,
+#panel-orchestration .task-session-inbox-item:hover,
+#panel-orchestration .task-project-item.active {
+    border-color: rgba(199, 116, 98, 0.34);
+    background: rgba(255, 255, 255, 0.86);
+}
+
+#panel-orchestration .task-project-item.active {
+    box-shadow: inset 3px 0 0 rgba(199, 116, 98, 0.56);
+}
+
+#panel-orchestration .task-project-item-title,
+#panel-orchestration .task-session-inbox-title {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--color-text-primary);
+    font-size: 0.86rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#panel-orchestration .task-project-item-meta,
+#panel-orchestration .task-session-inbox-meta,
+#panel-orchestration .task-project-item-stats {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#panel-orchestration .task-project-new-session {
+    width: 100%;
+    justify-content: center;
+}
+
+#panel-orchestration .task-session-inbox {
+    padding-top: 2px;
+}
+
+#panel-orchestration .task-session-inbox-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 9px;
+}
+
+#panel-orchestration .task-session-inbox-main {
+    min-width: 0;
+}
+
+#panel-orchestration .task-session-empty {
+    padding: 10px;
+    border-radius: 14px;
+    background: rgba(248, 250, 252, 0.52);
+}
+
+#panel-orchestration .task-quick-main {
+    min-width: 0;
+}
+
+#panel-orchestration .task-quick-side-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+#panel-orchestration .task-quick-side-card > .selector-section,
+#panel-orchestration .task-quick-side-card > details,
+#panel-orchestration .task-provider-status-card {
+    margin: 0;
+    padding: 12px;
+}
+
+#panel-orchestration .task-side-workbench-card,
+#panel-orchestration .task-side-settings-card {
+    max-height: none;
+}
+
+#panel-orchestration .task-side-workbench-card .task-runtime-list,
+#panel-orchestration .task-side-workbench-card .task-node-list {
+    max-height: 340px;
+    overflow: auto;
+}
+
+#panel-orchestration .task-thread-composer {
+    width: min(700px, calc(100vw - 680px));
+    min-width: 520px;
+}
+
+@media (max-width: 1180px) {
+    #panel-orchestration {
+        --task-orchestration-main-width: 100%;
+    }
+
+    #panel-orchestration .task-quick-card {
+        grid-template-columns: minmax(220px, 0.34fr) minmax(0, 0.66fr);
+    }
+
+    #panel-orchestration .task-quick-side-card {
+        grid-column: 1 / -1;
+        position: static;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #panel-orchestration .task-project-sidebar {
+        position: sticky;
+    }
+
+    #panel-orchestration .task-thread-composer {
+        width: min(680px, calc(100vw - 360px));
+        min-width: 420px;
+    }
+}
+
+@media (max-width: 760px) {
+    #panel-orchestration .task-quick-card,
+    #panel-orchestration .task-quick-side-card {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #panel-orchestration .task-project-sidebar,
+    #panel-orchestration .task-quick-side-card {
+        position: static;
+        max-height: none;
+    }
+
+    #panel-orchestration .task-thread-composer {
+        width: auto;
+        min-width: 0;
+    }
+}

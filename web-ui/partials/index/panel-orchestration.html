@@ -29,6 +29,55 @@
 
                     <div class="task-layout-grid task-layout-grid-primary task-quick-layout">
                         <section class="selector-section task-compose-flow-card task-quick-card">
+                            <aside class="task-project-sidebar" :aria-label="t('orchestration.workspace.aria')">
+                                <div class="task-project-sidebar-head">
+                                    <div>
+                                        <div class="task-thread-card-label">{{ t('orchestration.workspace.title') }}</div>
+                                        <div class="skills-panel-note">{{ t('orchestration.workspace.subtitle') }}</div>
+                                    </div>
+                                    <button type="button" class="btn-mini" @click="loadTaskOrchestrationOverview({ forceRefresh: true, includeDetail: true })" :disabled="taskOrchestration.loading">
+                                        {{ taskOrchestration.loading ? t('common.refreshing') : t('common.refresh') }}
+                                    </button>
+                                </div>
+                                <div class="task-project-list" role="listbox" :aria-label="t('orchestration.workspace.selector')">
+                                    <button
+                                        v-for="workspace in taskOrchestrationWorkspaceItems"
+                                        :key="workspace.key"
+                                        type="button"
+                                        :class="['task-project-item', { active: workspace.active }]"
+                                        :title="workspace.path || workspace.meta"
+                                        @click="selectTaskWorkspace(workspace.path)">
+                                        <span class="task-project-item-title">{{ workspace.label }}</span>
+                                        <span class="task-project-item-meta">{{ workspace.meta }}</span>
+                                        <span class="task-project-item-stats">{{ t('orchestration.workspace.counts', { runs: workspace.runCount, queue: workspace.queueCount }) }}</span>
+                                    </button>
+                                </div>
+                                <button type="button" class="btn-tool btn-primary task-project-new-session" @click="startNewTaskWorkspaceSession()">
+                                    {{ t('orchestration.workspace.newSession') }}
+                                </button>
+                                <div class="task-session-inbox">
+                                    <div class="task-session-inbox-head">
+                                        <span class="task-readiness-title">{{ t('orchestration.workspace.sessions.title') }}</span>
+                                        <span class="pill neutral">{{ taskOrchestrationWorkspaceSessions.length }}</span>
+                                    </div>
+                                    <div v-if="!taskOrchestrationWorkspaceSessions.length" class="task-empty-state task-session-empty">
+                                        <div class="task-empty-title">{{ t('orchestration.workspace.sessions.empty.title') }}</div>
+                                        <div class="task-empty-copy">{{ t('orchestration.workspace.sessions.empty.subtitle') }}</div>
+                                    </div>
+                                    <button
+                                        v-for="session in taskOrchestrationWorkspaceSessions.slice(0, 8)"
+                                        :key="session.id"
+                                        type="button"
+                                        class="task-session-inbox-item"
+                                        @click="continueTaskWorkspaceSession(session)">
+                                        <span class="task-session-inbox-main">
+                                            <span class="task-session-inbox-title">{{ session.title }}</span>
+                                            <span class="task-session-inbox-meta">{{ session.meta || session.id }}</span>
+                                        </span>
+                                        <span :class="['pill', taskRunStatusTone(session.status)]">{{ session.status }}</span>
+                                    </button>
+                                </div>
+                            </aside>
                             <div class="task-quick-main">
                                 <div class="task-quick-copy">
                                     <div class="task-hero-kicker">{{ t('orchestration.quick.kicker') }}</div>
@@ -154,19 +203,18 @@
                                 </div>
                             </div>
 
-                            <aside v-if="taskOrchestrationWorkbenchVisible || taskOrchestration.settingsOpen" class="task-quick-side-card">
+                            <aside class="task-quick-side-card">
                                     <section
-                                        v-if="taskOrchestrationWorkbenchVisible"
                                         class="selector-section task-workbench-card task-side-workbench-card">
                                         <div class="task-thread-card-label">{{ t('orchestration.workbench.title') }}</div>
                                         <div class="task-thread-run-summary">
                                             <span v-if="taskOrchestrationSelectedRun && taskOrchestrationSelectedRun.run" :class="['pill', taskRunStatusTone(taskOrchestrationSelectedRun.run.status)]">{{ taskOrchestrationSelectedRun.run.status }}</span>
-                                            <span v-else-if="taskOrchestration.runs.length" :class="['pill', taskRunStatusTone(taskOrchestration.runs[0].status)]">{{ taskOrchestration.runs[0].status }}</span>
-                                            <span v-else-if="taskOrchestrationActiveQueue.length" class="pill neutral">{{ taskOrchestrationActiveQueue.length }} queued</span>
+                                            <span v-else-if="taskOrchestrationWorkspaceRuns.length" :class="['pill', taskRunStatusTone(taskOrchestrationWorkspaceRuns[0].status)]">{{ taskOrchestrationWorkspaceRuns[0].status }}</span>
+                                            <span v-else-if="taskOrchestrationWorkspaceQueue.length" class="pill neutral">{{ taskOrchestrationWorkspaceQueue.length }} queued</span>
                                             <span v-else class="pill empty">Ready</span>
                                             <span v-if="taskOrchestrationSelectedRun && taskOrchestrationSelectedRun.run" class="task-thread-run-summary-copy">{{ taskOrchestrationSelectedRun.run.summary || taskOrchestrationSelectedRun.run.runId || taskOrchestration.selectedRunId }}</span>
-                                            <span v-else-if="taskOrchestration.runs.length" class="task-thread-run-summary-copy">{{ taskOrchestration.runs[0].summary || taskOrchestration.runs[0].runId }}</span>
-                                            <span v-else-if="taskOrchestrationActiveQueue.length" class="task-thread-run-summary-copy">{{ taskOrchestrationActiveQueue[0].title || taskOrchestrationActiveQueue[0].target || taskOrchestrationActiveQueue[0].taskId }}</span>
+                                            <span v-else-if="taskOrchestrationWorkspaceRuns.length" class="task-thread-run-summary-copy">{{ taskOrchestrationWorkspaceRuns[0].summary || taskOrchestrationWorkspaceRuns[0].runId }}</span>
+                                            <span v-else-if="taskOrchestrationWorkspaceQueue.length" class="task-thread-run-summary-copy">{{ taskOrchestrationWorkspaceQueue[0].title || taskOrchestrationWorkspaceQueue[0].target || taskOrchestrationWorkspaceQueue[0].taskId }}</span>
                                             <span v-else class="task-thread-run-summary-copy">{{ t('orchestration.workbench.subtitle') }}</span>
                                         </div>
                                         <details class="task-thread-run-details">
@@ -176,29 +224,29 @@
                                             <button type="button" class="btn-tool btn-tool-compact" @click="loadTaskOrchestrationOverview({ forceRefresh: true, includeDetail: true })" :disabled="taskOrchestration.loading">
                                                 {{ taskOrchestration.loading ? t('common.refreshing') : t('common.refresh') }}
                                             </button>
-                                            <button v-if="taskOrchestrationActiveQueue.length" type="button" class="btn-tool btn-tool-compact" @click="startTaskQueueRunner()" :disabled="taskOrchestration.queueStarting">
+                                            <button v-if="taskOrchestrationWorkspaceQueue.length" type="button" class="btn-tool btn-tool-compact" @click="startTaskQueueRunner()" :disabled="taskOrchestration.queueStarting">
                                                 {{ taskOrchestration.queueStarting ? t('orchestration.queue.starting') : t('orchestration.queue.start') }}
                                             </button>
                                         </div>
 
                                         <div
-                                            v-if="(taskOrchestrationActiveQueue.length ? 1 : 0) + (taskOrchestration.runs.length ? 1 : 0) + ((taskOrchestration.selectedRunId || taskOrchestration.selectedRunError) ? 1 : 0) > 1"
+                                            v-if="(taskOrchestrationWorkspaceQueue.length ? 1 : 0) + (taskOrchestrationWorkspaceRuns.length ? 1 : 0) + ((taskOrchestration.selectedRunId || taskOrchestration.selectedRunError) ? 1 : 0) > 1"
                                             class="task-workbench-tabs"
                                             role="group"
                                             :aria-label="t('orchestration.workbench.tabs.aria')">
-                                            <button v-if="taskOrchestrationActiveQueue.length" type="button" class="task-workbench-tab" :class="{ active: taskOrchestration.workspaceTab === 'queue' }" @click="taskOrchestration.workspaceTab = 'queue'">{{ t('orchestration.workbench.tabs.queue', { count: taskOrchestrationActiveQueue.length }) }}</button>
-                                            <button v-if="taskOrchestration.runs.length" type="button" class="task-workbench-tab" :class="{ active: taskOrchestration.workspaceTab === 'runs' }" @click="taskOrchestration.workspaceTab = 'runs'">{{ t('orchestration.workbench.tabs.runs', { count: taskOrchestration.runs.length }) }}</button>
+                                            <button v-if="taskOrchestrationWorkspaceQueue.length" type="button" class="task-workbench-tab" :class="{ active: taskOrchestration.workspaceTab === 'queue' }" @click="taskOrchestration.workspaceTab = 'queue'">{{ t('orchestration.workbench.tabs.queue', { count: taskOrchestrationWorkspaceQueue.length }) }}</button>
+                                            <button v-if="taskOrchestrationWorkspaceRuns.length" type="button" class="task-workbench-tab" :class="{ active: taskOrchestration.workspaceTab === 'runs' }" @click="taskOrchestration.workspaceTab = 'runs'">{{ t('orchestration.workbench.tabs.runs', { count: taskOrchestrationWorkspaceRuns.length }) }}</button>
                                             <button v-if="taskOrchestration.selectedRunId || taskOrchestration.selectedRunError" type="button" class="task-workbench-tab" :class="{ active: taskOrchestration.workspaceTab === 'detail' }" @click="taskOrchestration.workspaceTab = 'detail'">{{ t('orchestration.workbench.tabs.detail') }}</button>
                                         </div>
 
-                                        <div v-if="(taskOrchestrationActiveQueue.length && taskOrchestration.workspaceTab === 'queue') || (!taskOrchestration.runs.length && !taskOrchestration.selectedRunId && !taskOrchestration.selectedRunError)" class="task-workbench-panel">
-                                            <div v-if="!taskOrchestrationActiveQueue.length" class="task-empty-state">
+                                        <div v-if="(taskOrchestrationWorkspaceQueue.length && taskOrchestration.workspaceTab === 'queue') || (!taskOrchestrationWorkspaceRuns.length && !taskOrchestration.selectedRunId && !taskOrchestration.selectedRunError)" class="task-workbench-panel">
+                                            <div v-if="!taskOrchestrationWorkspaceQueue.length" class="task-empty-state">
                                                 <div class="task-empty-title">{{ t('orchestration.queue.empty.title') }}</div>
                                                 <div class="task-empty-copy">{{ t('orchestration.queue.empty.subtitle') }}</div>
                                             </div>
                                             <div v-else class="task-runtime-list">
                                                 <div
-                                                    v-for="item in taskOrchestrationActiveQueue"
+                                                    v-for="item in taskOrchestrationWorkspaceQueue"
                                                     :key="item.taskId"
                                                     :class="['task-runtime-item', { active: item.lastRunId && taskOrchestration.selectedRunId === item.lastRunId, clickable: !!item.lastRunId }]"
                                                     :role="item.lastRunId ? 'button' : null"
@@ -225,14 +273,14 @@
                                             </div>
                                         </div>
 
-                                        <div v-else-if="taskOrchestration.workspaceTab === 'runs' || (!taskOrchestrationActiveQueue.length && taskOrchestration.runs.length && !taskOrchestration.selectedRunId && !taskOrchestration.selectedRunError)" class="task-workbench-panel">
-                                            <div v-if="!taskOrchestration.runs.length" class="task-empty-state">
+                                        <div v-else-if="taskOrchestration.workspaceTab === 'runs' || (!taskOrchestrationWorkspaceQueue.length && taskOrchestrationWorkspaceRuns.length && !taskOrchestration.selectedRunId && !taskOrchestration.selectedRunError)" class="task-workbench-panel">
+                                            <div v-if="!taskOrchestrationWorkspaceRuns.length" class="task-empty-state">
                                                 <div class="task-empty-title">{{ t('orchestration.runs.empty.title') }}</div>
                                                 <div class="task-empty-copy">{{ t('orchestration.runs.empty.subtitle') }}</div>
                                             </div>
                                             <div v-else class="task-runtime-list">
                                                 <button
-                                                    v-for="item in taskOrchestration.runs"
+                                                    v-for="item in taskOrchestrationWorkspaceRuns"
                                                     :key="item.runId"
                                                     type="button"
                                                     :class="['task-runtime-item', { active: taskOrchestration.selectedRunId === item.runId }]"
@@ -465,7 +513,7 @@
                     </div>
 
                     <section
-                        v-if="!(taskOrchestration.plan || taskOrchestration.planIssues.length || taskOrchestration.planWarnings.length || taskOrchestration.lastError || taskOrchestrationActiveQueue.length || taskOrchestration.runs.length || taskOrchestration.selectedRunId || taskOrchestration.selectedRunError)"
+                        v-if="!(taskOrchestration.plan || taskOrchestration.planIssues.length || taskOrchestration.planWarnings.length || taskOrchestration.lastError || taskOrchestrationWorkspaceQueue.length || taskOrchestrationWorkspaceRuns.length || taskOrchestration.selectedRunId || taskOrchestration.selectedRunError)"
                         class="selector-section task-stage-card">
                         <div class="task-stage-empty">
                             <div>

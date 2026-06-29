@@ -33,6 +33,7 @@ function createDefaultTaskOrchestrationState() {
         selectedRunLoading: false,
         selectedRunError: '',
         detailRequestToken: 0,
+        settingsOpen: false,
         lastLoadedAt: '',
         lastError: ''
     };
@@ -172,6 +173,10 @@ function clearTaskRunSelectionForDraft(state) {
     state.selectedRunError = '';
     state.selectedRunLoading = false;
     state.workspaceTab = 'queue';
+}
+
+function normalizeTaskWorkspaceInputPath(value) {
+    return String(value || '').trim().replace(/\\+/g, '/').replace(/\/$/, '');
 }
 
 export function createTaskOrchestrationMethods(options = {}) {
@@ -636,6 +641,76 @@ export function createTaskOrchestrationMethods(options = {}) {
 
         async selectTaskRun(runId) {
             return this.loadTaskRunDetail(runId, { silent: false, switchToDetail: true });
+        },
+
+        selectTaskWorkspace(workspacePath) {
+            const state = this.ensureTaskOrchestrationState();
+            const nextWorkspacePath = normalizeTaskWorkspaceInputPath(workspacePath);
+            const previousWorkspacePath = normalizeTaskWorkspaceInputPath(state.workspacePath);
+            state.workspacePath = nextWorkspacePath;
+            state.workspaceTab = 'runs';
+            if (nextWorkspacePath !== previousWorkspacePath) {
+                state.plan = null;
+                state.planFingerprint = '';
+                state.planIssues = [];
+                state.planWarnings = [];
+                const selectedDetailWorkspacePath = normalizeTaskWorkspaceInputPath(state.selectedRunDetail && state.selectedRunDetail.cwd);
+                if (selectedDetailWorkspacePath && selectedDetailWorkspacePath !== nextWorkspacePath) {
+                    state.selectedRunId = '';
+                    state.selectedRunDetail = null;
+                    state.selectedRunError = '';
+                }
+            }
+            this.syncTaskOrchestrationPolling();
+        },
+
+        startNewTaskWorkspaceSession(workspacePath = '') {
+            const state = this.ensureTaskOrchestrationState();
+            const selectedWorkspacePath = normalizeTaskWorkspaceInputPath(workspacePath || state.workspacePath || (state.selectedRunDetail && state.selectedRunDetail.cwd));
+            state.workspacePath = selectedWorkspacePath;
+            state.threadId = '';
+            state.target = '';
+            state.chatDraft = '';
+            state.title = '';
+            state.notes = '';
+            state.followUpsText = '';
+            state.plan = null;
+            state.planFingerprint = '';
+            state.planIssues = [];
+            state.planWarnings = [];
+            state.selectedRunId = '';
+            state.selectedRunDetail = null;
+            state.selectedRunError = '';
+            state.selectedRunLoading = false;
+            state.workspaceTab = 'queue';
+            state.lastError = '';
+            this.showMessage(selectedWorkspacePath ? '已为当前工作区开始新会话' : '已开始新任务会话', 'success');
+            scrollTaskOrchestrationThreadToEnd();
+            this.syncTaskOrchestrationPolling();
+        },
+
+        async continueTaskWorkspaceSession(session) {
+            const item = session && typeof session === 'object' ? session : {};
+            const workspacePath = normalizeTaskWorkspaceInputPath(item.cwd || item.workspacePath || '');
+            const threadId = String(item.threadId || '').trim();
+            const runId = String(item.runId || '').trim();
+            const taskId = String(item.taskId || '').trim();
+            const state = this.ensureTaskOrchestrationState();
+            if (workspacePath) state.workspacePath = workspacePath;
+            if (threadId) state.threadId = threadId;
+            if (runId) {
+                await this.loadTaskRunDetail(runId, { silent: true, switchToDetail: true });
+                this.continueTaskThreadFromUi();
+                return;
+            }
+            state.selectedRunId = '';
+            state.selectedRunDetail = null;
+            state.selectedRunError = '';
+            state.workspaceTab = 'queue';
+            state.title = String(item.title || state.title || '').trim();
+            this.showMessage(taskId ? `已恢复队列任务上下文: ${taskId}` : '已恢复会话上下文', 'success');
+            scrollTaskOrchestrationThreadToEnd();
+            this.syncTaskOrchestrationPolling();
         },
 
         async retryTaskRunFromUi(runId) {

@@ -1604,6 +1604,149 @@ test('taskOrchestrationActiveQueue hides completed and failed queue history from
     assert.deepStrictEqual(activeQueue, [queued, running, runStatusOnly]);
 });
 
+test('task orchestration workspace selectors derive projects and sessions from real queue and run records', () => {
+    const computed = createMainTabsComputed();
+    const context = {
+        taskOrchestration: {
+            workspacePath: '/repo/codexmate',
+            queue: [
+                {
+                    taskId: 'task-codexmate',
+                    status: 'queued',
+                    title: 'Continue PR #208',
+                    cwd: '/repo/codexmate',
+                    threadId: 'thread-codexmate',
+                    enqueuedAt: '2026-06-29T10:00:00Z'
+                },
+                {
+                    taskId: 'task-other',
+                    status: 'running',
+                    target: 'Other project task',
+                    cwd: '/repo/other',
+                    enqueuedAt: '2026-06-29T10:03:00Z'
+                }
+            ],
+            runs: [
+                {
+                    runId: 'run-codexmate',
+                    status: 'success',
+                    summary: 'Finished workspace rail',
+                    cwd: '/repo/codexmate',
+                    threadId: 'thread-codexmate',
+                    updatedAt: '2026-06-29T10:05:00Z'
+                },
+                {
+                    runId: 'run-other',
+                    status: 'failed',
+                    summary: 'Other failed run',
+                    cwd: '/repo/other',
+                    updatedAt: '2026-06-29T10:06:00Z'
+                }
+            ]
+        }
+    };
+
+    context.taskOrchestrationWorkspacePath = computed.taskOrchestrationWorkspacePath.call(context);
+    const workspaceItems = computed.taskOrchestrationWorkspaceItems.call(context);
+    const workspaceQueue = computed.taskOrchestrationWorkspaceQueue.call(context);
+    const workspaceRuns = computed.taskOrchestrationWorkspaceRuns.call(context);
+    context.taskOrchestrationWorkspacePath = '/repo/codexmate';
+    const sessions = computed.taskOrchestrationWorkspaceSessions.call(context);
+
+    assert.deepStrictEqual(workspaceItems.map((item) => item.path).sort(), ['/repo/codexmate', '/repo/other']);
+    assert.strictEqual(workspaceItems.find((item) => item.path === '/repo/codexmate').active, true);
+    assert.strictEqual(workspaceItems.find((item) => item.path === '/repo/codexmate').runCount, 1);
+    assert.strictEqual(workspaceItems.find((item) => item.path === '/repo/codexmate').queueCount, 1);
+    assert.deepStrictEqual(workspaceQueue.map((item) => item.taskId), ['task-codexmate']);
+    assert.deepStrictEqual(workspaceRuns.map((item) => item.runId), ['run-codexmate']);
+    assert.deepStrictEqual(sessions.map((item) => item.id), ['task-codexmate', 'run-codexmate']);
+    assert.strictEqual(sessions[0].type, 'queue');
+    assert.strictEqual(sessions[1].type, 'run');
+});
+
+test('task workspace actions switch projects, start clean sessions, and resume queue or run records', async () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const messages = [];
+    const detailCalls = [];
+    const continued = [];
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        syncTaskOrchestrationPolling() {},
+        showMessage(message, tone) {
+            messages.push({ message, tone });
+        },
+        async loadTaskRunDetail(runId, options) {
+            detailCalls.push({ runId, options });
+            this.taskOrchestration.selectedRunId = runId;
+            this.taskOrchestration.selectedRunDetail = {
+                run: { runId, status: 'success' },
+                cwd: '/repo/codexmate',
+                threadId: 'thread-run'
+            };
+        },
+        continueTaskThreadFromUi() {
+            continued.push(this.taskOrchestration.selectedRunId);
+        },
+        taskOrchestration: {
+            workspacePath: '/repo/old',
+            threadId: 'thread-old',
+            target: 'stale target',
+            chatDraft: 'stale draft',
+            title: 'stale title',
+            notes: 'stale notes',
+            followUpsText: 'stale follow-up',
+            plan: { nodes: [{ id: 'old' }] },
+            planFingerprint: 'old-fingerprint',
+            planIssues: ['old issue'],
+            planWarnings: ['old warning'],
+            selectedRunId: 'run-old',
+            selectedRunDetail: { cwd: '/repo/old', run: { runId: 'run-old' } },
+            selectedRunError: 'old error',
+            workspaceTab: 'detail',
+            lastError: 'old last error'
+        }
+    };
+
+    methods.selectTaskWorkspace.call(context, '/repo/codexmate/');
+    assert.strictEqual(context.taskOrchestration.workspacePath, '/repo/codexmate');
+    assert.strictEqual(context.taskOrchestration.workspaceTab, 'runs');
+    assert.strictEqual(context.taskOrchestration.selectedRunId, '');
+    assert.strictEqual(context.taskOrchestration.selectedRunDetail, null);
+    assert.deepStrictEqual(context.taskOrchestration.planIssues, []);
+
+    methods.startNewTaskWorkspaceSession.call(context);
+    assert.strictEqual(context.taskOrchestration.workspacePath, '/repo/codexmate');
+    assert.strictEqual(context.taskOrchestration.threadId, '');
+    assert.strictEqual(context.taskOrchestration.target, '');
+    assert.strictEqual(context.taskOrchestration.chatDraft, '');
+    assert.strictEqual(context.taskOrchestration.title, '');
+    assert.strictEqual(context.taskOrchestration.notes, '');
+    assert.strictEqual(context.taskOrchestration.followUpsText, '');
+    assert.strictEqual(context.taskOrchestration.workspaceTab, 'queue');
+    assert.strictEqual(context.taskOrchestration.lastError, '');
+
+    await methods.continueTaskWorkspaceSession.call(context, {
+        taskId: 'task-queued',
+        cwd: '/repo/codexmate',
+        threadId: 'thread-queued',
+        title: 'Queued task'
+    });
+    assert.strictEqual(context.taskOrchestration.workspacePath, '/repo/codexmate');
+    assert.strictEqual(context.taskOrchestration.threadId, 'thread-queued');
+    assert.strictEqual(context.taskOrchestration.title, 'Queued task');
+    assert.strictEqual(context.taskOrchestration.workspaceTab, 'queue');
+
+    await methods.continueTaskWorkspaceSession.call(context, {
+        runId: 'run-history',
+        cwd: '/repo/codexmate',
+        threadId: 'thread-run'
+    });
+    assert.deepStrictEqual(detailCalls, [{ runId: 'run-history', options: { silent: true, switchToDetail: true } }]);
+    assert.deepStrictEqual(continued, ['run-history']);
+    assert.strictEqual(messages[0].message, '已为当前工作区开始新会话');
+    assert.strictEqual(messages[1].message, '已恢复队列任务上下文: task-queued');
+});
+
 test('taskOrchestrationWorkbenchVisible ignores passive failed run history', () => {
     const computed = createMainTabsComputed();
     const context = {

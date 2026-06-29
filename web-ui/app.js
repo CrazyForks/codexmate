@@ -485,6 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     selectedRunLoading: false,
                     selectedRunError: '',
                     detailRequestToken: 0,
+                    settingsOpen: false,
                     lastLoadedAt: '',
                     lastError: ''
                 },
