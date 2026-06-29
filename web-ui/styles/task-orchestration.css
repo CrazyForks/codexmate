@@ -2326,12 +2326,12 @@
 
 @media (max-width: 760px) {
     #panel-orchestration {
-        padding-bottom: 258px;
+        padding-bottom: 72px;
     }
 
     #panel-orchestration .task-chat-thread {
-        padding-bottom: 258px;
-        scroll-padding-bottom: 258px;
+        padding-bottom: 16px;
+        scroll-padding-bottom: 130px;
     }
 
     #panel-orchestration .task-thread-message-card {
@@ -2580,7 +2580,255 @@
     }
 
     #panel-orchestration .task-thread-composer {
-        width: auto;
+        right: auto;
+        bottom: 10px;
+        left: auto;
+        width: 100%;
+        min-width: 0;
+        transform: none;
+    }
+}
+
+/* Web Agent cockpit pass: the orchestration tab is an agent workbench, not a hidden task form. */
+#panel-orchestration {
+    --task-orchestration-main-width: 1440px;
+    --task-orchestration-project-width: 270px;
+    --task-orchestration-records-width: 340px;
+
+    padding-bottom: 40px;
+}
+
+#panel-orchestration .task-hero-card {
+    display: block;
+    max-width: var(--task-orchestration-main-width);
+    margin: -2px auto 14px;
+    border-color: rgba(59, 130, 246, 0.12);
+    background:
+        radial-gradient(circle at 12% 10%, rgba(59, 130, 246, 0.08), transparent 26%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.76));
+}
+
+#panel-orchestration .task-hero-card .task-hero-kicker,
+#panel-orchestration .task-hero-card .task-hero-copy {
+    display: block;
+}
+
+#panel-orchestration .task-quick-card {
+    grid-template-columns: var(--task-orchestration-project-width) minmax(0, 1fr) var(--task-orchestration-records-width);
+    gap: 18px;
+}
+
+#panel-orchestration .task-project-sidebar,
+#panel-orchestration .task-quick-side-card {
+    top: 92px;
+    max-height: calc(100vh - 120px);
+}
+
+#panel-orchestration .task-agent-cockpit {
+    margin-bottom: 12px;
+    padding: 14px;
+    border: 1px solid rgba(59, 130, 246, 0.14);
+    border-radius: 20px;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(239, 246, 255, 0.54)),
+        var(--color-surface);
+    box-shadow: 0 14px 38px rgba(15, 23, 42, 0.07);
+}
+
+#panel-orchestration .task-agent-cockpit-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+#panel-orchestration .task-agent-title {
+    font-size: clamp(18px, 1.45vw, 24px);
+    line-height: 1.18;
+}
+
+#panel-orchestration .task-agent-copy {
+    display: block;
+    margin-top: 6px;
+    max-width: 760px;
+    line-height: 1.5;
+}
+
+#panel-orchestration .task-agent-surface-grid,
+#panel-orchestration .task-agent-trace-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+}
+
+#panel-orchestration .task-agent-surface-card,
+#panel-orchestration .task-agent-trace-card {
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+#panel-orchestration .task-agent-surface-card span,
+#panel-orchestration .task-agent-trace-card span {
+    display: block;
+    color: var(--color-text-muted);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+#panel-orchestration .task-agent-surface-card strong,
+#panel-orchestration .task-agent-trace-card strong {
+    display: block;
+    min-width: 0;
+    margin-top: 5px;
+    overflow: hidden;
+    color: var(--color-text-primary);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#panel-orchestration .task-agent-trace-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 10px 0 2px;
+}
+
+#panel-orchestration .task-agent-trace-card {
+    padding: 8px 9px;
+    background: rgba(248, 250, 252, 0.72);
+}
+
+#panel-orchestration .task-agent-trace-card strong {
+    font-size: 18px;
+}
+
+#panel-orchestration .task-chat-panel {
+    min-height: calc(100vh - 330px);
+    border-radius: 22px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(248, 250, 252, 0.66)),
+        var(--color-surface);
+}
+
+#panel-orchestration .task-chat-thread {
+    padding-bottom: 18px;
+    scroll-padding-bottom: 120px;
+}
+
+#panel-orchestration .task-thread-composer {
+    grid-template-columns: minmax(0, 1fr) auto;
+    right: auto;
+    bottom: 14px;
+    left: auto;
+    width: min(100%, 760px);
+    min-width: 0;
+    margin-top: 10px;
+    transform: none;
+    align-self: center;
+    border-color: rgba(59, 130, 246, 0.16);
+    border-radius: 18px;
+}
+
+#panel-orchestration .task-chat-action-buttons {
+    justify-content: flex-end;
+}
+
+#panel-orchestration .task-chat-action-buttons .btn-tool {
+    min-width: 76px;
+}
+
+#panel-orchestration .task-chat-action-buttons .btn-primary {
+    min-width: 90px;
+}
+
+#panel-orchestration .task-side-workbench-card .task-thread-run-details {
+    margin-top: 10px;
+}
+
+#panel-orchestration .task-side-workbench-card .task-thread-run-details > summary {
+    background: rgba(239, 246, 255, 0.76);
+    color: #1D4ED8;
+}
+
+#panel-orchestration .task-side-workbench-card .task-workbench-panel,
+#panel-orchestration .task-side-workbench-card .task-runtime-list,
+#panel-orchestration .task-side-workbench-card .task-node-list {
+    max-height: 360px;
+    overflow: auto;
+}
+
+#panel-orchestration .task-side-settings-card {
+    border-style: dashed;
+}
+
+@media (max-width: 1180px) {
+    #panel-orchestration .task-quick-card {
+        grid-template-columns: minmax(220px, 0.35fr) minmax(0, 0.65fr);
+    }
+
+    #panel-orchestration .task-agent-surface-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #panel-orchestration .task-thread-composer {
+        width: min(100%, 720px);
+        min-width: 0;
+    }
+}
+
+@media (max-width: 760px) {
+    #panel-orchestration {
+        padding-bottom: 72px;
+    }
+
+    #panel-orchestration .task-hero-card {
+        margin-bottom: 10px;
+        padding: 12px;
+    }
+
+    #panel-orchestration .task-agent-cockpit {
+        padding: 12px;
+        border-radius: 18px;
+    }
+
+    #panel-orchestration .task-agent-cockpit-head {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #panel-orchestration .task-agent-surface-grid,
+    #panel-orchestration .task-agent-trace-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #panel-orchestration .task-chat-thread {
+        padding-bottom: 16px;
+        scroll-padding-bottom: 130px;
+    }
+
+    #panel-orchestration .task-thread-composer {
+        right: auto;
+        bottom: 10px;
+        left: auto;
+        width: 100%;
+        min-width: 0;
+        transform: none;
+    }
+
+    #panel-orchestration .task-chat-action-buttons {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    #panel-orchestration .task-chat-action-buttons .btn-tool {
+        width: 100%;
         min-width: 0;
     }
 }

@@ -85,6 +85,37 @@
                                     <div class="skills-panel-note task-hero-copy">{{ t('orchestration.quick.subtitle') }}</div>
                                 </div>
 
+                                <section class="task-agent-cockpit" :aria-label="t('orchestration.agent.aria')">
+                                    <div class="task-agent-cockpit-head">
+                                        <div>
+                                            <div class="task-hero-kicker">{{ t('orchestration.agent.kicker') }}</div>
+                                            <div class="selector-title task-agent-title">{{ t('orchestration.agent.title') }}</div>
+                                            <div class="skills-panel-note task-agent-copy">{{ t('orchestration.agent.subtitle') }}</div>
+                                        </div>
+                                        <span :class="['pill', taskOrchestration.running || taskOrchestration.planning ? 'warn' : (taskOrchestrationSelectedRun && taskOrchestrationSelectedRun.run ? taskRunStatusTone(taskOrchestrationSelectedRun.run.status) : 'neutral')]">
+                                            {{ taskOrchestration.running ? t('orchestration.agent.state.running') : (taskOrchestration.planning ? t('orchestration.agent.state.planning') : (taskOrchestrationSelectedRun && taskOrchestrationSelectedRun.run ? taskOrchestrationSelectedRun.run.status : t('orchestration.agent.state.ready'))) }}
+                                        </span>
+                                    </div>
+                                    <div class="task-agent-surface-grid">
+                                        <div class="task-agent-surface-card">
+                                            <span>{{ t('orchestration.agent.surface.workspace') }}</span>
+                                            <strong>{{ taskOrchestrationWorkspacePath || t('orchestration.chat.context.workspace.auto') }}</strong>
+                                        </div>
+                                        <div class="task-agent-surface-card">
+                                            <span>{{ t('orchestration.agent.surface.session') }}</span>
+                                            <strong>{{ taskOrchestration.threadId.trim() || (taskOrchestrationSelectedRun && taskOrchestrationSelectedRun.threadId) || t('orchestration.chat.context.thread.auto') }}</strong>
+                                        </div>
+                                        <div class="task-agent-surface-card">
+                                            <span>{{ t('orchestration.agent.surface.mode') }}</span>
+                                            <strong>{{ taskOrchestration.selectedEngine === 'workflow' ? t('orchestration.engine.workflow') : t('orchestration.engine.openaiChat') }} · {{ taskOrchestration.runMode === 'dry-run' ? t('orchestration.runMode.dryRun') : (taskOrchestration.runMode === 'read' ? t('orchestration.runMode.readOnly') : t('orchestration.runMode.write')) }}</strong>
+                                        </div>
+                                        <div class="task-agent-surface-card">
+                                            <span>{{ t('orchestration.agent.surface.trace') }}</span>
+                                            <strong>{{ taskOrchestrationWorkspaceRuns.length }} {{ t('orchestration.agent.surface.runs') }} · {{ taskOrchestrationWorkspaceQueue.length }} {{ t('orchestration.agent.surface.queue') }}</strong>
+                                        </div>
+                                    </div>
+                                </section>
+
                                 <div class="task-quick-input-card task-chat-panel">
                                     <div class="task-chat-thread" role="log" :aria-label="t('orchestration.chat.thread.aria')">
                                         <div
@@ -189,6 +220,9 @@
                                                 <button type="button" class="btn-tool" @click="submitTaskOrchestrationChatMessage()" :disabled="!taskOrchestration.chatDraft.trim()">
                                                     {{ t('orchestration.chat.input.send') }}
                                                 </button>
+                                                <button type="button" class="btn-tool" @click="previewTaskPlanFromChat()" :disabled="taskOrchestration.running || taskOrchestration.planning || (!taskOrchestration.target.trim() && !taskOrchestration.chatDraft.trim())">
+                                                    {{ taskOrchestration.planning ? t('orchestration.actions.planning') : t('orchestration.chat.input.discuss') }}
+                                                </button>
                                                 <button type="button" class="btn-tool btn-primary" @click="planAndRunTaskOrchestrationFromChat()" :disabled="taskOrchestration.running || taskOrchestration.planning || (!taskOrchestration.target.trim() && !taskOrchestration.chatDraft.trim())">
                                                     {{ taskOrchestration.running ? t('orchestration.actions.processing') : (taskOrchestration.planning ? t('orchestration.actions.planning') : t('orchestration.chat.input.work')) }}
                                                 </button>
@@ -225,8 +259,8 @@
                                             <span v-else-if="taskOrchestrationWorkspaceQueue.length" class="task-thread-run-summary-copy">{{ taskOrchestrationWorkspaceQueue[0].title || taskOrchestrationWorkspaceQueue[0].target || taskOrchestrationWorkspaceQueue[0].taskId }}</span>
                                             <span v-else class="task-thread-run-summary-copy">{{ t('orchestration.workbench.subtitle') }}</span>
                                         </div>
-                                        <details class="task-thread-run-details">
-                                            <summary>Execution details</summary>
+                                        <details class="task-thread-run-details" open>
+                                            <summary>{{ t('orchestration.agent.trace.title') }}</summary>
 
                                         <div class="settings-tab-actions task-header-actions task-thread-detail-actions">
                                             <button type="button" class="btn-tool btn-tool-compact" @click="loadTaskOrchestrationOverview({ forceRefresh: true, includeDetail: true })" :disabled="taskOrchestration.loading">
@@ -235,6 +269,25 @@
                                             <button v-if="taskOrchestrationWorkspaceQueue.length" type="button" class="btn-tool btn-tool-compact" @click="startTaskQueueRunner()" :disabled="taskOrchestration.queueStarting">
                                                 {{ taskOrchestration.queueStarting ? t('orchestration.queue.starting') : t('orchestration.queue.start') }}
                                             </button>
+                                        </div>
+
+                                        <div class="task-agent-trace-grid">
+                                            <div class="task-agent-trace-card">
+                                                <span>{{ t('orchestration.agent.trace.plan') }}</span>
+                                                <strong>{{ taskOrchestration.plan ? taskOrchestration.plan.nodes.length : 0 }}</strong>
+                                            </div>
+                                            <div class="task-agent-trace-card">
+                                                <span>{{ t('orchestration.agent.trace.queue') }}</span>
+                                                <strong>{{ taskOrchestrationWorkspaceQueue.length }}</strong>
+                                            </div>
+                                            <div class="task-agent-trace-card">
+                                                <span>{{ t('orchestration.agent.trace.runs') }}</span>
+                                                <strong>{{ taskOrchestrationWorkspaceRuns.length }}</strong>
+                                            </div>
+                                            <div class="task-agent-trace-card">
+                                                <span>{{ t('orchestration.agent.trace.nodes') }}</span>
+                                                <strong>{{ taskOrchestrationSelectedRunNodes.length }}</strong>
+                                            </div>
                                         </div>
 
                                         <div

@@ -1425,6 +1425,84 @@ test('planAndRunTaskOrchestrationFromChat absorbs the current chat draft before 
     assert.deepStrictEqual(context.taskOrchestration.planWarnings, []);
 });
 
+test('previewTaskPlanFromChat absorbs the current chat draft without starting work', async () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const previewCalls = [];
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        appendTaskChatMessage: methods.appendTaskChatMessage,
+        previewTaskPlan(options) {
+            previewCalls.push({
+                options,
+                target: this.taskOrchestration.target,
+                followUpsText: this.taskOrchestration.followUpsText,
+                chatDraft: this.taskOrchestration.chatDraft
+            });
+            return Promise.resolve({ ok: true, plan: { nodes: [{ id: 'plan-01' }], waves: [] } });
+        },
+        planAndRunTaskOrchestration() {
+            throw new Error('discuss plan must not start execution');
+        },
+        showMessage(message, tone) {
+            throw new Error(`unexpected message: ${tone}:${message}`);
+        },
+        taskOrchestration: {
+            target: '',
+            followUpsText: '',
+            chatDraft: '先探讨 Web Agent cockpit 方案，在明确授权前不要生成实现',
+            plan: { nodes: [{ id: 'stale' }] },
+            planFingerprint: 'stale',
+            planIssues: ['old issue'],
+            planWarnings: ['old warning'],
+            lastError: 'old error',
+            running: false,
+            planning: false
+        }
+    };
+
+    const result = await methods.previewTaskPlanFromChat.call(context);
+
+    assert.deepStrictEqual(result, { ok: true, plan: { nodes: [{ id: 'plan-01' }], waves: [] } });
+    assert.deepStrictEqual(previewCalls, [
+        {
+            options: { silent: false },
+            target: '先探讨 Web Agent cockpit 方案，在明确授权前不要生成实现',
+            followUpsText: '',
+            chatDraft: ''
+        }
+    ]);
+    assert.strictEqual(context.taskOrchestration.plan, null);
+    assert.deepStrictEqual(context.taskOrchestration.planIssues, []);
+    assert.deepStrictEqual(context.taskOrchestration.planWarnings, []);
+});
+
+test('previewTaskPlanFromChat rejects empty chat and empty task target', async () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const messages = [];
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        appendTaskChatMessage: methods.appendTaskChatMessage,
+        previewTaskPlan() {
+            throw new Error('should not preview without a task');
+        },
+        showMessage(message, tone) {
+            messages.push({ message, tone });
+        },
+        taskOrchestration: {
+            target: '',
+            followUpsText: '',
+            chatDraft: '   ',
+            running: false,
+            planning: false
+        }
+    };
+
+    const result = await methods.previewTaskPlanFromChat.call(context);
+
+    assert.strictEqual(result, null);
+    assert.deepStrictEqual(messages, [{ message: '先输入任务需求，再探讨方案', tone: 'error' }]);
+});
+
 test('planAndRunTaskOrchestrationFromChat rejects empty chat and empty task target', async () => {
     const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
     const messages = [];

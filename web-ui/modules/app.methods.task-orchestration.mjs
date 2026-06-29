@@ -444,6 +444,24 @@ export function createTaskOrchestrationMethods(options = {}) {
             }
         },
 
+        async previewTaskPlanFromChat() {
+            const state = this.ensureTaskOrchestrationState();
+            if (state.planning || state.running) {
+                return null;
+            }
+            if (String(state.chatDraft || '').trim()) {
+                const appended = this.appendTaskChatMessage();
+                if (!appended) {
+                    return null;
+                }
+            }
+            if (!String(state.target || '').trim()) {
+                this.showMessage('先输入任务需求，再探讨方案', 'error');
+                return null;
+            }
+            return this.previewTaskPlan({ silent: false });
+        },
+
         async runTaskOrchestration() {
             const state = this.ensureTaskOrchestrationState();
             if (state.running) {

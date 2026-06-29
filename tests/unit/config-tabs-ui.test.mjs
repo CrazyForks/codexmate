@@ -108,10 +108,15 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.doesNotMatch(orchestrationPanel, /class="task-quick-input-card task-chat-panel"[\s\S]*运行中 \{\{ taskOrchestrationQueueStats\.running \}\}/);
     assert.doesNotMatch(orchestrationPanel, /class="task-quick-input-card task-chat-panel"[\s\S]*历史 RUNS \{\{ taskOrchestration\.runs\.length \}\}/);
     assert.match(orchestrationPanel, /class="task-quick-input-card task-chat-panel"\s*>\s*<div class="task-chat-thread" role="log" :aria-label="t\('orchestration\.chat\.thread\.aria'\)"/);
+    assert.match(orchestrationPanel, /class="task-agent-cockpit" :aria-label="t\('orchestration\.agent\.aria'\)"/);
+    assert.match(orchestrationPanel, /t\('orchestration\.agent\.title'\)/);
+    assert.match(orchestrationPanel, /class="task-agent-surface-grid"/);
     assert.match(orchestrationPanel, /class="task-chat-thread" role="log" :aria-label="t\('orchestration\.chat\.thread\.aria'\)"/);
     assert.match(orchestrationPanel, /class="task-thread-composer"/);
     assert.match(orchestrationPanel, /class="task-chat-action-buttons"/);
+    assert.match(orchestrationPanel, /@click="previewTaskPlanFromChat\(\)"/);
     assert.match(orchestrationPanel, /@click="planAndRunTaskOrchestrationFromChat\(\)"/);
+    assert.match(orchestrationPanel, /t\('orchestration\.chat\.input\.discuss'\)/);
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.input\.work'\)/);
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.input\.workCaption'\)/);
     assert.match(orchestrationPanel, /class="[^\"]*task-thread-message-card[^\"]*task-thread-plan-card[^\"]*"/);
@@ -124,6 +129,8 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /@click="continueTaskWorkspaceSession\(session\)"/);
     assert.match(orchestrationPanel, /<aside class="task-quick-side-card">/);
     assert.match(orchestrationPanel, /class="[^\"]*task-side-workbench-card[^\"]*"/);
+    assert.match(orchestrationPanel, /class="task-agent-trace-grid"/);
+    assert.match(orchestrationPanel, /<summary>\{\{ t\('orchestration\.agent\.trace\.title'\) \}\}<\/summary>/);
     assert.match(orchestrationPanel, /class="task-thread-card-label">AI · \{\{ t\('orchestration\.plan\.title'\) \}\}/);
     assert.match(orchestrationPanel, /class="task-chat-bubble-row is-user task-thread-plan-request"/);
     assert.match(orchestrationPanel, /You · \/plan/);

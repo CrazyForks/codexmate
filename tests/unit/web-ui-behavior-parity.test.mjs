@@ -795,6 +795,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'selectTaskWorkspace',
         'startNewTaskWorkspaceSession',
         'continueTaskWorkspaceSession',
+        'previewTaskPlanFromChat',
         'planAndRunTaskOrchestrationFromChat'
     );
     const allowedMissingCurrentMethodKeys = [
