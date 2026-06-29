@@ -283,6 +283,12 @@ export function createMainTabsComputed() {
                 return status === 'queued' || status === 'running';
             });
         },
+        taskOrchestrationEngineLabel() {
+            const state = this.taskOrchestration && typeof this.taskOrchestration === 'object'
+                ? this.taskOrchestration
+                : {};
+            return state.selectedEngine === 'workflow' ? 'Workflow' : 'Codex';
+        },
         taskOrchestrationWorkbenchVisible() {
             const state = this.taskOrchestration && typeof this.taskOrchestration === 'object'
                 ? this.taskOrchestration
@@ -292,7 +298,8 @@ export function createMainTabsComputed() {
                 : [];
             return activeQueue.length > 0
                 || !!String(state.selectedRunId || '').trim()
-                || !!String(state.selectedRunError || '').trim();
+                || !!String(state.selectedRunError || '').trim()
+                || (state.workspaceTab === 'runs' && Array.isArray(state.runs) && state.runs.length > 0);
         },
         taskOrchestrationQueueStats() {
             const queue = this.taskOrchestration && Array.isArray(this.taskOrchestration.queue)

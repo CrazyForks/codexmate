@@ -1613,14 +1613,33 @@ test('taskOrchestrationWorkbenchVisible ignores passive failed run history', () 
                 { runId: 'run-failed', status: 'failed', summary: '前置节点失败，已阻塞' }
             ],
             selectedRunId: '',
+            workspaceTab: 'queue',
             selectedRunError: ''
         }
     };
 
     assert.strictEqual(computed.taskOrchestrationWorkbenchVisible.call(context), false);
 
+    context.taskOrchestration.workspaceTab = 'runs';
+    assert.strictEqual(computed.taskOrchestrationWorkbenchVisible.call(context), true);
+
+    context.taskOrchestration.workspaceTab = 'queue';
     context.taskOrchestration.selectedRunId = 'run-failed';
     assert.strictEqual(computed.taskOrchestrationWorkbenchVisible.call(context), true);
+});
+
+test('taskOrchestrationEngineLabel presents OpenAI chat engine as Codex in the status strip', () => {
+    const computed = createMainTabsComputed();
+    const context = {
+        taskOrchestration: {
+            selectedEngine: 'openai-chat'
+        }
+    };
+
+    assert.strictEqual(computed.taskOrchestrationEngineLabel.call(context), 'Codex');
+
+    context.taskOrchestration.selectedEngine = 'workflow';
+    assert.strictEqual(computed.taskOrchestrationEngineLabel.call(context), 'Workflow');
 });
 
 test('loadTaskOrchestrationOverview does not auto-select latest failed run history', async () => {

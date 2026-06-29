@@ -37,6 +37,13 @@
                                 </div>
 
                                 <div class="task-quick-input-card task-chat-panel">
+                                    <div class="task-chat-status-strip" role="status" aria-label="任务编排状态">
+                                        <span>引擎 {{ taskOrchestrationEngineLabel }}</span>
+                                        <span>并发度 {{ taskOrchestration.concurrency || 2 }}</span>
+                                        <span>运行中 {{ taskOrchestrationQueueStats.running }}</span>
+                                        <span>排队中 {{ taskOrchestrationQueueStats.queued }}</span>
+                                        <button type="button" class="task-chat-status-link" @click="taskOrchestration.workspaceTab = 'runs'">历史 RUNS {{ taskOrchestration.runs.length }}</button>
+                                    </div>
                                     <div class="task-chat-thread" role="log" :aria-label="t('orchestration.chat.thread.aria')">
                                         <div
                                             v-for="message in taskOrchestrationConversationMessages"
@@ -85,13 +92,6 @@
                                                     <span :class="['pill', taskOrchestrationDraftReadiness.tone]">{{ taskOrchestrationDraftReadiness.title }}</span>
                                                     <div class="task-readiness-copy task-draft-inline-copy">{{ taskOrchestrationDraftReadiness.summary }}</div>
                                                 </div>
-                                                <div class="task-config-strip">
-                                                    <div class="task-config-pill">{{ taskOrchestration.selectedEngine === 'workflow' ? t('orchestration.engine.workflow') : t('orchestration.engine.openaiChat') }}</div>
-                                                    <div class="task-config-pill">{{ taskOrchestration.runMode === 'dry-run' ? t('orchestration.runMode.dryRun') : (taskOrchestration.runMode === 'read' ? t('orchestration.runMode.readOnly') : t('orchestration.runMode.write') ) }}</div>
-                                                    <div v-if="taskOrchestrationDraftMetrics.hasTarget" class="task-config-pill">{{ t('orchestration.pills.sequenceCount', { count: taskOrchestrationDraftMetrics.requestCount }) }}</div>
-                                                    <div v-if="taskOrchestration.title.trim()" class="task-config-pill">{{ t('orchestration.pills.hasTitle') }}</div>
-                                                    <div v-if="taskOrchestration.selectedEngine === 'workflow' && taskOrchestrationDraftMetrics.workflowCount > 0" class="task-config-pill">{{ t('orchestration.pills.workflowCount', { count: taskOrchestrationDraftMetrics.workflowCount }) }}</div>
-                                                </div>
                                             </div>
                                             <div class="task-readiness-grid task-quick-checklist task-thread-checklist">
                                                 <div v-for="item in taskOrchestrationDraftChecklist" :key="item.key" :class="['task-readiness-item', { done: item.done }]">
@@ -101,80 +101,7 @@
                                             </div>
                                         </section>
 
-                                        <details class="selector-section task-thread-message-card task-thread-settings-card task-advanced-panel task-quick-advanced">
-                                            <summary class="task-advanced-summary">AI · {{ t('orchestration.advanced.title') }}</summary>
-                                    <div class="task-action-row-right task-action-row-right-prominent task-codex-queue-action">
-                                        <button type="button" class="btn-tool" @click="queueTaskOrchestrationAndStart()" :disabled="taskOrchestration.queueAdding || taskOrchestration.queueStarting || taskOrchestration.planning || !taskOrchestration.target.trim()">
-                                            {{ (taskOrchestration.queueAdding || taskOrchestration.queueStarting) ? t('orchestration.actions.processing') : t('orchestration.actions.queueAndStart') }}
-                                        </button>
-                                    </div>
-                                    <div class="selector-grid task-composer-grid task-composer-grid-secondary">
-                                        <label class="selector-field task-field-wide">
-                                            <span class="selector-label">{{ t('orchestration.fields.title') }}</span>
-                                            <input v-model="taskOrchestration.title" class="model-input" type="text" :placeholder="t('orchestration.fields.title.placeholder')">
-                                        </label>
-                                        <label class="selector-field">
-                                            <span class="selector-label">{{ t('orchestration.fields.engine') }}</span>
-                                            <select v-model="taskOrchestration.selectedEngine" class="provider-fast-switch-select" @change="taskOrchestration.selectedEngine === 'workflow' ? null : taskOrchestration.workflowIdsText = ''">
-                                                <option value="openai-chat">{{ t('orchestration.engine.openaiChat') }}</option>
-                                                <option value="workflow">{{ t('orchestration.engine.workflow') }}</option>
-                                            </select>
-                                        </label>
-                                        <label class="selector-field">
-                                            <span class="selector-label">{{ t('orchestration.fields.runMode') }}</span>
-                                            <select v-model="taskOrchestration.runMode" class="provider-fast-switch-select">
-                                                <option value="write">{{ t('orchestration.runMode.write') }}</option>
-                                                <option value="read">{{ t('orchestration.runMode.readOnly') }}</option>
-                                                <option value="dry-run">{{ t('orchestration.runMode.dryRun') }}</option>
-                                            </select>
-                                        </label>
-                                        <label class="selector-field task-field-wide">
-                                            <span class="selector-label">{{ t('orchestration.fields.notes') }}</span>
-                                            <textarea v-model="taskOrchestration.notes" class="task-textarea" rows="3" :placeholder="t('orchestration.fields.notes.placeholder')"></textarea>
-                                            <span class="task-field-hint">{{ t('orchestration.fields.notes.hint') }}</span>
-                                        </label>
-                                        <label class="selector-field task-field-wide">
-                                            <span class="selector-label">{{ t('orchestration.fields.workspacePath') }}</span>
-                                            <input v-model="taskOrchestration.workspacePath" class="model-input" type="text" :placeholder="t('orchestration.fields.workspacePath.placeholder')">
-                                            <span class="task-field-hint">{{ t('orchestration.fields.workspacePath.hint') }}</span>
-                                        </label>
-                                        <label class="selector-field">
-                                            <span class="selector-label">{{ t('orchestration.fields.threadId') }}</span>
-                                            <input v-model="taskOrchestration.threadId" class="model-input" type="text" :placeholder="t('orchestration.fields.threadId.placeholder')">
-                                            <span class="task-field-hint">{{ t('orchestration.fields.threadId.hint') }}</span>
-                                        </label>
-                                        <label class="selector-field task-field-wide">
-                                            <span class="selector-label">{{ t('orchestration.fields.followUps') }}</span>
-                                            <textarea v-model="taskOrchestration.followUpsText" class="task-textarea" rows="3" :placeholder="t('orchestration.fields.followUps.placeholder')"></textarea>
-                                        </label>
-                                        <label class="selector-field">
-                                            <span class="selector-label">{{ t('orchestration.fields.concurrency') }}</span>
-                                            <input v-model="taskOrchestration.concurrency" class="model-input" type="number" min="1" max="8">
-                                            <span class="task-field-hint">{{ t('orchestration.fields.concurrency.hint') }}</span>
-                                        </label>
-                                        <label class="selector-field">
-                                            <span class="selector-label">{{ t('orchestration.fields.autoFixRounds') }}</span>
-                                            <input v-model="taskOrchestration.autoFixRounds" class="model-input" type="number" min="0" max="5">
-                                            <span class="task-field-hint">{{ t('orchestration.fields.autoFixRounds.hint') }}</span>
-                                        </label>
-                                        <label v-if="taskOrchestration.selectedEngine === 'workflow'" class="selector-field task-field-wide">
-                                            <span class="selector-label">{{ t('orchestration.fields.workflowIds') }}</span>
-                                            <textarea v-model="taskOrchestration.workflowIdsText" class="task-textarea" rows="3" :placeholder="t('orchestration.fields.workflowIds.placeholder')"></textarea>
-                                            <span class="task-field-hint">{{ t('orchestration.fields.workflowIds.hint', { count: taskOrchestration.workflows.length }) }}</span>
-                                            <div v-if="taskOrchestration.workflows.length" class="task-workflow-suggestions">
-                                                <button
-                                                    v-for="workflow in taskOrchestration.workflows"
-                                                    :key="workflow.id || workflow.name"
-                                                    type="button"
-                                                    class="task-workflow-chip"
-                                                    @click="appendTaskWorkflowId(workflow.id || workflow.name)">
-                                                    <span>{{ workflow.name || workflow.id }}</span>
-                                                    <small v-if="workflow.stepCount">{{ t('orchestration.workflow.stepCount', { count: workflow.stepCount }) }}</small>
-                                                </button>
-                                            </div>
-                                        </label>
-                                    </div>
-                                </details>
+
 
                                     <section
                                         v-if="taskOrchestration.plan || taskOrchestration.planIssues.length || taskOrchestration.planWarnings.length || taskOrchestration.lastError"
@@ -241,10 +168,42 @@
                                             </details>
                                         </template>
                                     </section>
+
+                                    </div>
+                                    <div class="task-thread-composer">
+                                        <label class="task-quick-target-field task-chat-composer">
+                                            <span class="selector-label">{{ t('orchestration.chat.input.label') }}</span>
+                                            <textarea
+                                                v-model="taskOrchestration.chatDraft"
+                                                class="task-textarea task-textarea-goal task-quick-target"
+                                                rows="3"
+                                                :placeholder="t('orchestration.chat.input.placeholder')"
+                                                @keydown.enter.exact.prevent="submitTaskOrchestrationChatMessage()"></textarea>
+                                            <span class="task-field-hint">{{ t('orchestration.chat.input.hint') }}</span>
+                                        </label>
+                                        <div class="task-chat-send-row">
+                                            <button type="button" class="btn-tool btn-primary" @click="submitTaskOrchestrationChatMessage()" :disabled="!taskOrchestration.chatDraft.trim()">
+                                                {{ t('orchestration.chat.input.send') }}
+                                            </button>
+                                            <span class="task-field-hint">{{ taskOrchestrationDraftMetrics.hasTarget ? t('orchestration.chat.input.sequenceHint', { count: taskOrchestrationDraftMetrics.followUpCount + 2 }) : t('orchestration.chat.input.firstHint') }}</span>
+                                        </div>
+                                        <div class="task-chat-context-row" role="group" :aria-label="t('orchestration.chat.context.aria')">
+                                            <span class="task-chat-context-chip">{{ taskOrchestration.workspacePath.trim() ? t('orchestration.chat.context.workspace.value', { value: taskOrchestration.workspacePath.trim() }) : t('orchestration.chat.context.workspace.auto') }}</span>
+                                            <span class="task-chat-context-chip">{{ taskOrchestration.threadId.trim() ? t('orchestration.chat.context.thread.value', { value: taskOrchestration.threadId.trim() }) : t('orchestration.chat.context.thread.auto') }}</span>
+                                            <span class="task-chat-context-chip">{{ taskOrchestrationDraftMetrics.hasTarget ? t('orchestration.chat.context.sequence.value', { count: taskOrchestrationDraftMetrics.requestCount }) : t('orchestration.chat.context.sequence.empty') }}</span>
+                                            <span class="task-chat-context-chip">{{ taskOrchestration.runMode === 'dry-run' ? t('orchestration.runMode.dryRun') : (taskOrchestration.runMode === 'read' ? t('orchestration.runMode.readOnly') : t('orchestration.runMode.write') ) }}</span>
+                                        </div>
+
+                                        <div class="task-action-caption">{{ t('orchestration.quick.caption') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <aside class="task-quick-side-card">
                                     <section
                                         v-if="taskOrchestrationWorkbenchVisible"
-                                        class="selector-section task-workbench-card task-thread-message-card task-thread-workbench-card">
-                                        <div class="task-thread-card-label">AI · {{ t('orchestration.workbench.title') }}</div>
+                                        class="selector-section task-workbench-card task-side-workbench-card">
+                                        <div class="task-thread-card-label">{{ t('orchestration.workbench.title') }}</div>
                                         <div class="task-thread-run-summary">
                                             <span v-if="taskOrchestrationSelectedRun && taskOrchestrationSelectedRun.run" :class="['pill', taskRunStatusTone(taskOrchestrationSelectedRun.run.status)]">{{ taskOrchestrationSelectedRun.run.status }}</span>
                                             <span v-else-if="taskOrchestration.runs.length" :class="['pill', taskRunStatusTone(taskOrchestration.runs[0].status)]">{{ taskOrchestration.runs[0].status }}</span>
@@ -424,37 +383,80 @@
                                         </div>
                                         </details>
                                     </section>
+                                        <details class="selector-section task-side-settings-card task-advanced-panel task-quick-advanced">
+                                            <summary class="task-advanced-summary">{{ t('orchestration.advanced.title') }}</summary>
+                                    <div class="task-action-row-right task-action-row-right-prominent task-codex-queue-action">
+                                        <button type="button" class="btn-tool" @click="queueTaskOrchestrationAndStart()" :disabled="taskOrchestration.queueAdding || taskOrchestration.queueStarting || taskOrchestration.planning || !taskOrchestration.target.trim()">
+                                            {{ (taskOrchestration.queueAdding || taskOrchestration.queueStarting) ? t('orchestration.actions.processing') : t('orchestration.actions.queueAndStart') }}
+                                        </button>
                                     </div>
-                                    <div class="task-thread-composer">
-                                        <label class="task-quick-target-field task-chat-composer">
-                                            <span class="selector-label">{{ t('orchestration.chat.input.label') }}</span>
-                                            <textarea
-                                                v-model="taskOrchestration.chatDraft"
-                                                class="task-textarea task-textarea-goal task-quick-target"
-                                                rows="3"
-                                                :placeholder="t('orchestration.chat.input.placeholder')"
-                                                @keydown.enter.exact.prevent="submitTaskOrchestrationChatMessage()"></textarea>
-                                            <span class="task-field-hint">{{ t('orchestration.chat.input.hint') }}</span>
+                                    <div class="selector-grid task-composer-grid task-composer-grid-secondary">
+                                        <label class="selector-field task-field-wide">
+                                            <span class="selector-label">{{ t('orchestration.fields.title') }}</span>
+                                            <input v-model="taskOrchestration.title" class="model-input" type="text" :placeholder="t('orchestration.fields.title.placeholder')">
                                         </label>
-                                        <div class="task-chat-send-row">
-                                            <button type="button" class="btn-tool btn-primary" @click="submitTaskOrchestrationChatMessage()" :disabled="!taskOrchestration.chatDraft.trim()">
-                                                {{ t('orchestration.chat.input.send') }}
-                                            </button>
-                                            <span class="task-field-hint">{{ taskOrchestrationDraftMetrics.hasTarget ? t('orchestration.chat.input.sequenceHint', { count: taskOrchestrationDraftMetrics.followUpCount + 2 }) : t('orchestration.chat.input.firstHint') }}</span>
-                                        </div>
-                                        <div class="task-chat-context-row" role="group" :aria-label="t('orchestration.chat.context.aria')">
-                                            <span class="task-chat-context-chip">{{ taskOrchestration.workspacePath.trim() ? t('orchestration.chat.context.workspace.value', { value: taskOrchestration.workspacePath.trim() }) : t('orchestration.chat.context.workspace.auto') }}</span>
-                                            <span class="task-chat-context-chip">{{ taskOrchestration.threadId.trim() ? t('orchestration.chat.context.thread.value', { value: taskOrchestration.threadId.trim() }) : t('orchestration.chat.context.thread.auto') }}</span>
-                                            <span class="task-chat-context-chip">{{ taskOrchestrationDraftMetrics.hasTarget ? t('orchestration.chat.context.sequence.value', { count: taskOrchestrationDraftMetrics.requestCount }) : t('orchestration.chat.context.sequence.empty') }}</span>
-                                            <span class="task-chat-context-chip">{{ taskOrchestration.runMode === 'dry-run' ? t('orchestration.runMode.dryRun') : (taskOrchestration.runMode === 'read' ? t('orchestration.runMode.readOnly') : t('orchestration.runMode.write') ) }}</span>
-                                        </div>
-
-                                        <div class="task-action-caption">{{ t('orchestration.quick.caption') }}</div>
+                                        <label class="selector-field">
+                                            <span class="selector-label">{{ t('orchestration.fields.engine') }}</span>
+                                            <select v-model="taskOrchestration.selectedEngine" class="provider-fast-switch-select" @change="taskOrchestration.selectedEngine === 'workflow' ? null : taskOrchestration.workflowIdsText = ''">
+                                                <option value="openai-chat">{{ t('orchestration.engine.openaiChat') }}</option>
+                                                <option value="workflow">{{ t('orchestration.engine.workflow') }}</option>
+                                            </select>
+                                        </label>
+                                        <label class="selector-field">
+                                            <span class="selector-label">{{ t('orchestration.fields.runMode') }}</span>
+                                            <select v-model="taskOrchestration.runMode" class="provider-fast-switch-select">
+                                                <option value="write">{{ t('orchestration.runMode.write') }}</option>
+                                                <option value="read">{{ t('orchestration.runMode.readOnly') }}</option>
+                                                <option value="dry-run">{{ t('orchestration.runMode.dryRun') }}</option>
+                                            </select>
+                                        </label>
+                                        <label class="selector-field task-field-wide">
+                                            <span class="selector-label">{{ t('orchestration.fields.notes') }}</span>
+                                            <textarea v-model="taskOrchestration.notes" class="task-textarea" rows="3" :placeholder="t('orchestration.fields.notes.placeholder')"></textarea>
+                                            <span class="task-field-hint">{{ t('orchestration.fields.notes.hint') }}</span>
+                                        </label>
+                                        <label class="selector-field task-field-wide">
+                                            <span class="selector-label">{{ t('orchestration.fields.workspacePath') }}</span>
+                                            <input v-model="taskOrchestration.workspacePath" class="model-input" type="text" :placeholder="t('orchestration.fields.workspacePath.placeholder')">
+                                            <span class="task-field-hint">{{ t('orchestration.fields.workspacePath.hint') }}</span>
+                                        </label>
+                                        <label class="selector-field">
+                                            <span class="selector-label">{{ t('orchestration.fields.threadId') }}</span>
+                                            <input v-model="taskOrchestration.threadId" class="model-input" type="text" :placeholder="t('orchestration.fields.threadId.placeholder')">
+                                            <span class="task-field-hint">{{ t('orchestration.fields.threadId.hint') }}</span>
+                                        </label>
+                                        <label class="selector-field task-field-wide">
+                                            <span class="selector-label">{{ t('orchestration.fields.followUps') }}</span>
+                                            <textarea v-model="taskOrchestration.followUpsText" class="task-textarea" rows="3" :placeholder="t('orchestration.fields.followUps.placeholder')"></textarea>
+                                        </label>
+                                        <label class="selector-field">
+                                            <span class="selector-label">{{ t('orchestration.fields.concurrency') }}</span>
+                                            <input v-model="taskOrchestration.concurrency" class="model-input" type="number" min="1" max="8">
+                                            <span class="task-field-hint">{{ t('orchestration.fields.concurrency.hint') }}</span>
+                                        </label>
+                                        <label class="selector-field">
+                                            <span class="selector-label">{{ t('orchestration.fields.autoFixRounds') }}</span>
+                                            <input v-model="taskOrchestration.autoFixRounds" class="model-input" type="number" min="0" max="5">
+                                            <span class="task-field-hint">{{ t('orchestration.fields.autoFixRounds.hint') }}</span>
+                                        </label>
+                                        <label v-if="taskOrchestration.selectedEngine === 'workflow'" class="selector-field task-field-wide">
+                                            <span class="selector-label">{{ t('orchestration.fields.workflowIds') }}</span>
+                                            <textarea v-model="taskOrchestration.workflowIdsText" class="task-textarea" rows="3" :placeholder="t('orchestration.fields.workflowIds.placeholder')"></textarea>
+                                            <span class="task-field-hint">{{ t('orchestration.fields.workflowIds.hint', { count: taskOrchestration.workflows.length }) }}</span>
+                                            <div v-if="taskOrchestration.workflows.length" class="task-workflow-suggestions">
+                                                <button
+                                                    v-for="workflow in taskOrchestration.workflows"
+                                                    :key="workflow.id || workflow.name"
+                                                    type="button"
+                                                    class="task-workflow-chip"
+                                                    @click="appendTaskWorkflowId(workflow.id || workflow.name)">
+                                                    <span>{{ workflow.name || workflow.id }}</span>
+                                                    <small v-if="workflow.stepCount">{{ t('orchestration.workflow.stepCount', { count: workflow.stepCount }) }}</small>
+                                                </button>
+                                            </div>
+                                        </label>
                                     </div>
-                                </div>
-                            </div>
-
-                            <aside class="task-quick-side-card">
+                                </details>
                                 <div class="task-provider-status-card">
                                     <div class="task-readiness-title">{{ t('orchestration.openai.status.title') }}</div>
                                     <div class="task-readiness-copy">{{ t('orchestration.openai.status.subtitle') }}</div>

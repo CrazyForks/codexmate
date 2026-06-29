@@ -1703,6 +1703,51 @@
     scroll-padding-bottom: 188px;
 }
 
+#panel-orchestration .task-chat-status-strip {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    width: min(100%, 760px);
+    margin: 0 auto 4px;
+    padding: 7px 10px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.86);
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    font-weight: 650;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+    backdrop-filter: blur(12px);
+}
+
+#panel-orchestration .task-chat-status-strip span,
+#panel-orchestration .task-chat-status-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: rgba(248, 250, 252, 0.72);
+    white-space: nowrap;
+}
+
+#panel-orchestration .task-chat-status-link {
+    border: 0;
+    color: var(--color-brand-dark);
+    font: inherit;
+    cursor: pointer;
+}
+
+#panel-orchestration .task-chat-status-link:hover,
+#panel-orchestration .task-chat-status-link:focus-visible {
+    background: var(--color-brand-light);
+    outline: none;
+}
+
 #panel-orchestration .task-chat-bubble-row {
     gap: 8px;
     margin: 0;
@@ -1787,14 +1832,13 @@
 }
 
 #panel-orchestration .task-thread-suggestion-card,
-#panel-orchestration .task-thread-readiness-card,
-#panel-orchestration .task-thread-settings-card {
+#panel-orchestration .task-thread-readiness-card {
     display: block;
     width: min(100%, 660px);
 }
 
 #panel-orchestration .task-thread-suggestion-card .task-template-label,
-#panel-orchestration .task-thread-settings-card .task-advanced-summary {
+#panel-orchestration .task-side-settings-card .task-advanced-summary {
     margin: 0 0 8px;
     color: var(--color-text-primary);
     font-size: 0.86rem;
@@ -1836,20 +1880,15 @@
     box-shadow: none;
 }
 
-#panel-orchestration .task-thread-settings-card {
-    max-height: min(560px, calc(100vh - 220px));
-    overflow: auto;
-}
-
-#panel-orchestration .task-thread-settings-card:not([open]) {
+#panel-orchestration .task-side-settings-card:not([open]) {
     padding: 8px 10px;
 }
 
-#panel-orchestration .task-thread-settings-card .selector-grid {
+#panel-orchestration .task-side-settings-card .selector-grid {
     margin-top: 8px;
 }
 
-#panel-orchestration .task-thread-settings-card .task-codex-queue-action {
+#panel-orchestration .task-side-settings-card .task-codex-queue-action {
     justify-content: flex-start;
     margin: 8px 0 0;
 }
@@ -1934,12 +1973,14 @@
     line-height: 1.4;
 }
 
-#panel-orchestration .task-thread-workbench-card {
+#panel-orchestration .task-side-workbench-card,
+#panel-orchestration .task-side-settings-card {
     max-height: min(560px, calc(100vh - 220px));
+    margin-bottom: 8px;
     overflow: auto;
 }
 
-#panel-orchestration .task-thread-workbench-card .task-node-list {
+#panel-orchestration .task-side-workbench-card .task-node-list {
     max-height: 320px;
     overflow: auto;
     padding-right: 4px;
@@ -2114,11 +2155,11 @@
         min-width: calc(50% - 4px);
     }
 
-    #panel-orchestration .task-thread-workbench-card {
+    #panel-orchestration .task-side-workbench-card {
         max-height: calc(100vh - 190px);
     }
 
-    #panel-orchestration .task-thread-workbench-card .task-node-list {
+    #panel-orchestration .task-side-workbench-card .task-node-list {
         max-height: 260px;
     }
 
@@ -2163,9 +2204,8 @@
     }
 }
 
-/* Chat-alignment correction: keep every orchestration artifact inside the
-   transcript rhythm. The provider/config rail is useful, but it must not look
-   like the product's main surface. */
+/* Chat-alignment correction: keep the transcript clean while preserving a
+   separate side rail for settings, history, and run details. */
 #panel-orchestration {
     padding-bottom: 240px;
 }
@@ -2173,10 +2213,6 @@
 #panel-orchestration .task-chat-thread {
     padding-bottom: 240px;
     scroll-padding-bottom: 240px;
-}
-
-#panel-orchestration .task-quick-side-card {
-    display: none;
 }
 
 #panel-orchestration .task-thread-message-card {
@@ -2188,7 +2224,7 @@
 }
 
 #panel-orchestration .task-thread-plan-card,
-#panel-orchestration .task-thread-workbench-card {
+#panel-orchestration .task-side-workbench-card {
     overflow: visible;
     max-height: none;
 }
@@ -2206,12 +2242,12 @@
 }
 
 #panel-orchestration .task-thread-plan-card .skills-panel-note,
-#panel-orchestration .task-thread-workbench-card .skills-panel-note {
+#panel-orchestration .task-side-workbench-card .skills-panel-note {
     display: none;
 }
 
 #panel-orchestration .task-thread-plan-card .task-plan-summary-strip,
-#panel-orchestration .task-thread-workbench-card .task-detail-summary-strip {
+#panel-orchestration .task-side-workbench-card .task-detail-summary-strip {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
@@ -2219,7 +2255,7 @@
 }
 
 #panel-orchestration .task-thread-plan-card .task-plan-summary-item,
-#panel-orchestration .task-thread-workbench-card .task-plan-summary-item {
+#panel-orchestration .task-side-workbench-card .task-plan-summary-item {
     min-width: auto;
     padding: 4px 7px;
     border: 1px solid rgba(148, 163, 184, 0.12);
@@ -2228,7 +2264,7 @@
 }
 
 #panel-orchestration .task-thread-plan-card .task-plan-summary-label,
-#panel-orchestration .task-thread-workbench-card .task-plan-summary-label {
+#panel-orchestration .task-side-workbench-card .task-plan-summary-label {
     display: inline;
     margin-right: 4px;
     color: var(--color-text-muted);
@@ -2236,16 +2272,16 @@
 }
 
 #panel-orchestration .task-thread-plan-card .task-plan-summary-item strong,
-#panel-orchestration .task-thread-workbench-card .task-plan-summary-item strong {
+#panel-orchestration .task-side-workbench-card .task-plan-summary-item strong {
     display: inline;
     color: var(--color-text-primary);
     font-size: 11px;
     font-weight: 700;
 }
 
-#panel-orchestration .task-thread-workbench-card .task-header-actions,
-#panel-orchestration .task-thread-workbench-card .task-detail-toolbar,
-#panel-orchestration .task-thread-workbench-card .task-workbench-tabs {
+#panel-orchestration .task-side-workbench-card .task-header-actions,
+#panel-orchestration .task-side-workbench-card .task-detail-toolbar,
+#panel-orchestration .task-side-workbench-card .task-workbench-tabs {
     margin: 0;
     padding: 0;
     border: 0;
@@ -2253,16 +2289,16 @@
     box-shadow: none;
 }
 
-#panel-orchestration .task-thread-workbench-card .task-header-actions .btn-tool,
-#panel-orchestration .task-thread-workbench-card .task-detail-toolbar .btn-tool,
-#panel-orchestration .task-thread-workbench-card .task-workbench-tab {
+#panel-orchestration .task-side-workbench-card .task-header-actions .btn-tool,
+#panel-orchestration .task-side-workbench-card .task-detail-toolbar .btn-tool,
+#panel-orchestration .task-side-workbench-card .task-workbench-tab {
     min-height: 26px;
     padding: 3px 7px;
     border-radius: 999px;
     font-size: 0.7rem;
 }
 
-#panel-orchestration .task-thread-workbench-card .task-workbench-panel {
+#panel-orchestration .task-side-workbench-card .task-workbench-panel {
     margin-top: 8px;
     padding: 0;
     border: 0;
@@ -2320,17 +2356,17 @@
     margin-top: 0;
 }
 
-#panel-orchestration .task-thread-workbench-card .task-runtime-list,
-#panel-orchestration .task-thread-workbench-card .task-node-list {
+#panel-orchestration .task-side-workbench-card .task-runtime-list,
+#panel-orchestration .task-side-workbench-card .task-node-list {
     max-height: none;
     gap: 6px;
     padding-right: 0;
     overflow: visible;
 }
 
-#panel-orchestration .task-thread-workbench-card .task-node-card,
-#panel-orchestration .task-thread-workbench-card .task-runtime-item,
-#panel-orchestration .task-thread-workbench-card .task-node-output-card {
+#panel-orchestration .task-side-workbench-card .task-node-card,
+#panel-orchestration .task-side-workbench-card .task-runtime-item,
+#panel-orchestration .task-side-workbench-card .task-node-output-card {
     padding: 7px 0;
     border-width: 1px 0 0;
     border-radius: 0;
@@ -2338,8 +2374,8 @@
     box-shadow: none;
 }
 
-#panel-orchestration .task-thread-workbench-card .task-node-output-card,
-#panel-orchestration .task-thread-workbench-card .task-log-block {
+#panel-orchestration .task-side-workbench-card .task-node-output-card,
+#panel-orchestration .task-side-workbench-card .task-log-block {
     max-height: 120px;
     overflow: auto;
     border-radius: 10px;
@@ -2367,8 +2403,8 @@
         margin-left: 0;
     }
 
-    #panel-orchestration .task-thread-workbench-card .task-node-output-card,
-    #panel-orchestration .task-thread-workbench-card .task-log-block {
+    #panel-orchestration .task-side-workbench-card .task-node-output-card,
+    #panel-orchestration .task-side-workbench-card .task-log-block {
         max-height: 96px;
     }
 
