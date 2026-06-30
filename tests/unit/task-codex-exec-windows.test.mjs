@@ -1,4 +1,6 @@
 import assert from 'assert';
+import http from 'node:http';
+import https from 'node:https';
 import { readProjectFile } from './helpers/web-ui-source.mjs';
 
 const cliSource = readProjectFile('cli.js');
@@ -47,77 +49,246 @@ test('resolveSpawnCommand keeps bare command names on windows', () => {
     assert.strictEqual(resolveSpawnCommand('codex'), 'codex');
 });
 
-test('runCodexExecTaskNode spawns bare codex command through the windows shell', async () => {
-    const source = extractBlockBySignature(cliSource, 'async function runCodexExecTaskNode(node, context = {}) {');
-    const spawnCalls = [];
-    const runCodexExecTaskNode = instantiateFunction(source, 'runCodexExecTaskNode', {
-        process: { platform: 'win32' },
-        resolveSpawnCommand() {
-            return 'codex';
-        },
-        commandExists(command, args) {
-            assert.strictEqual(command, 'codex');
-            assert.strictEqual(args, '--version');
-            return true;
-        },
-        toIsoTime() {
-            return '2026-04-13T03:09:00.000Z';
-        },
-        truncateTaskText(text) {
-            return String(text || '');
-        },
-        ensureDir() {},
-        TASK_RUN_DETAILS_DIR: '/tmp/task-runs',
-        path: {
-            join: (...parts) => parts.join('/'),
-            basename(value) {
-                const parts = String(value || '').split(/[\\/]/g);
-                return parts[parts.length - 1] || '';
-            }
-        },
-        fs: {
-            mkdtempSync() {
-                return '/tmp/task-runs/tmp/codex-123';
-            },
-            rmSync() {}
-        },
-        readCodexLastMessageFile() {
-            return 'done';
-        },
-        findCodexSessionId() {
-            return '';
-        },
-        spawn(command, args, options) {
-            spawnCalls.push({ command, args, options });
+test('postOpenAiChatCompletion fails fast on oversized responses', async () => {
+    const source = extractBlockBySignature(cliSource, 'function postOpenAiChatCompletion(requestConfig, body, options = {}) {');
+    const postOpenAiChatCompletion = instantiateFunction(source, 'postOpenAiChatCompletion', {
+        URL,
+        http,
+        https,
+        HTTP_KEEP_ALIVE_AGENT: false,
+        HTTPS_KEEP_ALIVE_AGENT: false,
+        TASK_OPENAI_CHAT_MAX_RESPONSE_BYTES: 8,
+        TASK_OPENAI_CHAT_TIMEOUT_MS: 1000,
+        Buffer,
+        truncateTaskText(text, limit) {
+            return String(text || '').slice(0, limit || 1000);
+        }
+    });
+    const server = http.createServer((req, res) => {
+        req.resume();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ choices: [{ message: { content: 'x'.repeat(64) } }] }));
+    });
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    try {
+        const { port } = server.address();
+        const result = await postOpenAiChatCompletion({
+            endpointUrl: `http://127.0.0.1:${port}/v1/chat/completions`,
+            extraHeaders: {}
+        }, { model: 'mock', messages: [] });
+        assert.strictEqual(result.ok, false);
+        assert.strictEqual(result.status, 200);
+        assert.strictEqual(result.error, 'OpenAI Chat response too large');
+    } finally {
+        await new Promise((resolve) => server.close(resolve));
+    }
+});
+
+test('buildTaskOpenAiChatStatus reports provider readiness without leaking secrets', () => {
+    const source = extractBlockBySignature(cliSource, 'function buildTaskOpenAiChatStatus() {');
+    const buildTaskOpenAiChatStatus = instantiateFunction(source, 'buildTaskOpenAiChatStatus', {
+        resolveTaskOpenAiChatConfig() {
             return {
-                stdout: { on() {} },
-                stderr: { on() {} },
-                on(event, handler) {
-                    if (event === 'close') {
-                        handler(0, '');
-                    }
-                },
-                kill() {}
+                providerName: 'mock-openai',
+                model: 'gpt-4.1-mini',
+                endpointUrl: 'https://secret.example.test/v1/chat/completions?key=abc123',
+                apiKey: 'sk-secret',
+                extraHeaders: { 'X-Api-Key': 'hidden' }
             };
+        },
+        redactTaskEndpointUrl(endpointUrl) {
+            return String(endpointUrl || '').replace('key=abc123', 'key=***');
         }
     });
 
-    const result = await runCodexExecTaskNode({
+    assert.deepStrictEqual(buildTaskOpenAiChatStatus(), {
+        ok: true,
+        ready: true,
+        error: '',
+        providerName: 'mock-openai',
+        model: 'gpt-4.1-mini',
+        endpoint: 'https://secret.example.test/v1/chat/completions?key=***',
+        hasApiKey: true,
+        hasExtraHeaders: true
+    });
+});
+
+test('buildTaskOpenAiChatStatus surfaces OpenAI Chat config errors', () => {
+    const source = extractBlockBySignature(cliSource, 'function buildTaskOpenAiChatStatus() {');
+    const buildTaskOpenAiChatStatus = instantiateFunction(source, 'buildTaskOpenAiChatStatus', {
+        resolveTaskOpenAiChatConfig() {
+            return { error: 'OpenAI Chat 提供商 mock 缺少 base_url' };
+        },
+        redactTaskEndpointUrl(endpointUrl) {
+            return endpointUrl;
+        }
+    });
+
+    assert.deepStrictEqual(buildTaskOpenAiChatStatus(), {
+        ok: false,
+        ready: false,
+        error: 'OpenAI Chat 提供商 mock 缺少 base_url',
+        providerName: '',
+        model: '',
+        endpoint: '',
+        hasApiKey: false,
+        hasExtraHeaders: false
+    });
+});
+
+test('resolveTaskOpenAiChatConfig uses task provider without changing Codex provider key', () => {
+    const source = [
+        extractBlockBySignature(cliSource, 'function pickTaskProviderModel(providerName, provider, config) {'),
+        extractBlockBySignature(cliSource, 'function pickTaskProviderTemperature(provider) {'),
+        extractBlockBySignature(cliSource, 'function pickTaskOpenAiChatProviderName(config) {'),
+        extractBlockBySignature(cliSource, 'function resolveTaskOpenAiChatConfig() {')
+    ].join('\n\n');
+    const resolveTaskOpenAiChatConfig = instantiateFunction(source, 'resolveTaskOpenAiChatConfig', {
+        readCurrentModels() {
+            return {};
+        },
+        readConfigOrVirtualDefault() {
+            return {
+                config: {
+                    model_provider: 'local',
+                    model: 'gpt-5.3-codex',
+                    task_openai_chat_provider: 'new-api-chat',
+                    model_providers: {
+                        local: {
+                            base_url: 'https://codex.example.test/v1',
+                            wire_api: 'responses',
+                            preferred_auth_method: 'sk-codex-tab-secret',
+                            models: ['gpt-5.3-codex']
+                        },
+                        'new-api-chat': {
+                            base_url: 'https://api.42w.shop/v1',
+                            wire_api: 'chat_completions',
+                            preferred_auth_method: 'sk-task-e2e-secret',
+                            temperature: 0.7,
+                            models: ['glm-5.2']
+                        }
+                    }
+                }
+            };
+        },
+        resolveOpenaiBridgeUpstream() {
+            throw new Error('bridge should not be used');
+        },
+        OPENAI_BRIDGE_SETTINGS_FILE: '/tmp/openai-bridge-settings.json',
+        buildOpenAiChatEndpointUrl(baseUrl) {
+            return `${String(baseUrl).replace(/\/+$/, '')}/chat/completions`;
+        },
+        isValidHttpUrl(value) {
+            return /^https?:\/\//.test(String(value || ''));
+        }
+    });
+
+    const result = resolveTaskOpenAiChatConfig();
+    assert.strictEqual(result.providerName, 'new-api-chat');
+    assert.strictEqual(result.baseUrl, 'https://api.42w.shop/v1');
+    assert.strictEqual(result.endpointUrl, 'https://api.42w.shop/v1/chat/completions');
+    assert.strictEqual(result.apiKey, 'sk-task-e2e-secret');
+    assert.strictEqual(result.model, 'glm-5.2');
+    assert.strictEqual(result.temperature, 0.7);
+});
+
+test('runOpenAiChatTaskNode fails before request when OpenAI Chat auth is missing', async () => {
+    const source = extractBlockBySignature(cliSource, 'async function runOpenAiChatTaskNode(node, context = {}) {');
+    let requested = false;
+    const runOpenAiChatTaskNode = instantiateFunction(source, 'runOpenAiChatTaskNode', {
+        resolveTaskOpenAiChatConfig() {
+            return {
+                providerName: 'mock-openai',
+                model: 'gpt-4.1-mini',
+                endpointUrl: 'https://api.example.test/v1/chat/completions',
+                apiKey: '',
+                extraHeaders: {}
+            };
+        },
+        postOpenAiChatCompletion() {
+            requested = true;
+            return Promise.resolve({ ok: true, status: 200, payload: {} });
+        },
+        extractModelResponseText() {
+            return '';
+        },
+        truncateTaskText(text, limit) {
+            return String(text || '').slice(0, limit || 1000);
+        },
+        redactTaskEndpointUrl(endpointUrl) {
+            return endpointUrl;
+        },
+        toIsoTime() {
+            return '2026-06-27T15:30:00.000Z';
+        },
+        Date
+    });
+
+    const result = await runOpenAiChatTaskNode({ id: 'analysis-01', prompt: 'inspect', write: false }, {});
+
+    assert.strictEqual(result.success, false);
+    assert.match(result.error, /缺少 API key/);
+    assert.strictEqual(result.output.provider, 'mock-openai');
+    assert.strictEqual(requested, false);
+});
+
+test('runOpenAiChatTaskNode uses configured OpenAI Chat provider without spawning codex', async () => {
+    const source = extractBlockBySignature(cliSource, 'async function runOpenAiChatTaskNode(node, context = {}) {');
+    const requests = [];
+    const runOpenAiChatTaskNode = instantiateFunction(source, 'runOpenAiChatTaskNode', {
+        resolveTaskOpenAiChatConfig() {
+            return {
+                providerName: 'mock-openai',
+                model: 'glm-5.2',
+                endpointUrl: 'http://127.0.0.1:18183/v1/chat/completions',
+                apiKey: 'sk-unit-secret',
+                extraHeaders: {},
+                temperature: 0.7
+            };
+        },
+        postOpenAiChatCompletion(config, body) {
+            requests.push({ config, body });
+            return Promise.resolve({
+                ok: true,
+                status: 200,
+                payload: {
+                    choices: [{ message: { content: 'mock-openai-chat-ok' } }]
+                }
+            });
+        },
+        extractModelResponseText(payload) {
+            return payload.choices[0].message.content;
+        },
+        truncateTaskText(text, limit) {
+            return String(text || '').slice(0, limit || 1000);
+        },
+        redactTaskEndpointUrl(endpointUrl) {
+            return String(endpointUrl || '').replace(/sk-unit-secret/g, '***');
+        },
+        toIsoTime() {
+            return '2026-06-27T15:30:00.000Z';
+        },
+        Date
+    });
+
+    const result = await runOpenAiChatTaskNode({
         id: 'analysis-01',
-        prompt: 'inspect the bug',
+        prompt: 'inspect the orchestration chain',
         write: false
     }, {
-        cwd: 'C:/repo'
+        cwd: 'C:/repo',
+        dependencyResults: [{ id: 'plan-01', summary: 'dependency done' }]
     });
 
     assert.strictEqual(result.success, true);
-    assert.strictEqual(spawnCalls.length, 1);
-    assert.strictEqual(spawnCalls[0].command, 'codex');
-    assert.strictEqual(spawnCalls[0].options.shell, true);
-    assert.deepStrictEqual(spawnCalls[0].args.slice(0, 7), [
-        '-a', 'never',
-        '-s', 'read-only',
-        '-C', 'C:/repo',
-        'exec'
-    ]);
+    assert.strictEqual(result.output.provider, 'mock-openai');
+    assert.strictEqual(result.output.model, 'glm-5.2');
+    assert.strictEqual(result.output.text, 'mock-openai-chat-ok');
+    assert.strictEqual(requests.length, 1);
+    assert.strictEqual(requests[0].body.model, 'glm-5.2');
+    assert.strictEqual(requests[0].body.temperature, 0.7);
+    assert.strictEqual(requests[0].body.messages[0].role, 'system');
+    assert.strictEqual(requests[0].body.messages[1].role, 'user');
+    assert.match(requests[0].body.messages[1].content, /dependency done/);
+    assert.ok(!JSON.stringify(result).includes('sk-unit-secret'));
 });

@@ -181,6 +181,50 @@ test('provider cache and local Web preference settings are localized in every lo
     }
 });
 
+test('task orchestration chat composer copy is localized in every locale', () => {
+    const keys = [
+        'orchestration.chat.input.label',
+        'orchestration.chat.input.placeholder',
+        'orchestration.chat.input.hint',
+        'orchestration.chat.context.aria',
+        'orchestration.chat.context.workspace.auto',
+        'orchestration.chat.context.workspace.value',
+        'orchestration.chat.context.thread.auto',
+        'orchestration.chat.context.thread.value',
+        'orchestration.chat.thread.aria',
+        'orchestration.chat.input.send',
+        'orchestration.chat.input.firstHint',
+        'orchestration.chat.input.sequenceHint',
+        'orchestration.chat.assistant.contextLabel',
+        'orchestration.chat.assistant.contextFallback',
+        'orchestration.chat.assistant.readyLabel',
+        'orchestration.chat.assistant.empty',
+        'orchestration.chat.assistant.planLabel',
+        'orchestration.chat.assistant.planSummary',
+        'orchestration.chat.assistant.sequenceReady',
+        'orchestration.chat.assistant.singleReady',
+        'orchestration.chat.user.step',
+        'orchestration.chat.meta.thread',
+        'orchestration.chat.meta.workspace',
+        'orchestration.chat.meta.order',
+        'orchestration.chat.meta.first',
+        'orchestration.chat.meta.afterPrevious',
+        'orchestration.chat.meta.contextKept',
+        'orchestration.chat.meta.previewNext'
+    ];
+    for (const code of expectedLocales) {
+        for (const key of keys) {
+            assert.strictEqual(typeof DICT[code][key], 'string', `${code} should define ${key}`);
+            assert(DICT[code][key].trim(), `${code} ${key} should not be empty`);
+            assert.deepStrictEqual(
+                placeholders(DICT[code][key]),
+                placeholders(DICT.zh[key]),
+                `${code} placeholder mismatch for key: ${key}`
+            );
+        }
+    }
+});
+
 
 test('plugins catalog metadata is localized from i18n dictionaries', async () => {
     const { createPluginsComputed } = await import('../../plugins/prompt-templates/computed.mjs');

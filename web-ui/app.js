@@ -460,11 +460,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     queueStarting: false,
                     retrying: false,
                     target: '',
+                    chatDraft: '',
                     title: '',
                     notes: '',
+                    workspacePath: '',
+                    threadId: '',
                     followUpsText: '',
                     workflowIdsText: '',
-                    selectedEngine: 'codex',
+                    selectedEngine: 'openai-chat',
                     runMode: 'write',
                     concurrency: 2,
                     autoFixRounds: 1,
@@ -482,6 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     selectedRunLoading: false,
                     selectedRunError: '',
                     detailRequestToken: 0,
+                    settingsOpen: false,
                     lastLoadedAt: '',
                     lastError: ''
                 },
@@ -501,9 +505,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (pathname === '/web-ui' || pathname === '/web-ui/' || pathname === '/web-ui/index.html') {
                     const url = new URL(window.location.href);
                     url.pathname = '/';
-                    // 移除查询参数和 hash，保持 URL 纯净
-                    url.search = '';
-                    url.hash = '';
+                    // Preserve startup query/hash flags while normalizing the legacy web-ui path.
+                    // Feature gates such as ?taskOrchestration=1 are consumed below after redirect.
                     window.location.replace(url.toString());
                     return;
                 }
@@ -536,6 +539,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.agentsModalTitle = this.t('modal.agents.title');
                 this.agentsModalHint = this.t('modal.agents.hint');
             }
+            try {
+                const url = new URL(window.location.href);
+                const storedTaskOrchestrationFlag = localStorage.getItem('codexmateTaskOrchestrationTabEnabled');
+                const requestedTaskOrchestration = String(url.searchParams.get('taskOrchestration') || '').trim().toLowerCase();
+                if (storedTaskOrchestrationFlag === 'true' || requestedTaskOrchestration === '1' || requestedTaskOrchestration === 'true') {
+                    this.taskOrchestrationTabEnabled = true;
+                }
+            } catch (_) {}
             {
                 const NAV_STATE_STORAGE_KEY = 'codexmateNavState.v1';
                 const mainTabSet = new Set(['dashboard', 'config', 'sessions', 'usage', 'orchestration', 'market', 'plugins', 'docs', 'settings', 'trash', 'prompts']);

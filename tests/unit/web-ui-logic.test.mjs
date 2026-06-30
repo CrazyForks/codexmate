@@ -1153,8 +1153,8 @@ test('taskOrchestrationDraftReadiness highlights missing workflow ids and previe
     assert.strictEqual(readiness.tone, 'warn');
     assert.strictEqual(readiness.title, '缺少 Workflow');
     assert.match(readiness.summary, /还没指定可复用流程/);
-    assert.strictEqual(context.taskOrchestrationDraftChecklist[1].done, false);
-    assert.match(context.taskOrchestrationDraftChecklist[2].detail, /建议补说明/);
+    assert.strictEqual(context.taskOrchestrationDraftChecklist.find((item) => item.key === 'engine').done, false);
+    assert.match(context.taskOrchestrationDraftChecklist.find((item) => item.key === 'scope').detail, /建议补说明/);
 });
 
 test('taskOrchestrationDraftReadiness marks ready plans as executable', () => {
@@ -1208,6 +1208,8 @@ test('ensureTaskOrchestrationState creates workbench defaults including workspac
     const state = methods.ensureTaskOrchestrationState.call(context);
 
     assert.strictEqual(state.workspaceTab, 'queue');
+    assert.strictEqual(state.workspacePath, '');
+    assert.strictEqual(state.threadId, '');
     assert.strictEqual(state.selectedRunError, '');
     assert.strictEqual(state.detailRequestToken, 0);
     assert.deepStrictEqual(state.overviewWarnings, []);
@@ -1226,9 +1228,465 @@ test('ensureTaskOrchestrationState backfills missing workbench fields on existin
 
     assert.strictEqual(state.target, 'keep-me');
     assert.strictEqual(state.workspaceTab, 'runs');
+    assert.strictEqual(state.workspacePath, '');
+    assert.strictEqual(state.threadId, '');
     assert.strictEqual(state.selectedRunError, '');
     assert.strictEqual(state.detailRequestToken, 0);
     assert.deepStrictEqual(state.overviewWarnings, []);
+});
+
+test('buildTaskOrchestrationRequest includes workspace path and thread id', () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const context = {
+        taskOrchestration: {
+            title: '2048 task',
+            target: 'Create 2048 page',
+            notes: 'Only write inside cwd',
+            workspacePath: ' /tmp/codexmate-web-workspace ',
+            threadId: ' thread-2048 ',
+            followUpsText: 'Verify page',
+            workflowIdsText: '',
+            selectedEngine: 'openai-chat',
+            runMode: 'write',
+            concurrency: 1,
+            autoFixRounds: 0
+        },
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState
+    };
+
+    const req = methods.buildTaskOrchestrationRequest.call(context);
+
+    assert.strictEqual(req.cwd, '/tmp/codexmate-web-workspace');
+    assert.strictEqual(req.threadId, 'thread-2048');
+    assert.strictEqual(req.allowWrite, true);
+    assert.deepStrictEqual(req.followUps, ['Verify page']);
+});
+
+test('appendTaskChatMessage records sequential requests and invalidates stale plan', () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        taskOrchestration: {
+            chatDraft: 'Finish requirement 1',
+            target: '',
+            followUpsText: '',
+            selectedEngine: 'openai-chat',
+            runMode: 'write',
+            plan: { nodes: [{ id: 'stale' }] },
+            planFingerprint: 'stale-fingerprint',
+            planIssues: ['old issue'],
+            planWarnings: ['old warning'],
+            lastError: 'old error'
+        }
+    };
+
+    assert.strictEqual(methods.appendTaskChatMessage.call(context), true);
+    assert.strictEqual(context.taskOrchestration.target, 'Finish requirement 1');
+    assert.strictEqual(context.taskOrchestration.followUpsText, '');
+    assert.strictEqual(context.taskOrchestration.chatDraft, '');
+    assert.strictEqual(context.taskOrchestration.plan, null);
+    assert.strictEqual(context.taskOrchestration.planFingerprint, '');
+    assert.deepStrictEqual(context.taskOrchestration.planIssues, []);
+    assert.deepStrictEqual(context.taskOrchestration.planWarnings, []);
+    assert.strictEqual(context.taskOrchestration.lastError, '');
+
+    context.taskOrchestration.chatDraft = 'Then finish requirement 2 with the prior context';
+    assert.strictEqual(methods.appendTaskChatMessage.call(context), true);
+
+    const req = methods.buildTaskOrchestrationRequest.call(context);
+    assert.strictEqual(req.target, 'Finish requirement 1');
+    assert.deepStrictEqual(req.followUps, ['Then finish requirement 2 with the prior context']);
+});
+
+test('submitTaskOrchestrationChatMessage treats /plan as chat preview command', async () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const previewCalls = [];
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        appendTaskChatMessage: methods.appendTaskChatMessage,
+        previewTaskPlan(options) {
+            previewCalls.push(options);
+            return Promise.resolve({ ok: true });
+        },
+        showMessage(message, tone) {
+            throw new Error(`unexpected message: ${tone}:${message}`);
+        },
+        taskOrchestration: {
+            chatDraft: '/plan Finish requirement 1',
+            target: '',
+            followUpsText: '',
+            selectedEngine: 'openai-chat',
+            runMode: 'write',
+            plan: null,
+            planFingerprint: '',
+            planIssues: [],
+            planWarnings: [],
+            lastError: ''
+        }
+    };
+
+    const result = await methods.submitTaskOrchestrationChatMessage.call(context);
+
+    assert.deepStrictEqual(result, { ok: true });
+    assert.strictEqual(context.taskOrchestration.target, 'Finish requirement 1');
+    assert.strictEqual(context.taskOrchestration.followUpsText, '');
+    assert.strictEqual(context.taskOrchestration.chatDraft, '');
+    assert.deepStrictEqual(previewCalls, [{ silent: false }]);
+
+    context.taskOrchestration.chatDraft = '/plan';
+    const secondResult = await methods.submitTaskOrchestrationChatMessage.call(context);
+    assert.deepStrictEqual(secondResult, { ok: true });
+    assert.strictEqual(context.taskOrchestration.target, 'Finish requirement 1');
+    assert.strictEqual(context.taskOrchestration.followUpsText, '');
+    assert.deepStrictEqual(previewCalls, [{ silent: false }, { silent: false }]);
+});
+
+test('submitTaskOrchestrationChatMessage clears stale failed run detail before /plan preview', async () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        appendTaskChatMessage: methods.appendTaskChatMessage,
+        previewTaskPlan(options) {
+            const state = this.ensureTaskOrchestrationState();
+            assert.strictEqual(state.selectedRunId, '');
+            assert.strictEqual(state.selectedRunDetail, null);
+            assert.strictEqual(state.selectedRunError, '');
+            assert.strictEqual(state.workspaceTab, 'queue');
+            return Promise.resolve({ ok: true, options });
+        },
+        showMessage(message, tone) {
+            throw new Error(`unexpected message: ${tone}:${message}`);
+        },
+        taskOrchestration: {
+            chatDraft: '/plan Fix the orchestration preview',
+            target: '',
+            followUpsText: '',
+            selectedEngine: 'openai-chat',
+            runMode: 'write',
+            plan: null,
+            planFingerprint: '',
+            planIssues: [],
+            planWarnings: [],
+            selectedRunId: 'run-failed',
+            selectedRunDetail: { run: { status: 'failed', summary: '前置节点失败，已阻塞' } },
+            selectedRunError: '前置节点失败，已阻塞',
+            workspaceTab: 'detail',
+            lastError: ''
+        }
+    };
+
+    const result = await methods.submitTaskOrchestrationChatMessage.call(context);
+
+    assert.deepStrictEqual(result, { ok: true, options: { silent: false } });
+    assert.strictEqual(context.taskOrchestration.target, 'Fix the orchestration preview');
+});
+
+test('planAndRunTaskOrchestrationFromChat absorbs the current chat draft before starting work', async () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const calls = [];
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        appendTaskChatMessage: methods.appendTaskChatMessage,
+        async planAndRunTaskOrchestration() {
+            calls.push({
+                target: this.taskOrchestration.target,
+                followUpsText: this.taskOrchestration.followUpsText,
+                chatDraft: this.taskOrchestration.chatDraft
+            });
+            return { runId: 'run-started' };
+        },
+        showMessage(message, tone) {
+            throw new Error(`unexpected message: ${tone}:${message}`);
+        },
+        taskOrchestration: {
+            target: 'Finish requirement 1',
+            followUpsText: '',
+            chatDraft: 'Then execute requirement 2',
+            plan: { nodes: [{ id: 'stale' }] },
+            planFingerprint: 'stale',
+            planIssues: ['old issue'],
+            planWarnings: ['old warning'],
+            lastError: 'old error'
+        }
+    };
+
+    const result = await methods.planAndRunTaskOrchestrationFromChat.call(context);
+
+    assert.deepStrictEqual(result, { runId: 'run-started' });
+    assert.deepStrictEqual(calls, [
+        {
+            target: 'Finish requirement 1',
+            followUpsText: 'Then execute requirement 2',
+            chatDraft: ''
+        }
+    ]);
+    assert.strictEqual(context.taskOrchestration.plan, null);
+    assert.deepStrictEqual(context.taskOrchestration.planIssues, []);
+    assert.deepStrictEqual(context.taskOrchestration.planWarnings, []);
+});
+
+test('previewTaskPlanFromChat absorbs the current chat draft without starting work', async () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const previewCalls = [];
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        appendTaskChatMessage: methods.appendTaskChatMessage,
+        previewTaskPlan(options) {
+            previewCalls.push({
+                options,
+                target: this.taskOrchestration.target,
+                followUpsText: this.taskOrchestration.followUpsText,
+                chatDraft: this.taskOrchestration.chatDraft
+            });
+            return Promise.resolve({ ok: true, plan: { nodes: [{ id: 'plan-01' }], waves: [] } });
+        },
+        planAndRunTaskOrchestration() {
+            throw new Error('discuss plan must not start execution');
+        },
+        showMessage(message, tone) {
+            throw new Error(`unexpected message: ${tone}:${message}`);
+        },
+        taskOrchestration: {
+            target: '',
+            followUpsText: '',
+            chatDraft: '先探讨 Web Agent cockpit 方案，在明确授权前不要生成实现',
+            plan: { nodes: [{ id: 'stale' }] },
+            planFingerprint: 'stale',
+            planIssues: ['old issue'],
+            planWarnings: ['old warning'],
+            lastError: 'old error',
+            running: false,
+            planning: false
+        }
+    };
+
+    const result = await methods.previewTaskPlanFromChat.call(context);
+
+    assert.deepStrictEqual(result, { ok: true, plan: { nodes: [{ id: 'plan-01' }], waves: [] } });
+    assert.deepStrictEqual(previewCalls, [
+        {
+            options: { silent: false },
+            target: '先探讨 Web Agent cockpit 方案，在明确授权前不要生成实现',
+            followUpsText: '',
+            chatDraft: ''
+        }
+    ]);
+    assert.strictEqual(context.taskOrchestration.plan, null);
+    assert.deepStrictEqual(context.taskOrchestration.planIssues, []);
+    assert.deepStrictEqual(context.taskOrchestration.planWarnings, []);
+});
+
+test('previewTaskPlanFromChat rejects empty chat and empty task target', async () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const messages = [];
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        appendTaskChatMessage: methods.appendTaskChatMessage,
+        previewTaskPlan() {
+            throw new Error('should not preview without a task');
+        },
+        showMessage(message, tone) {
+            messages.push({ message, tone });
+        },
+        taskOrchestration: {
+            target: '',
+            followUpsText: '',
+            chatDraft: '   ',
+            running: false,
+            planning: false
+        }
+    };
+
+    const result = await methods.previewTaskPlanFromChat.call(context);
+
+    assert.strictEqual(result, null);
+    assert.deepStrictEqual(messages, [{ message: '先输入任务需求，再探讨方案', tone: 'error' }]);
+});
+
+test('planAndRunTaskOrchestrationFromChat rejects empty chat and empty task target', async () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const messages = [];
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        appendTaskChatMessage: methods.appendTaskChatMessage,
+        planAndRunTaskOrchestration() {
+            throw new Error('should not start without a task');
+        },
+        showMessage(message, tone) {
+            messages.push({ message, tone });
+        },
+        taskOrchestration: {
+            target: '',
+            followUpsText: '',
+            chatDraft: '   ',
+            running: false,
+            planning: false
+        }
+    };
+
+    const result = await methods.planAndRunTaskOrchestrationFromChat.call(context);
+
+    assert.strictEqual(result, null);
+    assert.deepStrictEqual(messages, [{ message: '先输入任务需求，再开始执行', tone: 'error' }]);
+});
+
+test('previewTaskPlan sends previewOnly without mutating normal run semantics', async () => {
+    const apiCalls = [];
+    const methods = createTaskOrchestrationMethods({
+        api: async (name, payload) => {
+            apiCalls.push({ name, payload });
+            return {
+                plan: { threadId: 'thread-preview', nodes: [{ id: 'plan-01' }], waves: [{ nodeIds: ['plan-01'] }] },
+                issues: [],
+                warnings: []
+            };
+        }
+    });
+    const messages = [];
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        buildTaskOrchestrationRequest: methods.buildTaskOrchestrationRequest,
+        buildTaskOrchestrationFingerprint: methods.buildTaskOrchestrationFingerprint,
+        showMessage(message, tone) {
+            messages.push({ message, tone });
+        },
+        taskOrchestration: {
+            target: 'Finish requirement 1',
+            followUpsText: '',
+            chatDraft: '',
+            selectedEngine: 'openai-chat',
+            runMode: 'write',
+            concurrency: 2,
+            autoFixRounds: 1,
+            workspacePath: '',
+            threadId: '',
+            plan: null,
+            planIssues: [],
+            planWarnings: [],
+            planFingerprint: '',
+            planning: false
+        }
+    };
+
+    const result = await methods.previewTaskPlan.call(context, { silent: false });
+
+    assert.strictEqual(result.plan.threadId, 'thread-preview');
+    assert.strictEqual(apiCalls.length, 1);
+    assert.strictEqual(apiCalls[0].name, 'task-plan');
+    assert.strictEqual(apiCalls[0].payload.target, 'Finish requirement 1');
+    assert.strictEqual(apiCalls[0].payload.previewOnly, true);
+    assert.strictEqual(apiCalls[0].payload.allowWrite, true);
+    assert.strictEqual(context.taskOrchestration.threadId, 'thread-preview');
+    assert.strictEqual(context.taskOrchestration.planFingerprint.includes('previewOnly'), false);
+    assert.deepStrictEqual(messages, [{ message: '任务计划已更新', tone: 'success' }]);
+});
+
+test('taskOrchestrationConversationMessages renders assistant-left and user-right sequence model', () => {
+    const computed = createMainTabsComputed();
+    const translations = {
+        'orchestration.chat.user.step': '需求 {count}',
+        'orchestration.chat.meta.first': '先完成这一条',
+        'orchestration.chat.meta.afterPrevious': '等待前一条完成后继续',
+        'orchestration.chat.assistant.sequenceReady': '已收到多条需求；执行时会先完成需求 1，再带着上下文继续后续需求。',
+        'orchestration.chat.meta.previewNext': '下一步：预览计划'
+    };
+    const context = {
+        t(key, params = {}) {
+            let value = translations[key] || key;
+            for (const [name, paramValue] of Object.entries(params || {})) {
+                value = value.replace(new RegExp(`\\{${name}\\}`, 'g'), String(paramValue));
+            }
+            return value;
+        },
+        taskOrchestration: {
+            target: '先做完需求 1',
+            followUpsText: '再做需求 2\n最后汇总结果',
+            selectedRunDetail: null,
+            plan: null
+        }
+    };
+
+    const messages = computed.taskOrchestrationConversationMessages.call(context);
+
+    assert.deepStrictEqual(messages.map((item) => item.role), ['user', 'user', 'user', 'assistant']);
+    assert.deepStrictEqual(messages.slice(0, 3).map((item) => item.label), ['需求 1', '需求 2', '需求 3']);
+    assert.strictEqual(messages[0].meta, '先完成这一条');
+    assert.strictEqual(messages[1].meta, '等待前一条完成后继续');
+    assert.match(messages[3].text, /先完成需求 1/);
+});
+
+test('task orchestration draft status exposes sequential request order', () => {
+    const computed = createMainTabsComputed();
+    const translations = {
+        'orchestration.readiness.sequence.label': '顺序',
+        'orchestration.readiness.sequence.multiple': '{count} 条需求会按顺序执行：先完成需求 1，再继续需求 2。',
+        'orchestration.readiness.preview.title': '建议先预览',
+        'orchestration.readiness.preview.sequenceSummary': '草稿已成形，已锁定 {count} 条顺序需求：先完成需求 1，再继续需求 2。'
+    };
+    const context = {
+        t(key, params = {}) {
+            let value = translations[key] || key;
+            for (const [name, paramValue] of Object.entries(params || {})) {
+                value = value.replace(new RegExp(`\{${name}\}`, 'g'), String(paramValue));
+            }
+            return value;
+        },
+        taskOrchestration: {
+            target: '需求 1：先修复入口',
+            followUpsText: '需求 2：再补测试\n需求 3：最后汇报',
+            selectedEngine: 'openai-chat',
+            runMode: 'write',
+            notes: '',
+            workflowIdsText: '',
+            plan: null,
+            planIssues: [],
+            planWarnings: []
+        }
+    };
+
+    const metrics = computed.taskOrchestrationDraftMetrics.call(context);
+    context.taskOrchestrationDraftMetrics = metrics;
+    const checklist = computed.taskOrchestrationDraftChecklist.call(context);
+    const readiness = computed.taskOrchestrationDraftReadiness.call(context);
+
+    assert.strictEqual(metrics.requestCount, 3);
+    assert.strictEqual(metrics.hasSequentialFollowUps, true);
+    const sequenceItem = checklist.find((item) => item.key === 'sequence');
+    assert(sequenceItem);
+    assert.strictEqual(sequenceItem.done, true);
+    assert.match(sequenceItem.detail, /3 条需求/);
+    assert.match(sequenceItem.detail, /先完成需求 1/);
+    assert.match(sequenceItem.detail, /需求 2/);
+    assert.strictEqual(readiness.title, '建议先预览');
+    assert.match(readiness.summary, /3 条顺序需求/);
+    assert.match(readiness.summary, /先完成需求 1/);
+    assert.match(readiness.summary, /需求 2/);
+});
+
+test('buildTaskOrchestrationRequest clears stale workflow ids outside workflow mode', () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const context = {
+        taskOrchestration: {
+            title: 'Continue normal run',
+            target: 'Add one more check',
+            notes: '',
+            workspacePath: '',
+            threadId: '',
+            followUpsText: '',
+            workflowIdsText: 'diagnose-config',
+            selectedEngine: 'openai-chat',
+            runMode: 'write',
+            concurrency: 2,
+            autoFixRounds: 1
+        },
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState
+    };
+
+    const req = methods.buildTaskOrchestrationRequest.call(context);
+
+    assert.strictEqual(req.engine, 'openai-chat');
+    assert.deepStrictEqual(req.workflowIds, []);
+    assert.strictEqual(context.taskOrchestration.workflowIdsText, '');
 });
 
 test('taskOrchestrationSelectedRunNodes prefers top-level detail nodes when present', () => {
@@ -1255,6 +1713,8 @@ test('taskOrchestrationQueueStats counts queue statuses in one pass without chan
                 { status: 'queued' },
                 { status: ' queued ' },
                 { status: 'running' },
+                { runStatus: 'running' },
+                { runStatus: 'queued' },
                 { status: 'FAILED' },
                 { status: 'ignored' }
             ]
@@ -1264,10 +1724,244 @@ test('taskOrchestrationQueueStats counts queue statuses in one pass without chan
     const stats = computed.taskOrchestrationQueueStats.call(context);
 
     assert.deepStrictEqual(stats, {
-        queued: 2,
-        running: 1,
+        queued: 3,
+        running: 2,
         failed: 1
     });
+});
+
+test('taskOrchestrationActiveQueue hides completed and failed queue history from workbench queue tab', () => {
+    const computed = createMainTabsComputed();
+    const queued = { taskId: 'task-queued', status: 'queued' };
+    const running = { taskId: 'task-running', status: 'RUNNING' };
+    const runStatusOnly = { taskId: 'task-run-status-only', runStatus: 'running' };
+    const context = {
+        taskOrchestration: {
+            queue: [
+                { taskId: 'task-completed', status: 'completed' },
+                queued,
+                { taskId: 'task-failed', status: 'failed' },
+                running,
+                runStatusOnly,
+                { taskId: 'task-cancelled', status: 'cancelled' }
+            ]
+        }
+    };
+
+    const activeQueue = computed.taskOrchestrationActiveQueue.call(context);
+
+    assert.deepStrictEqual(activeQueue, [queued, running, runStatusOnly]);
+});
+
+test('task orchestration workspace selectors derive projects and sessions from real queue and run records', () => {
+    const computed = createMainTabsComputed();
+    const context = {
+        taskOrchestration: {
+            workspacePath: '/repo/codexmate',
+            queue: [
+                {
+                    taskId: 'task-codexmate',
+                    status: 'queued',
+                    title: 'Continue PR #208',
+                    cwd: '/repo/codexmate',
+                    threadId: 'thread-codexmate',
+                    enqueuedAt: '2026-06-29T10:00:00Z'
+                },
+                {
+                    taskId: 'task-other',
+                    status: 'running',
+                    target: 'Other project task',
+                    cwd: '/repo/other',
+                    enqueuedAt: '2026-06-29T10:03:00Z'
+                }
+            ],
+            runs: [
+                {
+                    runId: 'run-codexmate',
+                    status: 'success',
+                    summary: 'Finished workspace rail',
+                    cwd: '/repo/codexmate',
+                    threadId: 'thread-codexmate',
+                    updatedAt: '2026-06-29T10:05:00Z'
+                },
+                {
+                    runId: 'run-other',
+                    status: 'failed',
+                    summary: 'Other failed run',
+                    cwd: '/repo/other',
+                    updatedAt: '2026-06-29T10:06:00Z'
+                }
+            ]
+        }
+    };
+
+    context.taskOrchestrationWorkspacePath = computed.taskOrchestrationWorkspacePath.call(context);
+    const workspaceItems = computed.taskOrchestrationWorkspaceItems.call(context);
+    const workspaceQueue = computed.taskOrchestrationWorkspaceQueue.call(context);
+    const workspaceRuns = computed.taskOrchestrationWorkspaceRuns.call(context);
+    context.taskOrchestrationWorkspacePath = '/repo/codexmate';
+    const sessions = computed.taskOrchestrationWorkspaceSessions.call(context);
+
+    assert.deepStrictEqual(workspaceItems.map((item) => item.path).sort(), ['/repo/codexmate', '/repo/other']);
+    assert.strictEqual(workspaceItems.find((item) => item.path === '/repo/codexmate').active, true);
+    assert.strictEqual(workspaceItems.find((item) => item.path === '/repo/codexmate').runCount, 1);
+    assert.strictEqual(workspaceItems.find((item) => item.path === '/repo/codexmate').queueCount, 1);
+    assert.deepStrictEqual(workspaceQueue.map((item) => item.taskId), ['task-codexmate']);
+    assert.deepStrictEqual(workspaceRuns.map((item) => item.runId), ['run-codexmate']);
+    assert.deepStrictEqual(sessions.map((item) => item.id), ['task-codexmate', 'run-codexmate']);
+    assert.strictEqual(sessions[0].type, 'queue');
+    assert.strictEqual(sessions[1].type, 'run');
+});
+
+test('task workspace actions switch projects, start clean sessions, and resume queue or run records', async () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const messages = [];
+    const detailCalls = [];
+    const continued = [];
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        syncTaskOrchestrationPolling() {},
+        showMessage(message, tone) {
+            messages.push({ message, tone });
+        },
+        async loadTaskRunDetail(runId, options) {
+            detailCalls.push({ runId, options });
+            this.taskOrchestration.selectedRunId = runId;
+            this.taskOrchestration.selectedRunDetail = {
+                run: { runId, status: 'success' },
+                cwd: '/repo/codexmate',
+                threadId: 'thread-run'
+            };
+        },
+        continueTaskThreadFromUi() {
+            continued.push(this.taskOrchestration.selectedRunId);
+        },
+        taskOrchestration: {
+            workspacePath: '/repo/old',
+            threadId: 'thread-old',
+            target: 'stale target',
+            chatDraft: 'stale draft',
+            title: 'stale title',
+            notes: 'stale notes',
+            followUpsText: 'stale follow-up',
+            plan: { nodes: [{ id: 'old' }] },
+            planFingerprint: 'old-fingerprint',
+            planIssues: ['old issue'],
+            planWarnings: ['old warning'],
+            selectedRunId: 'run-old',
+            selectedRunDetail: { cwd: '/repo/old', run: { runId: 'run-old' } },
+            selectedRunError: 'old error',
+            workspaceTab: 'detail',
+            lastError: 'old last error'
+        }
+    };
+
+    methods.selectTaskWorkspace.call(context, '/repo/codexmate/');
+    assert.strictEqual(context.taskOrchestration.workspacePath, '/repo/codexmate');
+    assert.strictEqual(context.taskOrchestration.workspaceTab, 'runs');
+    assert.strictEqual(context.taskOrchestration.selectedRunId, '');
+    assert.strictEqual(context.taskOrchestration.selectedRunDetail, null);
+    assert.deepStrictEqual(context.taskOrchestration.planIssues, []);
+
+    methods.startNewTaskWorkspaceSession.call(context);
+    assert.strictEqual(context.taskOrchestration.workspacePath, '/repo/codexmate');
+    assert.strictEqual(context.taskOrchestration.threadId, '');
+    assert.strictEqual(context.taskOrchestration.target, '');
+    assert.strictEqual(context.taskOrchestration.chatDraft, '');
+    assert.strictEqual(context.taskOrchestration.title, '');
+    assert.strictEqual(context.taskOrchestration.notes, '');
+    assert.strictEqual(context.taskOrchestration.followUpsText, '');
+    assert.strictEqual(context.taskOrchestration.workspaceTab, 'queue');
+    assert.strictEqual(context.taskOrchestration.lastError, '');
+
+    await methods.continueTaskWorkspaceSession.call(context, {
+        taskId: 'task-queued',
+        cwd: '/repo/codexmate',
+        threadId: 'thread-queued',
+        title: 'Queued task'
+    });
+    assert.strictEqual(context.taskOrchestration.workspacePath, '/repo/codexmate');
+    assert.strictEqual(context.taskOrchestration.threadId, 'thread-queued');
+    assert.strictEqual(context.taskOrchestration.title, 'Queued task');
+    assert.strictEqual(context.taskOrchestration.workspaceTab, 'queue');
+
+    await methods.continueTaskWorkspaceSession.call(context, {
+        runId: 'run-history',
+        cwd: '/repo/codexmate',
+        threadId: 'thread-run'
+    });
+    assert.deepStrictEqual(detailCalls, [{ runId: 'run-history', options: { silent: true, switchToDetail: true } }]);
+    assert.deepStrictEqual(continued, ['run-history']);
+    assert.strictEqual(messages[0].message, '已为当前工作区开始新会话');
+    assert.strictEqual(messages[1].message, '已恢复队列任务上下文: task-queued');
+});
+
+test('taskOrchestrationWorkbenchVisible ignores passive failed run history', () => {
+    const computed = createMainTabsComputed();
+    const context = {
+        taskOrchestrationActiveQueue: [],
+        taskOrchestration: {
+            runs: [
+                { runId: 'run-failed', status: 'failed', summary: '前置节点失败，已阻塞' }
+            ],
+            selectedRunId: '',
+            workspaceTab: 'queue',
+            selectedRunError: ''
+        }
+    };
+
+    assert.strictEqual(computed.taskOrchestrationWorkbenchVisible.call(context), false);
+
+    context.taskOrchestration.workspaceTab = 'runs';
+    assert.strictEqual(computed.taskOrchestrationWorkbenchVisible.call(context), true);
+
+    context.taskOrchestration.workspaceTab = 'queue';
+    context.taskOrchestration.selectedRunId = 'run-failed';
+    assert.strictEqual(computed.taskOrchestrationWorkbenchVisible.call(context), true);
+});
+
+test('taskOrchestrationEngineLabel presents OpenAI chat engine as Codex in the status strip', () => {
+    const computed = createMainTabsComputed();
+    const context = {
+        taskOrchestration: {
+            selectedEngine: 'openai-chat'
+        }
+    };
+
+    assert.strictEqual(computed.taskOrchestrationEngineLabel.call(context), 'Codex');
+
+    context.taskOrchestration.selectedEngine = 'workflow';
+    assert.strictEqual(computed.taskOrchestrationEngineLabel.call(context), 'Workflow');
+});
+
+test('loadTaskOrchestrationOverview does not auto-select latest failed run history', async () => {
+    const methods = createTaskOrchestrationMethods({
+        api: async (name) => {
+            assert.strictEqual(name, 'task-overview');
+            return {
+                runs: [{ runId: 'run-failed', status: 'failed', summary: '前置节点失败，已阻塞' }],
+                queue: [],
+                workflows: [],
+                warnings: []
+            };
+        }
+    });
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        loadTaskRunDetail() {
+            throw new Error('should not load detail for passive history');
+        },
+        isTaskRunActive: () => false,
+        showMessage() {},
+        syncTaskOrchestrationPolling() {}
+    };
+    context.taskOrchestration = methods.ensureTaskOrchestrationState.call(context);
+
+    await methods.loadTaskOrchestrationOverview.call(context, { silent: true, includeDetail: false });
+
+    assert.strictEqual(context.taskOrchestration.runs.length, 1);
+    assert.strictEqual(context.taskOrchestration.selectedRunId, '');
+    assert.strictEqual(context.taskOrchestration.selectedRunDetail, null);
 });
 
 test('startTaskQueueRunner surfaces already-running queue state distinctly', async () => {
@@ -1310,6 +2004,14 @@ test('loadTaskOrchestrationOverview keeps selected run detail when overview slic
                     runs: [{ runId: 'run-new', status: 'running' }],
                     queue: [],
                     workflows: [],
+                    openAiChatStatus: {
+                        ready: true,
+                        providerName: 'mock-openai',
+                        model: 'gpt-4.1-mini',
+                        endpoint: 'https://api.example.test/v1/chat/completions',
+                        hasApiKey: true,
+                        hasExtraHeaders: false
+                    },
                     warnings: []
                 };
             }
@@ -1331,6 +2033,67 @@ test('loadTaskOrchestrationOverview keeps selected run detail when overview slic
 
     assert.strictEqual(context.taskOrchestration.selectedRunId, 'run-old');
     assert.strictEqual(context.taskOrchestration.selectedRunDetail.run.runId, 'run-old');
+    assert.deepStrictEqual(context.taskOrchestration.openAiChatStatus, {
+        ready: true,
+        providerName: 'mock-openai',
+        model: 'gpt-4.1-mini',
+        endpoint: 'https://api.example.test/v1/chat/completions',
+        hasApiKey: true,
+        hasExtraHeaders: false
+    });
+});
+
+test('task orchestration detail helpers surface AI output and open OpenAI Chat config', () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const calls = [];
+    const context = {
+        mainTab: 'orchestration',
+        configMode: 'openclaw',
+        providersList: [{ name: 'mock-openai', hasKey: true }],
+        taskOrchestration: {
+            openAiChatStatus: { providerName: 'mock-openai' }
+        },
+        switchMainTab(tab) {
+            calls.push(['switchMainTab', tab]);
+            this.mainTab = tab;
+        },
+        openEditModal(provider) {
+            calls.push(['openEditModal', provider.name]);
+        }
+    };
+
+    assert.strictEqual(methods.formatTaskNodeOutputText.call(context, { output: { text: '  actual AI result  ' } }), 'actual AI result');
+    assert.strictEqual(methods.formatTaskNodeOutputText.call(context, { output: {} }), '(no output)');
+
+    methods.openTaskOpenAiChatConfig.call(context);
+
+    assert.strictEqual(context.mainTab, 'config');
+    assert.strictEqual(context.configMode, 'codex');
+    assert.deepStrictEqual(calls, [
+        ['switchMainTab', 'config'],
+        ['openEditModal', 'mock-openai']
+    ]);
+
+    const fallbackCalls = [];
+    methods.openTaskOpenAiChatConfig.call({
+        mainTab: 'orchestration',
+        configMode: 'openclaw',
+        providersList: [{ name: 'different-provider', hasKey: true }],
+        taskOrchestration: {
+            openAiChatStatus: { providerName: 'missing-provider' }
+        },
+        switchMainTab(tab) {
+            fallbackCalls.push(['switchMainTab', tab]);
+            this.mainTab = tab;
+        },
+        openAddProviderModal() {
+            fallbackCalls.push(['openAddProviderModal']);
+        }
+    });
+    assert.deepStrictEqual(fallbackCalls, [
+        ['switchMainTab', 'config'],
+        ['openAddProviderModal']
+    ]);
 });
 
 test('selectTaskRun switches workbench to detail and keeps latest detail response only', async () => {
@@ -1370,4 +2133,74 @@ test('selectTaskRun switches workbench to detail and keeps latest detail respons
 
     assert.strictEqual(context.taskOrchestration.selectedRunDetail.run.runId, 'run-2');
     assert.strictEqual(context.taskOrchestration.selectedRunError, '');
+});
+
+test('loadTaskRunDetail does not mutate draft thread or workspace', async () => {
+    const methods = createTaskOrchestrationMethods({
+        api: async (name) => {
+            assert.strictEqual(name, 'task-run-detail');
+            return {
+                run: { runId: 'run-history', status: 'success' },
+                threadId: 'thread-from-history',
+                cwd: '/tmp/history-workspace',
+                nodes: []
+            };
+        }
+    });
+    const context = {
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        showMessage() {},
+        syncTaskOrchestrationPolling() {}
+    };
+    context.taskOrchestration = methods.ensureTaskOrchestrationState.call(context);
+    context.taskOrchestration.threadId = 'draft-thread';
+    context.taskOrchestration.workspacePath = '/tmp/draft-workspace';
+
+    await methods.loadTaskRunDetail.call(context, 'run-history', { silent: true });
+
+    assert.strictEqual(context.taskOrchestration.selectedRunDetail.threadId, 'thread-from-history');
+    assert.strictEqual(context.taskOrchestration.threadId, 'draft-thread');
+    assert.strictEqual(context.taskOrchestration.workspacePath, '/tmp/draft-workspace');
+});
+
+test('continueTaskThreadFromUi inherits selected run workspace and thread', () => {
+    const methods = createTaskOrchestrationMethods({ api: async () => ({}) });
+    const messages = [];
+    const context = {
+        taskOrchestration: {
+            selectedRunDetail: {
+                threadId: 'thread-existing',
+                cwd: '/tmp/existing-workspace',
+                title: 'Existing task',
+                target: 'Create 2048 page',
+                engine: 'openai-chat',
+                allowWrite: true,
+                dryRun: false
+            },
+            selectedEngine: 'workflow',
+            workflowIdsText: 'diagnose-config',
+            runMode: 'read',
+            plan: { nodes: [{ id: 'old' }] },
+            planIssues: ['old issue'],
+            planWarnings: ['old warning']
+        },
+        ensureTaskOrchestrationState: methods.ensureTaskOrchestrationState,
+        showMessage(message, tone) {
+            messages.push({ message, tone });
+        }
+    };
+
+    methods.continueTaskThreadFromUi.call(context);
+
+    assert.strictEqual(context.taskOrchestration.threadId, 'thread-existing');
+    assert.strictEqual(context.taskOrchestration.workspacePath, '/tmp/existing-workspace');
+    assert.strictEqual(context.taskOrchestration.title, '');
+    assert.strictEqual(context.taskOrchestration.target, '');
+    assert.strictEqual(context.taskOrchestration.selectedEngine, 'openai-chat');
+    assert.strictEqual(context.taskOrchestration.workflowIdsText, '');
+    assert.strictEqual(context.taskOrchestration.runMode, 'write');
+    assert.strictEqual(context.taskOrchestration.chatDraft, '');
+    assert.strictEqual(context.taskOrchestration.plan, null);
+    assert.deepStrictEqual(context.taskOrchestration.planIssues, []);
+    assert.deepStrictEqual(messages, [{ message: '已继承该任务的会话与工作区，可继续追加要求', tone: 'success' }]);
 });

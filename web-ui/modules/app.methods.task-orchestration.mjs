@@ -7,11 +7,14 @@ function createDefaultTaskOrchestrationState() {
         queueStarting: false,
         retrying: false,
         target: '',
+        chatDraft: '',
         title: '',
         notes: '',
+        workspacePath: '',
+        threadId: '',
         followUpsText: '',
         workflowIdsText: '',
-        selectedEngine: 'codex',
+        selectedEngine: 'openai-chat',
         runMode: 'write',
         concurrency: 2,
         autoFixRounds: 1,
@@ -20,6 +23,7 @@ function createDefaultTaskOrchestrationState() {
         planIssues: [],
         planWarnings: [],
         overviewWarnings: [],
+        openAiChatStatus: null,
         workflows: [],
         queue: [],
         runs: [],
@@ -29,6 +33,7 @@ function createDefaultTaskOrchestrationState() {
         selectedRunLoading: false,
         selectedRunError: '',
         detailRequestToken: 0,
+        settingsOpen: false,
         lastLoadedAt: '',
         lastError: ''
     };
@@ -39,6 +44,81 @@ function normalizeLines(text) {
         .split(/\r?\n/g)
         .map((item) => item.trim())
         .filter(Boolean);
+}
+
+let taskOrchestrationScrollObserver = null;
+
+function scrollTaskOrchestrationThreadToEnd() {
+    if (typeof document === 'undefined') {
+        return;
+    }
+    const alignLatestCard = (remainingAttempts = 20) => {
+        const panel = document.querySelector('#panel-orchestration');
+        const thread = panel && panel.querySelector('.task-chat-thread');
+        if (!panel || !thread) {
+            return;
+        }
+        const latestCard = Array.from(panel.querySelectorAll('.task-thread-plan-request, .task-thread-message-card')).pop()
+            || thread.lastElementChild;
+        if (latestCard && Number.isFinite(latestCard.offsetTop)) {
+            if (thread.contains(latestCard)) {
+                thread.scrollTop = Math.max(0, latestCard.offsetTop - thread.offsetTop - 12);
+            }
+            const composer = document.querySelector('#panel-orchestration .task-thread-composer');
+            const composerRect = composer && typeof composer.getBoundingClientRect === 'function'
+                ? composer.getBoundingClientRect()
+                : null;
+            const latestRect = typeof latestCard.getBoundingClientRect === 'function'
+                ? latestCard.getBoundingClientRect()
+                : null;
+            if (composerRect && latestRect) {
+                const safeBottom = composerRect.top - 20;
+                const overlap = latestRect.bottom - safeBottom;
+                if (overlap > 0) {
+                    let scrollElement = latestCard.parentElement;
+                    while (scrollElement && scrollElement !== document.body) {
+                        const style = window.getComputedStyle(scrollElement);
+                        const canScroll = /(auto|scroll)/.test(style.overflowY) && scrollElement.scrollHeight > scrollElement.clientHeight;
+                        if (canScroll) {
+                            break;
+                        }
+                        scrollElement = scrollElement.parentElement;
+                    }
+                    if (!scrollElement || scrollElement === document.body) {
+                        scrollElement = document.scrollingElement || document.documentElement;
+                    }
+                    const maxScrollTop = Math.max(0, scrollElement.scrollHeight - scrollElement.clientHeight);
+                    const targetScrollTop = Math.min(maxScrollTop, scrollElement.scrollTop + overlap);
+                    if (targetScrollTop > scrollElement.scrollTop) {
+                        scrollElement.scrollTo({ top: targetScrollTop, behavior: 'auto' });
+                    }
+                }
+            }
+            if (remainingAttempts > 0) {
+                setTimeout(() => alignLatestCard(remainingAttempts - 1), 160);
+            }
+            return;
+        }
+        thread.scrollTop = thread.scrollHeight;
+        if (remainingAttempts > 0) {
+            setTimeout(() => alignLatestCard(remainingAttempts - 1), 160);
+        }
+    };
+    setTimeout(() => alignLatestCard(), 0);
+    const panel = document.querySelector('#panel-orchestration');
+    if (panel && typeof MutationObserver !== 'undefined') {
+        if (taskOrchestrationScrollObserver) {
+            taskOrchestrationScrollObserver.disconnect();
+        }
+        taskOrchestrationScrollObserver = new MutationObserver(() => alignLatestCard(2));
+        taskOrchestrationScrollObserver.observe(panel, { childList: true, subtree: true });
+        setTimeout(() => {
+            if (taskOrchestrationScrollObserver) {
+                taskOrchestrationScrollObserver.disconnect();
+                taskOrchestrationScrollObserver = null;
+            }
+        }, 4000);
+    }
 }
 
 function normalizePositiveInteger(value, fallback, min = 1, max = 8) {
@@ -69,6 +149,12 @@ function normalizeTaskRunMode(value) {
     return 'write';
 }
 
+function normalizeTaskSelectedEngine(value) {
+    const normalized = String(value || '').trim().toLowerCase().replace(/[\s_]+/g, '-');
+    if (normalized === 'workflow') return 'workflow';
+    return 'openai-chat';
+}
+
 function buildRunModeFlags(runMode) {
     const normalized = normalizeTaskRunMode(runMode);
     return {
@@ -76,6 +162,21 @@ function buildRunModeFlags(runMode) {
         allowWrite: normalized === 'write',
         dryRun: normalized === 'dry-run'
     };
+}
+
+function clearTaskRunSelectionForDraft(state) {
+    if (!state || typeof state !== 'object') {
+        return;
+    }
+    state.selectedRunId = '';
+    state.selectedRunDetail = null;
+    state.selectedRunError = '';
+    state.selectedRunLoading = false;
+    state.workspaceTab = 'queue';
+}
+
+function normalizeTaskWorkspaceInputPath(value) {
+    return String(value || '').trim().replace(/\\+/g, '/').replace(/\/$/, '');
 }
 
 export function createTaskOrchestrationMethods(options = {}) {
@@ -92,6 +193,8 @@ export function createTaskOrchestrationMethods(options = {}) {
                     }
                 }
                 current.runMode = normalizeTaskRunMode(current.runMode);
+                current.selectedEngine = normalizeTaskSelectedEngine(current.selectedEngine);
+                current.chatDraft = String(current.chatDraft || '');
                 return current;
             }
             this.taskOrchestration = createDefaultTaskOrchestrationState();
@@ -101,13 +204,20 @@ export function createTaskOrchestrationMethods(options = {}) {
         buildTaskOrchestrationRequest() {
             const state = this.ensureTaskOrchestrationState();
             const flags = buildRunModeFlags(state.runMode);
+            const selectedEngine = normalizeTaskSelectedEngine(state.selectedEngine);
+            const workflowIds = selectedEngine === 'workflow' ? normalizeLines(state.workflowIdsText) : [];
+            if (selectedEngine !== 'workflow' && state.workflowIdsText) {
+                state.workflowIdsText = '';
+            }
             return {
                 title: String(state.title || '').trim(),
                 target: String(state.target || '').trim(),
                 notes: String(state.notes || '').trim(),
+                cwd: String(state.workspacePath || '').trim(),
+                threadId: String(state.threadId || '').trim(),
                 followUps: normalizeLines(state.followUpsText),
-                workflowIds: normalizeLines(state.workflowIdsText),
-                engine: String(state.selectedEngine || 'codex').trim().toLowerCase() === 'workflow' ? 'workflow' : 'codex',
+                workflowIds,
+                engine: selectedEngine,
                 allowWrite: flags.allowWrite,
                 dryRun: flags.dryRun,
                 concurrency: normalizePositiveInteger(state.concurrency, 2, 1, 8),
@@ -121,6 +231,8 @@ export function createTaskOrchestrationMethods(options = {}) {
                 title: req.title,
                 target: req.target,
                 notes: req.notes,
+                cwd: req.cwd,
+                threadId: req.threadId,
                 followUps: req.followUps,
                 workflowIds: req.workflowIds,
                 engine: req.engine,
@@ -149,6 +261,33 @@ export function createTaskOrchestrationMethods(options = {}) {
                 return '(no logs)';
             }
             return logs.map((item) => `${item && item.at ? item.at : ''} ${item && item.level ? item.level : ''} ${item && item.message ? item.message : ''}`.trim()).join('\n');
+        },
+
+        formatTaskNodeOutputText(node) {
+            const output = node && node.output && typeof node.output === 'object' ? node.output : null;
+            const text = output && typeof output.text === 'string' ? output.text.trim() : '';
+            return text || '(no output)';
+        },
+
+        openTaskOpenAiChatConfig() {
+            if (typeof this.switchMainTab === 'function') {
+                this.switchMainTab('config');
+            } else {
+                this.mainTab = 'config';
+            }
+            this.configMode = 'codex';
+            const status = this.taskOrchestration && this.taskOrchestration.openAiChatStatus
+                ? this.taskOrchestration.openAiChatStatus
+                : null;
+            const providerName = status && typeof status.providerName === 'string' ? status.providerName.trim() : '';
+            const provider = providerName && Array.isArray(this.providersList)
+                ? this.providersList.find((item) => item && item.name === providerName)
+                : null;
+            if (provider && typeof this.openEditModal === 'function') {
+                this.openEditModal(provider);
+            } else if (typeof this.openAddProviderModal === 'function') {
+                this.openAddProviderModal();
+            }
         },
 
         appendTaskWorkflowId(workflowId) {
@@ -188,11 +327,11 @@ export function createTaskOrchestrationMethods(options = {}) {
                 state.workflows = Array.isArray(res && res.workflows) ? res.workflows : [];
                 state.queue = Array.isArray(res && res.queue) ? res.queue : [];
                 state.runs = Array.isArray(res && res.runs) ? res.runs : [];
+                state.openAiChatStatus = res && res.openAiChatStatus && typeof res.openAiChatStatus === 'object'
+                    ? res.openAiChatStatus
+                    : null;
                 state.overviewWarnings = Array.isArray(res && res.warnings) ? res.warnings : [];
                 state.lastLoadedAt = new Date().toISOString();
-                if (!state.selectedRunId && state.runs.length > 0) {
-                    state.selectedRunId = state.runs[0].runId || '';
-                }
                 const shouldRefreshSelectedDetail = !!state.selectedRunId
                     && (options.includeDetail !== false
                         || (state.selectedRunDetail && this.isTaskRunActive(state.selectedRunDetail && state.selectedRunDetail.run && state.selectedRunDetail.run.status)));
@@ -213,18 +352,74 @@ export function createTaskOrchestrationMethods(options = {}) {
             }
         },
 
+        appendTaskChatMessage() {
+            const state = this.ensureTaskOrchestrationState();
+            const message = String(state.chatDraft || '').trim();
+            if (!message) {
+                return false;
+            }
+            if (!String(state.target || '').trim()) {
+                state.target = message;
+            } else {
+                const existing = normalizeLines(state.followUpsText);
+                state.followUpsText = existing.concat(message).join('\n');
+            }
+            state.chatDraft = '';
+            state.plan = null;
+            state.planFingerprint = '';
+            state.planIssues = [];
+            state.planWarnings = [];
+            state.lastError = '';
+            clearTaskRunSelectionForDraft(state);
+            scrollTaskOrchestrationThreadToEnd();
+            return true;
+        },
+
+        async submitTaskOrchestrationChatMessage() {
+            const state = this.ensureTaskOrchestrationState();
+            const rawMessage = String(state.chatDraft || '').trim();
+            if (!rawMessage) {
+                return false;
+            }
+            const planCommand = rawMessage.match(/^\/plan(?:\s+([\s\S]*))?$/i);
+            if (!planCommand) {
+                return this.appendTaskChatMessage();
+            }
+            const planTarget = String(planCommand[1] || '').trim();
+            if (planTarget) {
+                state.chatDraft = planTarget;
+                if (!this.appendTaskChatMessage()) {
+                    return false;
+                }
+            } else if (!String(state.target || '').trim()) {
+                this.showMessage('先输入任务需求，再发送 /plan', 'error');
+                return false;
+            } else {
+                state.chatDraft = '';
+            }
+            return this.previewTaskPlan({ silent: false });
+        },
+
         async previewTaskPlan(options = {}) {
             const state = this.ensureTaskOrchestrationState();
             if (state.planning) {
                 return null;
             }
+            clearTaskRunSelectionForDraft(state);
             state.planning = true;
             try {
-                const res = await api('task-plan', this.buildTaskOrchestrationRequest());
+                const res = await api('task-plan', {
+                    ...this.buildTaskOrchestrationRequest(),
+                    previewOnly: true
+                });
                 state.plan = res && res.plan ? res.plan : null;
+                if (state.plan && state.plan.threadId && !state.threadId) {
+                    state.threadId = state.plan.threadId;
+                }
                 state.planIssues = Array.isArray(res && res.issues) ? res.issues : [];
                 state.planWarnings = Array.isArray(res && res.warnings) ? res.warnings : [];
                 state.planFingerprint = state.plan ? this.buildTaskOrchestrationFingerprint() : '';
+                scrollTaskOrchestrationThreadToEnd();
                 if (res && res.error) {
                     if (!options.silent) {
                         this.showMessage(res.error, 'error');
@@ -249,6 +444,24 @@ export function createTaskOrchestrationMethods(options = {}) {
             }
         },
 
+        async previewTaskPlanFromChat() {
+            const state = this.ensureTaskOrchestrationState();
+            if (state.planning || state.running) {
+                return null;
+            }
+            if (String(state.chatDraft || '').trim()) {
+                const appended = this.appendTaskChatMessage();
+                if (!appended) {
+                    return null;
+                }
+            }
+            if (!String(state.target || '').trim()) {
+                this.showMessage('先输入任务需求，再探讨方案', 'error');
+                return null;
+            }
+            return this.previewTaskPlan({ silent: false });
+        },
+
         async runTaskOrchestration() {
             const state = this.ensureTaskOrchestrationState();
             if (state.running) {
@@ -265,6 +478,9 @@ export function createTaskOrchestrationMethods(options = {}) {
                     return res;
                 }
                 state.selectedRunId = res.runId || state.selectedRunId;
+                if (res && res.threadId) {
+                    state.threadId = res.threadId;
+                }
                 await this.loadTaskOrchestrationOverview({ silent: true, includeDetail: false });
                 if (state.selectedRunId) {
                     await this.loadTaskRunDetail(state.selectedRunId, { silent: true });
@@ -294,6 +510,9 @@ export function createTaskOrchestrationMethods(options = {}) {
                         this.showMessage(res.error, 'error');
                     }
                     return res;
+                }
+                if (res && res.task && res.task.threadId) {
+                    state.threadId = res.task.threadId;
                 }
                 if (!options.deferRefresh) {
                     await this.loadTaskOrchestrationOverview({ silent: true, includeDetail: false });
@@ -338,6 +557,24 @@ export function createTaskOrchestrationMethods(options = {}) {
                 return { error: 'Plan has blocking issues' };
             }
             return this.runTaskOrchestration();
+        },
+
+        async planAndRunTaskOrchestrationFromChat() {
+            const state = this.ensureTaskOrchestrationState();
+            if (state.running || state.planning) {
+                return null;
+            }
+            if (String(state.chatDraft || '').trim()) {
+                const appended = this.appendTaskChatMessage();
+                if (!appended) {
+                    return null;
+                }
+            }
+            if (!String(state.target || '').trim()) {
+                this.showMessage('先输入任务需求，再开始执行', 'error');
+                return null;
+            }
+            return this.planAndRunTaskOrchestration();
         },
 
         async queueTaskOrchestrationAndStart() {
@@ -418,6 +655,7 @@ export function createTaskOrchestrationMethods(options = {}) {
                 }
                 state.selectedRunDetail = res;
                 state.selectedRunError = '';
+                scrollTaskOrchestrationThreadToEnd();
                 this.syncTaskOrchestrationPolling();
                 return res;
             } catch (error) {
@@ -441,6 +679,76 @@ export function createTaskOrchestrationMethods(options = {}) {
             return this.loadTaskRunDetail(runId, { silent: false, switchToDetail: true });
         },
 
+        selectTaskWorkspace(workspacePath) {
+            const state = this.ensureTaskOrchestrationState();
+            const nextWorkspacePath = normalizeTaskWorkspaceInputPath(workspacePath);
+            const previousWorkspacePath = normalizeTaskWorkspaceInputPath(state.workspacePath);
+            state.workspacePath = nextWorkspacePath;
+            state.workspaceTab = 'runs';
+            if (nextWorkspacePath !== previousWorkspacePath) {
+                state.plan = null;
+                state.planFingerprint = '';
+                state.planIssues = [];
+                state.planWarnings = [];
+                const selectedDetailWorkspacePath = normalizeTaskWorkspaceInputPath(state.selectedRunDetail && state.selectedRunDetail.cwd);
+                if (selectedDetailWorkspacePath && selectedDetailWorkspacePath !== nextWorkspacePath) {
+                    state.selectedRunId = '';
+                    state.selectedRunDetail = null;
+                    state.selectedRunError = '';
+                }
+            }
+            this.syncTaskOrchestrationPolling();
+        },
+
+        startNewTaskWorkspaceSession(workspacePath = '') {
+            const state = this.ensureTaskOrchestrationState();
+            const selectedWorkspacePath = normalizeTaskWorkspaceInputPath(workspacePath || state.workspacePath || (state.selectedRunDetail && state.selectedRunDetail.cwd));
+            state.workspacePath = selectedWorkspacePath;
+            state.threadId = '';
+            state.target = '';
+            state.chatDraft = '';
+            state.title = '';
+            state.notes = '';
+            state.followUpsText = '';
+            state.plan = null;
+            state.planFingerprint = '';
+            state.planIssues = [];
+            state.planWarnings = [];
+            state.selectedRunId = '';
+            state.selectedRunDetail = null;
+            state.selectedRunError = '';
+            state.selectedRunLoading = false;
+            state.workspaceTab = 'queue';
+            state.lastError = '';
+            this.showMessage(selectedWorkspacePath ? '已为当前工作区开始新会话' : '已开始新任务会话', 'success');
+            scrollTaskOrchestrationThreadToEnd();
+            this.syncTaskOrchestrationPolling();
+        },
+
+        async continueTaskWorkspaceSession(session) {
+            const item = session && typeof session === 'object' ? session : {};
+            const workspacePath = normalizeTaskWorkspaceInputPath(item.cwd || item.workspacePath || '');
+            const threadId = String(item.threadId || '').trim();
+            const runId = String(item.runId || '').trim();
+            const taskId = String(item.taskId || '').trim();
+            const state = this.ensureTaskOrchestrationState();
+            if (workspacePath) state.workspacePath = workspacePath;
+            if (threadId) state.threadId = threadId;
+            if (runId) {
+                await this.loadTaskRunDetail(runId, { silent: true, switchToDetail: true });
+                this.continueTaskThreadFromUi();
+                return;
+            }
+            state.selectedRunId = '';
+            state.selectedRunDetail = null;
+            state.selectedRunError = '';
+            state.workspaceTab = 'queue';
+            state.title = String(item.title || state.title || '').trim();
+            this.showMessage(taskId ? `已恢复队列任务上下文: ${taskId}` : '已恢复会话上下文', 'success');
+            scrollTaskOrchestrationThreadToEnd();
+            this.syncTaskOrchestrationPolling();
+        },
+
         async retryTaskRunFromUi(runId) {
             const state = this.ensureTaskOrchestrationState();
             const normalizedRunId = String(runId || '').trim();
@@ -455,6 +763,9 @@ export function createTaskOrchestrationMethods(options = {}) {
                     return res;
                 }
                 state.selectedRunId = res.runId || state.selectedRunId;
+                if (res && res.threadId) {
+                    state.threadId = res.threadId;
+                }
                 await this.loadTaskOrchestrationOverview({ silent: true, includeDetail: false });
                 if (state.selectedRunId) {
                     await this.loadTaskRunDetail(state.selectedRunId, { silent: true });
@@ -494,6 +805,31 @@ export function createTaskOrchestrationMethods(options = {}) {
                 this.showMessage(message, 'error');
                 return { error: message };
             }
+        },
+
+        continueTaskThreadFromUi() {
+            const state = this.ensureTaskOrchestrationState();
+            const detail = state.selectedRunDetail && typeof state.selectedRunDetail === 'object' ? state.selectedRunDetail : null;
+            if (!detail) {
+                return;
+            }
+            const continuedEngine = normalizeTaskSelectedEngine(detail.engine || state.selectedEngine || 'openai-chat');
+            state.threadId = String(detail.threadId || state.threadId || '').trim();
+            state.workspacePath = String(detail.cwd || state.workspacePath || '').trim();
+            state.title = '';
+            state.target = '';
+            state.selectedEngine = continuedEngine;
+            state.workflowIdsText = continuedEngine === 'workflow'
+                ? (Array.isArray(detail.plan && detail.plan.workflowIds) ? detail.plan.workflowIds.join('\n') : '')
+                : '';
+            state.runMode = detail.dryRun ? 'dry-run' : (detail.allowWrite ? 'write' : 'read');
+            state.notes = '';
+            state.followUpsText = '';
+            state.chatDraft = '';
+            state.plan = null;
+            state.planIssues = [];
+            state.planWarnings = [];
+            this.showMessage('已继承该任务的会话与工作区，可继续追加要求', 'success');
         },
 
         taskOrchestrationHasLiveActivity() {
@@ -538,11 +874,14 @@ export function createTaskOrchestrationMethods(options = {}) {
         resetTaskOrchestrationDraft() {
             const state = this.ensureTaskOrchestrationState();
             state.target = '';
+            state.chatDraft = '';
             state.title = '';
             state.notes = '';
+            state.workspacePath = '';
+            state.threadId = '';
             state.followUpsText = '';
             state.workflowIdsText = '';
-            state.selectedEngine = 'codex';
+            state.selectedEngine = 'openai-chat';
             state.runMode = 'write';
             state.concurrency = 2;
             state.autoFixRounds = 1;

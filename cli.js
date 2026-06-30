@@ -73,8 +73,15 @@ const {
     truncateText: truncateTaskText,
     buildTaskPlan,
     validateTaskPlan,
-    executeTaskPlan
+    executeTaskPlan,
+    computePlanWaves
 } = require('./lib/task-orchestrator');
+const {
+    buildWorkspaceChatContext,
+    loadWorkspaceChatThread,
+    appendWorkspaceChatThread,
+    applyWorkspaceFileOperations
+} = require('./lib/task-workspace-chat');
 const {
     readAutomationConfig,
     matchAutomationRule,
@@ -258,6 +265,9 @@ const TASK_RUNS_FILE = path.join(CONFIG_DIR, 'codexmate-task-runs.jsonl');
 const TASK_RUN_DETAILS_DIR = path.join(CONFIG_DIR, 'codexmate-task-runs');
 const TASK_QUEUE_WORKER_FILE = path.join(CONFIG_DIR, 'codexmate-task-queue-worker.json');
 const TASK_ARTIFACTS_DIR = path.join(CONFIG_DIR, 'codexmate-task-artifacts');
+const TASK_WORKSPACE_CHAT_THREADS_DIR = path.join(CONFIG_DIR, 'codexmate-task-chat-threads');
+const TASK_OPENAI_CHAT_TIMEOUT_MS = 180000;
+const TASK_OPENAI_CHAT_MAX_RESPONSE_BYTES = 4 * 1024 * 1024;
 const AUTOMATION_CONFIG_FILE = path.join(CONFIG_DIR, 'codexmate-automation.json');
 const DEFAULT_CLAUDE_MODEL = 'glm-4.7';
 const DEFAULT_MODEL_CONTEXT_WINDOW = 190000;
@@ -13015,6 +13025,8 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                                         detached: true,
                                         taskId,
                                         runId,
+                                        threadId: plan.threadId || '',
+                                        cwd: plan.cwd || '',
                                         warnings: validation.warnings || []
                                     };
                                 } else {
@@ -13859,7 +13871,11 @@ function printTaskHelp() {
     console.log('  --allow-write           允许写入工作区');
     console.log('  --dry-run               仅计划/预演，不执行写入');
     console.log('  --plan-only             仅输出计划，不执行');
-    console.log('  --engine <codex|workflow>  选择编排引擎');
+    console.log('  --engine <openai-chat|workflow>  选择编排引擎');
+    console.log('  --cwd <路径>           指定任务工作区路径');
+    console.log('  --thread-id <ID>       指定任务线程 ID');
+    console.log('  --conversation-id <ID> 指定任务线程 ID（兼容别名）');
+    console.log('  --session-id <ID>      指定任务线程 ID（兼容别名）');
     console.log('  --concurrency <N>       并发度');
     console.log('  --auto-fix-rounds <N>   自动修复回合数');
     console.log('  --limit <N>             runs/queue list 数量');
@@ -13882,7 +13898,7 @@ function parseTaskCliOptions(args = []) {
         allowWrite: false,
         dryRun: false,
         planOnly: false,
-        engine: 'codex',
+        engine: 'openai-chat',
         concurrency: 2,
         autoFixRounds: 1,
         limit: 20,
@@ -14029,6 +14045,38 @@ function parseTaskCliOptions(args = []) {
             options.explicit.autoFixRounds = true;
             continue;
         }
+        if (arg === '--cwd') {
+            options.cwd = String(args[i + 1] || '').trim();
+            options.explicit.cwd = true;
+            i += 1;
+            continue;
+        }
+        if (arg.startsWith('--cwd=')) {
+            options.cwd = arg.slice('--cwd='.length).trim();
+            options.explicit.cwd = true;
+            continue;
+        }
+        if (arg === '--thread-id' || arg === '--conversation-id' || arg === '--session-id') {
+            options.threadId = String(args[i + 1] || '').trim();
+            options.explicit.threadId = true;
+            i += 1;
+            continue;
+        }
+        if (arg.startsWith('--thread-id=')) {
+            options.threadId = arg.slice('--thread-id='.length).trim();
+            options.explicit.threadId = true;
+            continue;
+        }
+        if (arg.startsWith('--conversation-id=')) {
+            options.threadId = arg.slice('--conversation-id='.length).trim();
+            options.explicit.threadId = true;
+            continue;
+        }
+        if (arg.startsWith('--session-id=')) {
+            options.threadId = arg.slice('--session-id='.length).trim();
+            options.explicit.threadId = true;
+            continue;
+        }
         if (arg === '--limit') {
             const value = parseInt(args[i + 1], 10);
             if (Number.isFinite(value)) options.limit = value;
@@ -14086,9 +14134,11 @@ function buildTaskCliPayload(options = {}, rest = []) {
     if (explicit.followUps && Array.isArray(options.followUps)) payload.followUps = options.followUps.slice();
     if (explicit.allowWrite) payload.allowWrite = options.allowWrite === true;
     if (explicit.dryRun) payload.dryRun = options.dryRun === true;
-    if (explicit.engine) payload.engine = options.engine || 'codex';
+    if (explicit.engine) payload.engine = options.engine || 'openai-chat';
     if (explicit.concurrency) payload.concurrency = options.concurrency;
     if (explicit.autoFixRounds) payload.autoFixRounds = options.autoFixRounds;
+    if (explicit.cwd && options.cwd) payload.cwd = options.cwd;
+    if (explicit.threadId && options.threadId) payload.threadId = options.threadId;
     if (explicit.taskId && options.taskId) payload.taskId = options.taskId;
     if (explicit.runId && options.runId) payload.runId = options.runId;
     if (!payload.target && Array.isArray(rest) && rest.length > 0) {
@@ -14102,7 +14152,7 @@ function buildTaskCliPayload(options = {}, rest = []) {
 
 function printTaskPlanSummary(plan, warnings = []) {
     console.log(`\n任务计划: ${plan.title || '(untitled)'}`);
-    console.log(`  engine: ${plan.engine || 'codex'}`);
+    console.log(`  engine: ${plan.engine || 'openai-chat'}`);
     console.log(`  allowWrite: ${plan.allowWrite === true ? 'yes' : 'no'}`);
     console.log(`  dryRun: ${plan.dryRun === true ? 'yes' : 'no'}`);
     console.log(`  concurrency: ${plan.concurrency || 1}`);
@@ -15556,6 +15606,10 @@ function createTaskRunId() {
     return `tr-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
 }
 
+function createTaskThreadId() {
+    return `tt-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
+}
+
 function validateTaskRunId(value) {
     const runId = typeof value === 'string' ? value.trim() : '';
     if (!runId) {
@@ -15567,9 +15621,19 @@ function validateTaskRunId(value) {
     return { ok: true, error: '', runId };
 }
 
+function normalizeTaskThreadId(value) {
+    const threadId = typeof value === 'string' ? value.trim() : '';
+    if (!threadId) {
+        return '';
+    }
+    return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(threadId) ? threadId : '';
+}
+
 function normalizeTaskEngine(value) {
-    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    return normalized === 'workflow' ? 'workflow' : 'codex';
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase().replace(/[\s_/]+/g, '-') : '';
+    if (normalized === 'workflow') return 'workflow';
+    // Legacy task plans used `codex`; new task execution uses the configured OpenAI Chat-compatible provider.
+    return 'openai-chat';
 }
 
 function normalizeTaskFollowUps(input = []) {
@@ -15610,6 +15674,7 @@ function normalizeTaskPlanRequest(params = {}) {
         : (typeof source.followUp === 'string' && source.followUp.trim() ? [source.followUp.trim()] : []);
     return {
         id: typeof source.id === 'string' ? source.id.trim() : '',
+        threadId: normalizeTaskThreadId(source.threadId || source.conversationId || source.sessionId),
         title: typeof source.title === 'string' ? source.title.trim() : '',
         target: typeof source.target === 'string' ? source.target.trim() : '',
         notes: typeof source.notes === 'string' ? source.notes.trim() : '',
@@ -15619,6 +15684,7 @@ function normalizeTaskPlanRequest(params = {}) {
         dryRun: source.dryRun === true,
         concurrency: Number.isFinite(source.concurrency) ? source.concurrency : parseInt(source.concurrency, 10),
         autoFixRounds: Number.isFinite(source.autoFixRounds) ? source.autoFixRounds : parseInt(source.autoFixRounds, 10),
+        previewOnly: source.previewOnly === true,
         workflowIds: rawWorkflowIds,
         followUps: normalizeTaskFollowUps(rawFollowUps)
     };
@@ -15627,12 +15693,18 @@ function normalizeTaskPlanRequest(params = {}) {
 function coerceTaskPlanPayload(params = {}) {
     if (params && params.plan && typeof params.plan === 'object' && !Array.isArray(params.plan)) {
         const plan = cloneJson(params.plan, {});
-        const overrideKeys = ['id', 'title', 'target', 'notes', 'cwd', 'engine', 'allowWrite', 'dryRun', 'concurrency', 'autoFixRounds', 'workflowIds', 'followUps'];
+        const overrideKeys = ['id', 'threadId', 'conversationId', 'sessionId', 'title', 'target', 'notes', 'cwd', 'engine', 'allowWrite', 'dryRun', 'concurrency', 'autoFixRounds', 'previewOnly', 'workflowIds', 'followUps'];
         for (const key of overrideKeys) {
             if (Object.prototype.hasOwnProperty.call(params, key) && params[key] !== undefined) {
-                plan[key] = cloneJson(params[key], params[key]);
+                if (key === 'conversationId' || key === 'sessionId') {
+                    plan.threadId = cloneJson(params[key], params[key]);
+                } else {
+                    plan[key] = cloneJson(params[key], params[key]);
+                }
             }
         }
+        plan.cwd = typeof plan.cwd === 'string' && plan.cwd.trim() ? plan.cwd.trim() : process.cwd();
+        plan.threadId = normalizeTaskThreadId(plan.threadId) || createTaskThreadId();
         plan.engine = normalizeTaskEngine(plan.engine);
         plan.workflowIds = normalizeTaskFollowUps(plan.workflowIds || []).map((id) => normalizeWorkflowId(id)).filter(Boolean);
         plan.followUps = normalizeTaskFollowUps(plan.followUps || []);
@@ -15647,6 +15719,7 @@ function coerceTaskPlanPayload(params = {}) {
     });
     return {
         ...plan,
+        threadId: request.threadId || createTaskThreadId(),
         engine: normalizeTaskEngine(request.engine || plan.engine)
     };
 }
@@ -15669,8 +15742,10 @@ function normalizeTaskQueueItem(raw = {}) {
     const taskId = typeof raw.taskId === 'string' ? raw.taskId.trim() : '';
     return {
         taskId: taskId || createTaskId(),
+        threadId: normalizeTaskThreadId(raw.threadId || plan.threadId) || createTaskThreadId(),
         title: typeof raw.title === 'string' ? raw.title.trim() : (typeof plan.title === 'string' ? plan.title.trim() : ''),
         target: typeof raw.target === 'string' ? raw.target.trim() : (typeof plan.target === 'string' ? plan.target.trim() : ''),
+        cwd: typeof raw.cwd === 'string' && raw.cwd.trim() ? raw.cwd.trim() : (typeof plan.cwd === 'string' ? plan.cwd.trim() : ''),
         status: typeof raw.status === 'string' ? raw.status.trim().toLowerCase() : 'queued',
         createdAt: toIsoTime(raw.createdAt || Date.now(), ''),
         updatedAt: toIsoTime(raw.updatedAt || raw.createdAt || Date.now(), ''),
@@ -15871,8 +15946,10 @@ function collectTaskRunSummary(detail = {}) {
     return {
         runId: detail.runId || '',
         taskId: detail.taskId || '',
+        threadId: detail.threadId || '',
         title: detail.title || '',
         target: detail.target || '',
+        cwd: detail.cwd || '',
         engine: detail.engine || '',
         allowWrite: detail.allowWrite === true,
         dryRun: detail.dryRun === true,
@@ -15996,6 +16073,7 @@ function buildTaskOverviewPayload(options = {}) {
     }
     return {
         workflows: workflowCatalog.workflows,
+        openAiChatStatus: buildTaskOpenAiChatStatus(),
         warnings,
         queue,
         runs,
@@ -16058,20 +16136,434 @@ function readCodexLastMessageFile(filePath) {
     }
 }
 
-async function runCodexExecTaskNode(node, context = {}) {
-    const codexPath = resolveSpawnCommand('codex');
-    const codexProbeCommand = process.platform === 'win32' ? 'codex' : codexPath;
-    if (!commandExists(codexProbeCommand, '--version')) {
+function buildOpenAiChatEndpointUrl(baseUrl) {
+    const trimmed = normalizeBaseUrl(baseUrl);
+    if (!trimmed) return '';
+    if (/\/v1\/chat\/completions$/i.test(trimmed) || /\/chat\/completions$/i.test(trimmed)) {
+        return trimmed;
+    }
+    return joinApiUrl(trimmed, 'chat/completions');
+}
+
+function redactTaskEndpointUrl(endpointUrl = '') {
+    const raw = String(endpointUrl || '').trim();
+    if (!raw) return '';
+    try {
+        const parsed = new URL(raw);
+        if (parsed.username) parsed.username = '***';
+        if (parsed.password) parsed.password = '***';
+        const secretKeyPattern = /(?:^|[_-])(?:key|api[-_]?key|token|access[-_]?token|refresh[-_]?token|secret|password|passwd|pwd|credential|credentials|signature|sig)(?:$|[_-])/i;
+        for (const key of [...parsed.searchParams.keys()]) {
+            if (secretKeyPattern.test(key)) {
+                parsed.searchParams.set(key, '***');
+            }
+        }
+        return parsed.toString();
+    } catch (_) {
+        return raw
+            .replace(/\/\/([^/@:]+):([^/@]+)@/g, '//***:***@')
+            .replace(/([?&][^=&]*(?:key|token|secret|password|passwd|pwd|credential|signature|sig)[^=]*=)[^&]*/ig, '$1***');
+    }
+}
+
+function pickTaskProviderModel(providerName, provider, config) {
+    const currentModels = readCurrentModels();
+    const savedModel = currentModels && typeof currentModels[providerName] === 'string'
+        ? currentModels[providerName].trim()
+        : '';
+    const activeProvider = typeof config.model_provider === 'string' ? config.model_provider.trim() : '';
+    const activeModel = typeof config.model === 'string' ? config.model.trim() : '';
+    const providerModels = Array.isArray(provider && provider.models) ? provider.models : [];
+    const firstProviderModel = providerModels
+        .map((item) => {
+            if (typeof item === 'string') return item.trim();
+            if (item && typeof item === 'object') return String(item.id || item.name || item.model || '').trim();
+            return '';
+        })
+        .find(Boolean) || '';
+    return savedModel || (activeProvider === providerName ? activeModel : '') || firstProviderModel;
+}
+
+function pickTaskProviderTemperature(provider) {
+    const raw = provider && Object.prototype.hasOwnProperty.call(provider, 'temperature')
+        ? provider.temperature
+        : undefined;
+    if (raw === undefined || raw === null || String(raw).trim() === '') {
+        return 0.2;
+    }
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < 0 || value > 2) {
+        return 0.2;
+    }
+    return value;
+}
+
+function pickTaskOpenAiChatProviderName(config) {
+    const taskProvider = typeof config.task_openai_chat_provider === 'string'
+        ? config.task_openai_chat_provider.trim()
+        : '';
+    if (taskProvider) {
+        return taskProvider;
+    }
+    return typeof config.model_provider === 'string' ? config.model_provider.trim() : '';
+}
+
+function resolveTaskOpenAiChatConfig() {
+    const configResult = readConfigOrVirtualDefault();
+    const config = configResult && configResult.config && typeof configResult.config === 'object' ? configResult.config : {};
+    const providerName = pickTaskOpenAiChatProviderName(config);
+    if (!providerName) {
+        return { error: '未设置当前 OpenAI Chat 提供商' };
+    }
+    const providers = config.model_providers && typeof config.model_providers === 'object' ? config.model_providers : {};
+    const provider = providers[providerName];
+    if (!provider || typeof provider !== 'object') {
+        return { error: `OpenAI Chat 提供商不存在: ${providerName}` };
+    }
+
+    const bridgeType = typeof provider.codexmate_bridge === 'string' ? provider.codexmate_bridge.trim() : '';
+    const isOpenaiBridgeProvider = bridgeType === 'openai'
+        || (typeof provider.base_url === 'string' && provider.base_url.includes('/bridge/openai/'));
+    let baseUrl = typeof provider.base_url === 'string' ? provider.base_url.trim() : '';
+    let apiKey = typeof provider.preferred_auth_method === 'string' ? provider.preferred_auth_method.trim() : '';
+    let extraHeaders = {};
+    if (isOpenaiBridgeProvider) {
+        const upstream = resolveOpenaiBridgeUpstream(OPENAI_BRIDGE_SETTINGS_FILE, providerName);
+        if (upstream && !upstream.error) {
+            baseUrl = upstream.baseUrl || baseUrl;
+            apiKey = upstream.apiKey || apiKey;
+            extraHeaders = upstream.headers && typeof upstream.headers === 'object' && !Array.isArray(upstream.headers)
+                ? upstream.headers
+                : {};
+        }
+    }
+
+    const model = pickTaskProviderModel(providerName, provider, config);
+    if (!baseUrl) {
+        return { error: `OpenAI Chat 提供商 ${providerName} 缺少 base_url` };
+    }
+    if (!isValidHttpUrl(baseUrl)) {
+        return { error: `OpenAI Chat 提供商 ${providerName} 的 base_url 无效` };
+    }
+    if (!model) {
+        return { error: `OpenAI Chat 提供商 ${providerName} 未设置模型` };
+    }
+    return {
+        providerName,
+        baseUrl,
+        endpointUrl: buildOpenAiChatEndpointUrl(baseUrl),
+        apiKey,
+        extraHeaders,
+        model,
+        temperature: pickTaskProviderTemperature(provider)
+    };
+}
+
+function buildTaskOpenAiChatStatus() {
+    const requestConfig = resolveTaskOpenAiChatConfig();
+    if (requestConfig && requestConfig.error) {
         return {
-            success: false,
-            error: '未找到 codex CLI，请先安装并确保 PATH 可用',
-            summary: 'codex CLI 不可用',
-            output: null,
-            logs: [{ at: toIsoTime(Date.now()), level: 'error', message: 'codex CLI 不可用' }]
+            ok: false,
+            ready: false,
+            error: requestConfig.error,
+            providerName: '',
+            model: '',
+            endpoint: '',
+            hasApiKey: false,
+            hasExtraHeaders: false
         };
     }
-    const allowWrite = context.allowWrite === true && node.write === true;
-    const cwd = typeof context.cwd === 'string' && context.cwd.trim() ? context.cwd.trim() : process.cwd();
+    const hasApiKey = !!(requestConfig && typeof requestConfig.apiKey === 'string' && requestConfig.apiKey.trim());
+    const hasExtraHeaders = !!(requestConfig
+        && requestConfig.extraHeaders
+        && typeof requestConfig.extraHeaders === 'object'
+        && !Array.isArray(requestConfig.extraHeaders)
+        && Object.keys(requestConfig.extraHeaders).length > 0);
+    const hasAuthMaterial = hasApiKey || hasExtraHeaders;
+    return {
+        ok: true,
+        ready: hasAuthMaterial,
+        error: hasAuthMaterial ? '' : `OpenAI Chat 提供商 ${requestConfig.providerName || ''} 缺少 API key 或额外 headers`,
+        providerName: requestConfig.providerName || '',
+        model: requestConfig.model || '',
+        endpoint: redactTaskEndpointUrl(requestConfig.endpointUrl || ''),
+        hasApiKey,
+        hasExtraHeaders
+    };
+}
+
+function postOpenAiChatCompletion(requestConfig, body, options = {}) {
+    const endpointUrl = requestConfig && requestConfig.endpointUrl ? requestConfig.endpointUrl : '';
+    return new Promise((resolve) => {
+        let parsed;
+        try {
+            parsed = new URL(endpointUrl);
+        } catch (error) {
+            resolve({ ok: false, error: 'OpenAI Chat endpoint URL 无效', status: 0, payload: null, body: '' });
+            return;
+        }
+        const transport = parsed.protocol === 'https:' ? https : http;
+        const agent = parsed.protocol === 'https:' ? HTTPS_KEEP_ALIVE_AGENT : HTTP_KEEP_ALIVE_AGENT;
+        const payloadText = JSON.stringify(body || {});
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'codexmate-task-orchestration',
+            'Content-Length': Buffer.byteLength(payloadText, 'utf-8'),
+            ...(requestConfig.extraHeaders && typeof requestConfig.extraHeaders === 'object' ? requestConfig.extraHeaders : {})
+        };
+        if (requestConfig.apiKey) {
+            headers.Authorization = `Bearer ${requestConfig.apiKey}`;
+        }
+        let settled = false;
+        let req = null;
+        const finish = (result) => {
+            if (settled) return;
+            settled = true;
+            resolve(result);
+        };
+        req = transport.request(parsed, { method: 'POST', headers, agent }, (res) => {
+            const status = res.statusCode || 0;
+            let raw = '';
+            let receivedBytes = 0;
+            res.on('data', (chunk) => {
+                if (settled) return;
+                receivedBytes += chunk.length || 0;
+                if (receivedBytes > TASK_OPENAI_CHAT_MAX_RESPONSE_BYTES) {
+                    finish({ ok: false, status, error: 'OpenAI Chat response too large', payload: null, body: raw });
+                    res.destroy();
+                    return;
+                }
+                raw += chunk;
+            });
+            res.on('error', (error) => {
+                finish({
+                    ok: false,
+                    status,
+                    error: error && error.message ? error.message : 'OpenAI Chat request failed',
+                    payload: null,
+                    body: raw
+                });
+            });
+            res.on('end', () => {
+                if (settled) return;
+                let parsedPayload = null;
+                try {
+                    parsedPayload = raw ? JSON.parse(raw) : null;
+                } catch (_) {}
+                if (status < 200 || status >= 300) {
+                    const message = parsedPayload && parsedPayload.error
+                        ? (typeof parsedPayload.error === 'string' ? parsedPayload.error : (parsedPayload.error.message || JSON.stringify(parsedPayload.error)))
+                        : (raw || `OpenAI Chat request failed: ${status}`);
+                    finish({ ok: false, status, error: truncateTaskText(message, 1200), payload: parsedPayload, body: raw });
+                    return;
+                }
+                finish({ ok: true, status, error: '', payload: parsedPayload, body: raw });
+            });
+        });
+        if (typeof options.registerAbort === 'function') {
+            options.registerAbort(() => {
+                try {
+                    req.destroy(new Error('cancelled'));
+                } catch (_) {}
+            });
+        }
+        req.setTimeout(TASK_OPENAI_CHAT_TIMEOUT_MS, () => {
+            req.destroy(new Error('OpenAI Chat request timeout'));
+        });
+        req.on('error', (error) => {
+            finish({ ok: false, status: 0, error: error && error.message ? error.message : String(error || 'OpenAI Chat request failed'), payload: null, body: '' });
+        });
+        req.write(payloadText);
+        req.end();
+    });
+}
+
+const TASK_OPENAI_MATERIALIZED_ARTIFACT_MAX_BYTES = 512 * 1024;
+const TASK_OPENAI_MATERIALIZED_ARTIFACT_EXTENSIONS = new Set(['.html', '.htm', '.css', '.js', '.mjs', '.json', '.md', '.txt', '.svg']);
+
+function normalizeTaskMaterializedArtifactPath(rawPath, cwd) {
+    const baseDir = path.resolve(typeof cwd === 'string' && cwd.trim() ? cwd.trim() : process.cwd());
+    const text = typeof rawPath === 'string' ? rawPath.trim() : '';
+    if (!text || text.length > 200) {
+        return { error: 'artifact path is empty or too long' };
+    }
+    if (path.isAbsolute(text) || text.includes('\\')) {
+        return { error: `artifact path must be a safe relative path: ${text}` };
+    }
+    const normalized = path.normalize(text);
+    if (!normalized || normalized === '.' || normalized.startsWith('..') || normalized.split(path.sep).includes('..')) {
+        return { error: `artifact path escapes cwd: ${text}` };
+    }
+    const ext = path.extname(normalized).toLowerCase();
+    if (!TASK_OPENAI_MATERIALIZED_ARTIFACT_EXTENSIONS.has(ext)) {
+        return { error: `artifact extension is not allowed: ${ext || '(none)'}` };
+    }
+    const targetPath = path.resolve(baseDir, normalized);
+    const relative = path.relative(baseDir, targetPath);
+    if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) {
+        return { error: `artifact path escapes cwd: ${text}` };
+    }
+    return { path: targetPath, relativePath: normalized, baseDir };
+}
+
+function validateTaskMaterializedArtifactParents(targetPath, baseDir) {
+    const resolvedBase = fs.realpathSync.native(baseDir);
+    let current = path.dirname(targetPath);
+    const pending = [];
+    while (true) {
+        if (current === resolvedBase) {
+            return { ok: true };
+        }
+        if (current === path.dirname(current)) {
+            return { ok: false, error: 'artifact parent escapes cwd' };
+        }
+        if (fs.existsSync(current)) {
+            const stats = fs.lstatSync(current);
+            if (stats.isSymbolicLink()) {
+                return { ok: false, error: `artifact parent is a symlink: ${path.relative(baseDir, current) || current}` };
+            }
+            const resolvedCurrent = fs.realpathSync.native(current);
+            const relative = path.relative(resolvedBase, resolvedCurrent);
+            if (relative.startsWith('..') || path.isAbsolute(relative)) {
+                return { ok: false, error: 'artifact parent resolves outside cwd' };
+            }
+            for (const child of pending) {
+                const childRelative = path.relative(resolvedBase, child);
+                if (childRelative.startsWith('..') || path.isAbsolute(childRelative)) {
+                    return { ok: false, error: 'artifact parent escapes cwd' };
+                }
+            }
+            return { ok: true };
+        }
+        pending.push(current);
+        current = path.dirname(current);
+    }
+}
+
+function inferTaskMaterializedArtifactPath(info, prefix, hints) {
+    const sources = [info, prefix, hints].map((item) => String(item || '')).filter(Boolean);
+    const explicitPatterns = [
+        /(?:file|filename|path)\s*[:=]\s*[`"']?([A-Za-z0-9._/-]+\.[A-Za-z0-9]+)[`"']?/i,
+        /(?:文件|路径|保存为|写入到?|输出到?)\s*[:：]?\s*[`"']?([A-Za-z0-9._/-]+\.[A-Za-z0-9]+)[`"']?/i,
+        /[`"']([A-Za-z0-9._/-]+\.[A-Za-z0-9]+)[`"']/i
+    ];
+    for (const source of sources) {
+        for (const pattern of explicitPatterns) {
+            const match = source.match(pattern);
+            if (match && match[1]) {
+                return match[1];
+            }
+        }
+    }
+    const normalizedInfo = String(info || '').trim().toLowerCase();
+    const hintText = sources.join('\n').toLowerCase();
+    if ((normalizedInfo === 'html' || normalizedInfo.startsWith('html ')) && hintText.includes('index.html')) {
+        return 'index.html';
+    }
+    return '';
+}
+
+function materializeOpenAiChatTaskArtifacts(text, options = {}) {
+    const content = typeof text === 'string' ? text : '';
+    if (!content.trim()) {
+        return { files: [], warnings: [] };
+    }
+    const cwd = typeof options.cwd === 'string' && options.cwd.trim() ? options.cwd.trim() : process.cwd();
+    const hints = [options.target, options.notes, options.prompt]
+        .map((item) => String(item || '').trim())
+        .filter(Boolean)
+        .join('\n');
+    const files = [];
+    const warnings = [];
+    const seen = new Set();
+    const fencePattern = /```([^\n`]*)\n([\s\S]*?)```/g;
+    let match = null;
+    while ((match = fencePattern.exec(content)) !== null) {
+        const info = String(match[1] || '').trim();
+        const body = String(match[2] || '');
+        const prefix = content.slice(Math.max(0, match.index - 240), match.index);
+        const inferredPath = inferTaskMaterializedArtifactPath(info, prefix, hints);
+        if (!inferredPath) {
+            continue;
+        }
+        if (Buffer.byteLength(body, 'utf-8') > TASK_OPENAI_MATERIALIZED_ARTIFACT_MAX_BYTES) {
+            warnings.push(`artifact too large and skipped: ${inferredPath}`);
+            continue;
+        }
+        const normalized = normalizeTaskMaterializedArtifactPath(inferredPath, cwd);
+        if (normalized.error) {
+            warnings.push(normalized.error);
+            continue;
+        }
+        if (seen.has(normalized.path)) {
+            warnings.push(`duplicate artifact skipped: ${normalized.relativePath}`);
+            continue;
+        }
+        seen.add(normalized.path);
+        try {
+            const fileContent = body.trimStart();
+            const parentValidation = validateTaskMaterializedArtifactParents(normalized.path, normalized.baseDir);
+            if (!parentValidation.ok) {
+                warnings.push(parentValidation.error || `artifact parent is unsafe: ${normalized.relativePath}`);
+                continue;
+            }
+            ensureDir(path.dirname(normalized.path));
+            try {
+                if (fs.lstatSync(normalized.path).isSymbolicLink()) {
+                    warnings.push(`artifact target is a symlink: ${normalized.relativePath}`);
+                    continue;
+                }
+            } catch (error) {
+                if (!error || error.code !== 'ENOENT') {
+                    throw error;
+                }
+            }
+            fs.writeFileSync(normalized.path, fileContent, { encoding: 'utf-8', mode: 0o600 });
+            files.push({ path: normalized.path, relativePath: normalized.relativePath, bytes: Buffer.byteLength(fileContent, 'utf-8') });
+        } catch (error) {
+            warnings.push(`failed to write artifact ${normalized.relativePath}: ${error && error.message ? error.message : String(error)}`);
+        }
+    }
+    return { files, warnings };
+}
+
+async function runOpenAiChatTaskNode(node, context = {}) {
+    const requestConfig = resolveTaskOpenAiChatConfig();
+    if (requestConfig.error) {
+        return {
+            success: false,
+            error: requestConfig.error,
+            summary: requestConfig.error,
+            output: null,
+            logs: [{ at: toIsoTime(Date.now()), level: 'error', message: requestConfig.error }]
+        };
+    }
+    const hasApiKey = typeof requestConfig.apiKey === 'string' && requestConfig.apiKey.trim();
+    const hasExtraHeaders = requestConfig.extraHeaders
+        && typeof requestConfig.extraHeaders === 'object'
+        && !Array.isArray(requestConfig.extraHeaders)
+        && Object.keys(requestConfig.extraHeaders).length > 0;
+    if (!hasApiKey && !hasExtraHeaders) {
+        const error = `OpenAI Chat 提供商 ${requestConfig.providerName || ''} 缺少 API key 或额外 headers`;
+        return {
+            success: false,
+            error,
+            summary: error,
+            output: {
+                provider: requestConfig.providerName || '',
+                model: requestConfig.model || '',
+                endpoint: redactTaskEndpointUrl(requestConfig.endpointUrl || ''),
+                status: 0,
+                text: '',
+                response: null,
+                durationMs: 0,
+                materializedFiles: []
+            },
+            logs: [{ at: toIsoTime(Date.now()), level: 'error', message: error }]
+        };
+    }
+    const allowWrite = context.allowWrite === true && node.write !== false && context.dryRun !== true;
     const dependencyResults = Array.isArray(context.dependencyResults) ? context.dependencyResults : [];
     const dependencyLines = dependencyResults
         .map((item) => {
@@ -16091,124 +16583,95 @@ async function runCodexExecTaskNode(node, context = {}) {
         promptParts.push('请在保持目标不变的前提下修复上一轮失败并继续完成当前节点。');
     }
     const finalPrompt = promptParts.filter(Boolean).join('\n\n');
-    const tempRoot = path.join(TASK_RUN_DETAILS_DIR, 'tmp');
-    ensureDir(tempRoot);
-    const tempDir = fs.mkdtempSync(path.join(tempRoot, 'codex-'));
-    const outputFile = path.join(tempDir, 'last-message.txt');
-    const args = [
-        '-a', 'never',
-        '-s', allowWrite ? 'workspace-write' : 'read-only',
-        '-C', cwd,
-        'exec',
-        '--json',
-        '--skip-git-repo-check',
-        '--output-last-message', outputFile,
-        finalPrompt
-    ];
-    const stdoutLines = [];
-    const stderrLines = [];
-    const parsedEvents = [];
-    let sessionId = '';
-    let stdoutPartial = '';
-    let stderrPartial = '';
-    const processCapturedLine = (bucket, line) => {
-        const normalizedLine = String(line || '').trim();
-        if (!normalizedLine) {
-            return;
-        }
-        if (bucket.length < 120) {
-            bucket.push(truncateTaskText(normalizedLine, 1200));
-        }
-        try {
-            const payload = JSON.parse(normalizedLine);
-            if (parsedEvents.length < 120) {
-                parsedEvents.push(payload);
-            }
-            if (!sessionId) {
-                sessionId = findCodexSessionId(payload);
-            }
-        } catch (_) { }
+    const rawThreadId = String(context.threadId || (context.plan && context.plan.threadId) || '').trim();
+    const threadId = /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(rawThreadId) ? rawThreadId : '';
+    const threadStoreDir = typeof TASK_WORKSPACE_CHAT_THREADS_DIR === 'string' ? TASK_WORKSPACE_CHAT_THREADS_DIR : '';
+    const canLoadWorkspaceThread = typeof loadWorkspaceChatThread === 'function' && !!threadStoreDir;
+    const thread = threadId && canLoadWorkspaceThread ? loadWorkspaceChatThread(threadStoreDir, threadId) : { messages: [] };
+    const historyMessages = Array.isArray(thread.messages) ? thread.messages.slice(-12) : [];
+    const workspaceContext = typeof buildWorkspaceChatContext === 'function'
+        ? buildWorkspaceChatContext(context.cwd || process.cwd(), finalPrompt, historyMessages)
+        : '';
+    const systemPrompt = [
+        '你是 codexmate 任务编排中的 OpenAI Chat-compatible 执行节点。',
+        '基于用户给出的目标、前置节点摘要、同一 thread 历史和当前工作区快照，输出可执行、可验证、事实谨慎的结果。',
+        allowWrite
+            ? '当前任务允许写入；如果需要创建或更新文件，优先使用 fenced code block：```codexmate-file action="write" path="相对路径"。代码块内容会写入任务工作目录内对应文本文件。删除文件请单独写一行 CODEXMATE_DELETE_FILE: 相对路径。只允许安全相对路径。'
+            : '当前任务是只读/验证节点，不要声称修改了文件。',
+        '查询/读取文件时，先依据用户要求和工作区快照回答；如果快照不足，说明缺口，不要编造。',
+        '回答使用中文，避免空泛总结。'
+    ].join('\n');
+    const currentUserMessage = [
+        finalPrompt,
+        workspaceContext ? '\n--- codexmate workspace snapshot ---' : '',
+        workspaceContext
+    ].filter(Boolean).join('\n');
+    const startedAt = Date.now();
+    const body = {
+        model: requestConfig.model,
+        messages: [
+            { role: 'system', content: systemPrompt },
+            ...historyMessages.map((message) => ({
+                role: message.role === 'assistant' ? 'assistant' : 'user',
+                content: String(message.content || '')
+            })),
+            { role: 'user', content: currentUserMessage }
+        ],
+        temperature: Number.isFinite(requestConfig.temperature) ? requestConfig.temperature : 0.2,
+        stream: false
     };
-    const captureLines = (bucket, text, stream) => {
-        const currentPartial = stream === 'stderr' ? stderrPartial : stdoutPartial;
-        const merged = `${currentPartial}${String(text || '')}`;
-        const pieces = merged.split(/\r?\n/g);
-        const nextPartial = pieces.pop() || '';
-        if (stream === 'stderr') {
-            stderrPartial = nextPartial;
-        } else {
-            stdoutPartial = nextPartial;
-        }
-        for (const line of pieces) {
-            processCapturedLine(bucket, line);
-        }
-    };
-    const flushCapturedPartial = (bucket, stream) => {
-        const partial = stream === 'stderr' ? stderrPartial : stdoutPartial;
-        if (stream === 'stderr') {
-            stderrPartial = '';
-        } else {
-            stdoutPartial = '';
-        }
-        processCapturedLine(bucket, partial);
-    };
-    const exit = await new Promise((resolve) => {
-        const child = spawn(codexPath, args, {
-            stdio: ['ignore', 'pipe', 'pipe'],
-            windowsHide: true,
-            shell: process.platform === 'win32'
-        });
-        if (typeof context.registerAbort === 'function') {
-            context.registerAbort(() => {
-                try {
-                    child.kill('SIGTERM');
-                } catch (_) { }
-            });
-        }
-        child.stdout.on('data', (chunk) => {
-            captureLines(stdoutLines, chunk, 'stdout');
-        });
-        child.stderr.on('data', (chunk) => {
-            captureLines(stderrLines, chunk, 'stderr');
-        });
-        child.on('error', (error) => {
-            resolve({ code: 1, signal: '', error: error && error.message ? error.message : String(error || 'spawn failed') });
-        });
-        child.on('close', (code, signal) => {
-            flushCapturedPartial(stdoutLines, 'stdout');
-            flushCapturedPartial(stderrLines, 'stderr');
-            resolve({ code: typeof code === 'number' ? code : 1, signal: signal || '', error: '' });
-        });
+    const result = await postOpenAiChatCompletion(requestConfig, body, {
+        registerAbort: context.registerAbort
     });
-    const lastMessage = readCodexLastMessageFile(outputFile);
-    try {
-        if (fs.rmSync) {
-            fs.rmSync(tempDir, { recursive: true, force: true });
-        } else {
-            fs.rmdirSync(tempDir, { recursive: true });
-        }
-    } catch (_) { }
-    const success = exit.code === 0;
-    const errorMessage = success
-        ? ''
-        : (exit.error || stderrLines[stderrLines.length - 1] || stdoutLines[stdoutLines.length - 1] || `codex exec exited with code ${exit.code}`);
-    const summary = truncateTaskText(lastMessage || (success ? 'Codex 执行完成' : errorMessage), 400);
+    const text = result.ok ? extractModelResponseText(result.payload) : '';
+    const success = result.ok && !!text;
+    const errorMessage = success ? '' : (result.error || 'OpenAI Chat response did not contain text');
+    const summary = truncateTaskText(text || errorMessage, 400);
+    const safeEndpoint = redactTaskEndpointUrl(requestConfig.endpointUrl);
+    const materialized = success && allowWrite
+        ? materializeOpenAiChatTaskArtifacts(text, {
+            cwd: context.cwd || process.cwd(),
+            target: context.plan && context.plan.target ? context.plan.target : '',
+            notes: context.plan && context.plan.notes ? context.plan.notes : '',
+            prompt: node.prompt || ''
+        })
+        : { files: [], warnings: [] };
+    const workspaceOperations = success && typeof applyWorkspaceFileOperations === 'function'
+        ? applyWorkspaceFileOperations(text, context.cwd || process.cwd(), { allowWrite })
+        : { files: [], warnings: [] };
+    const threadAppend = threadId && typeof appendWorkspaceChatThread === 'function' && !!threadStoreDir
+        ? appendWorkspaceChatThread(threadStoreDir, threadId, [
+            { role: 'user', content: finalPrompt },
+            { role: 'assistant', content: text || errorMessage }
+        ], { cwd: context.cwd || process.cwd() })
+        : { ok: false, error: 'thread id is empty' };
     return {
         success,
         error: errorMessage,
         summary,
         output: {
-            exitCode: exit.code,
-            signal: exit.signal || '',
-            sessionId,
-            lastMessage,
-            events: parsedEvents,
-            stdoutPreview: stdoutLines,
-            stderrPreview: stderrLines
+            provider: requestConfig.providerName,
+            model: requestConfig.model,
+            endpoint: safeEndpoint,
+            status: result.status || 0,
+            text,
+            response: result.payload || null,
+            durationMs: Date.now() - startedAt,
+            messageCount: body.messages.length,
+            threadId,
+            threadStore: threadAppend && threadAppend.file ? threadAppend.file : '',
+            materializedFiles: materialized.files,
+            workspaceFiles: workspaceOperations.files
         },
         logs: [
-            ...stdoutLines.map((line) => ({ at: toIsoTime(Date.now()), level: 'info', message: line })),
-            ...stderrLines.map((line) => ({ at: toIsoTime(Date.now()), level: 'warn', message: line }))
+            { at: toIsoTime(Date.now()), level: 'info', message: `OpenAI Chat request provider=${requestConfig.providerName} model=${requestConfig.model} status=${result.status || 0}` },
+            ...(threadId ? [{ at: toIsoTime(Date.now()), level: 'info', message: `workspace chat thread=${threadId} messages=${body.messages.length}` }] : []),
+            ...(success ? [{ at: toIsoTime(Date.now()), level: 'info', message: truncateTaskText(text, 1200) }] : [{ at: toIsoTime(Date.now()), level: 'error', message: errorMessage }]),
+            ...materialized.files.map((file) => ({ at: toIsoTime(Date.now()), level: 'info', message: `materialized artifact ${file.relativePath} (${file.bytes} bytes)` })),
+            ...workspaceOperations.files.map((file) => ({ at: toIsoTime(Date.now()), level: 'info', message: `workspace ${file.operation} ${file.relativePath} (${file.bytes} bytes)` })),
+            ...materialized.warnings.map((warning) => ({ at: toIsoTime(Date.now()), level: 'warn', message: warning })),
+            ...workspaceOperations.warnings.map((warning) => ({ at: toIsoTime(Date.now()), level: 'warn', message: warning })),
+            ...(threadAppend && threadAppend.error ? [{ at: toIsoTime(Date.now()), level: 'warn', message: threadAppend.error }] : [])
         ]
     };
 }
@@ -16246,7 +16709,7 @@ async function executeTaskNodeAdapter(node, context = {}) {
                 : []
         };
     }
-    return runCodexExecTaskNode(node, context);
+    return runOpenAiChatTaskNode(node, context);
 }
 
 async function runTaskPlanInternal(plan, options = {}) {
@@ -16260,13 +16723,18 @@ async function runTaskPlanInternal(plan, options = {}) {
     }
     const taskId = typeof options.taskId === 'string' && options.taskId.trim() ? options.taskId.trim() : (plan.id || createTaskId());
     const runId = typeof options.runId === 'string' && options.runId.trim() ? options.runId.trim() : createTaskRunId();
+    const threadId = normalizeTaskThreadId(options.threadId || plan.threadId) || createTaskThreadId();
+    plan.threadId = threadId;
+    const cwd = typeof plan.cwd === 'string' && plan.cwd.trim() ? plan.cwd.trim() : process.cwd();
     const controller = new AbortController();
     const baseDetail = {
         runId,
         taskId,
+        threadId,
         workerPid: process.pid,
         title: plan.title || '',
         target: plan.target || '',
+        cwd,
         engine: normalizeTaskEngine(plan.engine),
         allowWrite: plan.allowWrite === true,
         dryRun: plan.dryRun === true,
@@ -16302,6 +16770,8 @@ async function runTaskPlanInternal(plan, options = {}) {
         const queued = upsertTaskQueueItem({
             ...options.queueItem,
             taskId,
+            threadId,
+            cwd,
             status: 'running',
             runStatus: 'running',
             lastRunId: runId,
@@ -16320,9 +16790,10 @@ async function runTaskPlanInternal(plan, options = {}) {
                 plan,
                 taskId,
                 runId,
+                threadId,
                 allowWrite: plan.allowWrite === true,
                 dryRun: plan.dryRun === true,
-                cwd: plan.cwd || process.cwd()
+                cwd
             }),
             onUpdate: async (snapshot) => {
                 const nextDetail = {
@@ -16336,6 +16807,8 @@ async function runTaskPlanInternal(plan, options = {}) {
                     const queued = upsertTaskQueueItem({
                         ...options.queueItem,
                         taskId,
+                        threadId,
+                        cwd,
                         status: snapshot.status === 'success'
                             ? 'completed'
                             : (snapshot.status === 'failed' ? 'failed' : (snapshot.status === 'cancelled' ? 'cancelled' : 'running')),
@@ -16365,6 +16838,8 @@ async function runTaskPlanInternal(plan, options = {}) {
             const queued = upsertTaskQueueItem({
                 ...options.queueItem,
                 taskId,
+                threadId,
+                cwd,
                 status: run.status === 'success'
                     ? 'completed'
                     : (run.status === 'cancelled' ? 'cancelled' : 'failed'),
@@ -16395,8 +16870,10 @@ function addTaskToQueue(params = {}) {
     const taskId = typeof params.taskId === 'string' && params.taskId.trim() ? params.taskId.trim() : createTaskId();
     const item = upsertTaskQueueItem({
         taskId,
+        threadId: plan.threadId || createTaskThreadId(),
         title: plan.title,
         target: plan.target,
+        cwd: plan.cwd || process.cwd(),
         status: 'queued',
         createdAt: toIsoTime(Date.now()),
         updatedAt: toIsoTime(Date.now()),

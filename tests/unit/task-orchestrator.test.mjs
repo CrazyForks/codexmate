@@ -30,21 +30,55 @@ test('computePlanWaves groups dependencies into waves', () => {
     ]);
 });
 
-test('buildTaskPlan generates codex orchestration nodes and follow-ups', () => {
+test('buildTaskPlan generates OpenAI Chat orchestration nodes and follow-ups', () => {
     const plan = buildTaskPlan({
         target: '实现任务编排 Tab\n- 新增前端面板\n- 扩展 CLI',
         allowWrite: true,
         concurrency: 3,
         followUps: ['继续处理 review 评论']
     });
-    assert.strictEqual(plan.engine, 'codex');
+    assert.strictEqual(plan.engine, 'openai-chat');
     assert.strictEqual(plan.allowWrite, true);
     assert.strictEqual(plan.concurrency, 3);
     assert.ok(Array.isArray(plan.nodes));
-    assert.ok(plan.nodes.some((node) => node.kind === 'codex'));
+    assert.ok(plan.nodes.some((node) => node.kind === 'openai-chat'));
     assert.ok(plan.nodes.some((node) => node.title.includes('验证')));
+    assert.ok(plan.nodes.filter((node) => node.kind === 'openai-chat').every((node) => node.retryLimit === 2));
     assert.strictEqual(plan.followUps.length, 1);
-    assert.strictEqual(plan.nodes[plan.nodes.length - 1].kind, 'codex');
+    assert.strictEqual(plan.nodes[plan.nodes.length - 1].kind, 'openai-chat');
+});
+
+test('buildTaskPlan creates a dependency-free preview node for /plan drafts', () => {
+    const plan = buildTaskPlan({
+        target: '实现任务编排聊天式预览',
+        allowWrite: true,
+        previewOnly: true
+    });
+
+    assert.strictEqual(plan.engine, 'openai-chat');
+    assert.strictEqual(plan.nodes.length, 1);
+    assert.strictEqual(plan.nodes[0].id, 'plan-01');
+    assert.strictEqual(plan.nodes[0].title, '方案草拟');
+    assert.strictEqual(plan.nodes[0].kind, 'openai-chat');
+    assert.deepStrictEqual(plan.nodes[0].dependsOn, []);
+    assert.strictEqual(plan.nodes[0].write, false);
+    assert.strictEqual(plan.nodes[0].autoFixRounds, 0);
+    assert.match(plan.nodes[0].prompt, /任务需求:\n我们先探讨方案，在我让你生成之前不要生成\n\n实现任务编排聊天式预览/);
+    assert.doesNotMatch(plan.nodes[0].prompt, /前置节点/);
+    assert.doesNotMatch(plan.nodes[0].prompt, /前置执行节点/);
+});
+
+test('buildTaskPlan carries workspace and thread context into OpenAI Chat nodes', () => {
+    const plan = buildTaskPlan({
+        target: '在指定工作区创建 2048 页面',
+        cwd: '/tmp/codexmate-workspace',
+        threadId: 'thread-2048',
+        allowWrite: true
+    });
+
+    assert.strictEqual(plan.cwd, '/tmp/codexmate-workspace');
+    assert.strictEqual(plan.threadId, 'thread-2048');
+    assert.ok(plan.nodes.some((node) => String(node.prompt || '').includes('工作区路径: /tmp/codexmate-workspace')));
 });
 
 test('buildTaskPlan can map workflow ids onto sequential workflow nodes', () => {
@@ -58,10 +92,37 @@ test('buildTaskPlan can map workflow ids onto sequential workflow nodes', () => 
             { id: 'safe-provider-switch', name: '安全切换', readOnly: false }
         ]
     });
+    assert.strictEqual(plan.engine, 'workflow');
     assert.strictEqual(plan.nodes.length, 2);
     assert.strictEqual(plan.nodes[0].kind, 'workflow');
     assert.deepStrictEqual(plan.nodes[1].dependsOn, [plan.nodes[0].id]);
     assert.strictEqual(plan.nodes[1].write, true);
+});
+
+test('buildTaskPlan keeps workflowIds requests in workflow mode without explicit engine', () => {
+    const plan = buildTaskPlan({
+        target: '诊断并整理 provider 配置',
+        workflowIds: ['diagnose-config'],
+        followUps: ['总结风险']
+    }, {
+        workflowCatalog: [
+            { id: 'diagnose-config', name: '诊断配置', readOnly: true }
+        ]
+    });
+    assert.strictEqual(plan.engine, 'workflow');
+    assert.strictEqual(plan.nodes.length, 1);
+    assert.strictEqual(plan.nodes[0].kind, 'workflow');
+    assert.deepStrictEqual(plan.nodes[0].input.followUps, ['总结风险']);
+});
+
+test('validateTaskPlan rejects external nodes with missing kind', () => {
+    const result = validateTaskPlan({
+        engine: 'openai-chat',
+        nodes: [{ id: 'missing-kind', prompt: 'Do work' }]
+    });
+
+    assert.strictEqual(result.ok, false);
+    assert.ok(result.issues.some((issue) => issue.code === 'task-node-kind-invalid'));
 });
 
 test('buildTaskPlan keeps workflow follow-ups inside the final workflow node payload', () => {
@@ -107,8 +168,8 @@ test('validateTaskPlan rejects unknown workflow ids instead of silently falling 
 test('validateTaskPlan rejects dependency cycles', () => {
     const result = validateTaskPlan({
         nodes: [
-            { id: 'a', kind: 'codex', prompt: 'a', dependsOn: ['b'] },
-            { id: 'b', kind: 'codex', prompt: 'b', dependsOn: ['a'] }
+            { id: 'a', kind: 'openai-chat', prompt: 'a', dependsOn: ['b'] },
+            { id: 'b', kind: 'openai-chat', prompt: 'b', dependsOn: ['a'] }
         ]
     });
     assert.strictEqual(result.ok, false);
@@ -120,10 +181,10 @@ test('executeTaskPlan respects dependency blocking and concurrency', async () =>
     const run = await executeTaskPlan({
         concurrency: 2,
         nodes: [
-            { id: 'inspect', kind: 'codex', prompt: 'inspect', dependsOn: [], write: false },
-            { id: 'work-a', kind: 'codex', prompt: 'work-a', dependsOn: ['inspect'], write: false },
-            { id: 'work-b', kind: 'codex', prompt: 'work-b', dependsOn: ['inspect'], write: false },
-            { id: 'verify', kind: 'codex', prompt: 'verify', dependsOn: ['work-a', 'work-b'], write: false }
+            { id: 'inspect', kind: 'openai-chat', prompt: 'inspect', dependsOn: [], write: false },
+            { id: 'work-a', kind: 'openai-chat', prompt: 'work-a', dependsOn: ['inspect'], write: false },
+            { id: 'work-b', kind: 'openai-chat', prompt: 'work-b', dependsOn: ['inspect'], write: false },
+            { id: 'verify', kind: 'openai-chat', prompt: 'verify', dependsOn: ['work-a', 'work-b'], write: false }
         ]
     }, {
         concurrency: 2,
@@ -151,7 +212,7 @@ test('executeTaskPlan retries failed nodes within auto-fix rounds', async () => 
     const attempts = new Map();
     const run = await executeTaskPlan({
         nodes: [
-            { id: 'work', kind: 'codex', prompt: 'work', dependsOn: [], write: false, autoFixRounds: 1 }
+            { id: 'work', kind: 'openai-chat', prompt: 'work', dependsOn: [], write: false, autoFixRounds: 1 }
         ]
     }, {
         async executeNode(node) {
@@ -178,8 +239,8 @@ test('executeTaskPlan retries failed nodes within auto-fix rounds', async () => 
 test('executeTaskPlan marks downstream nodes blocked when dependency fails', async () => {
     const run = await executeTaskPlan({
         nodes: [
-            { id: 'fail', kind: 'codex', prompt: 'fail', dependsOn: [], write: false },
-            { id: 'after', kind: 'codex', prompt: 'after', dependsOn: ['fail'], write: false }
+            { id: 'fail', kind: 'openai-chat', prompt: 'fail', dependsOn: [], write: false },
+            { id: 'after', kind: 'openai-chat', prompt: 'after', dependsOn: ['fail'], write: false }
         ]
     }, {
         async executeNode(node) {
@@ -202,7 +263,7 @@ test('executeTaskPlan marks downstream nodes blocked when dependency fails', asy
 test('executeTaskPlan keeps payload logs without duplicating them', async () => {
     const run = await executeTaskPlan({
         nodes: [
-            { id: 'work', kind: 'codex', prompt: 'work', dependsOn: [], write: false }
+            { id: 'work', kind: 'openai-chat', prompt: 'work', dependsOn: [], write: false }
         ]
     }, {
         async executeNode() {
