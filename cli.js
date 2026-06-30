@@ -77,6 +77,12 @@ const {
     computePlanWaves
 } = require('./lib/task-orchestrator');
 const {
+    buildWorkspaceChatContext,
+    loadWorkspaceChatThread,
+    appendWorkspaceChatThread,
+    applyWorkspaceFileOperations
+} = require('./lib/task-workspace-chat');
+const {
     readAutomationConfig,
     matchAutomationRule,
     buildAutomationEventKey,
@@ -259,6 +265,7 @@ const TASK_RUNS_FILE = path.join(CONFIG_DIR, 'codexmate-task-runs.jsonl');
 const TASK_RUN_DETAILS_DIR = path.join(CONFIG_DIR, 'codexmate-task-runs');
 const TASK_QUEUE_WORKER_FILE = path.join(CONFIG_DIR, 'codexmate-task-queue-worker.json');
 const TASK_ARTIFACTS_DIR = path.join(CONFIG_DIR, 'codexmate-task-artifacts');
+const TASK_WORKSPACE_CHAT_THREADS_DIR = path.join(CONFIG_DIR, 'codexmate-task-chat-threads');
 const TASK_OPENAI_CHAT_TIMEOUT_MS = 180000;
 const TASK_OPENAI_CHAT_MAX_RESPONSE_BYTES = 4 * 1024 * 1024;
 const AUTOMATION_CONFIG_FILE = path.join(CONFIG_DIR, 'codexmate-automation.json');
@@ -16576,20 +16583,39 @@ async function runOpenAiChatTaskNode(node, context = {}) {
         promptParts.push('请在保持目标不变的前提下修复上一轮失败并继续完成当前节点。');
     }
     const finalPrompt = promptParts.filter(Boolean).join('\n\n');
+    const rawThreadId = String(context.threadId || (context.plan && context.plan.threadId) || '').trim();
+    const threadId = /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(rawThreadId) ? rawThreadId : '';
+    const threadStoreDir = typeof TASK_WORKSPACE_CHAT_THREADS_DIR === 'string' ? TASK_WORKSPACE_CHAT_THREADS_DIR : '';
+    const canLoadWorkspaceThread = typeof loadWorkspaceChatThread === 'function' && !!threadStoreDir;
+    const thread = threadId && canLoadWorkspaceThread ? loadWorkspaceChatThread(threadStoreDir, threadId) : { messages: [] };
+    const historyMessages = Array.isArray(thread.messages) ? thread.messages.slice(-12) : [];
+    const workspaceContext = typeof buildWorkspaceChatContext === 'function'
+        ? buildWorkspaceChatContext(context.cwd || process.cwd(), finalPrompt, historyMessages)
+        : '';
     const systemPrompt = [
         '你是 codexmate 任务编排中的 OpenAI Chat-compatible 执行节点。',
-        '基于用户给出的目标、前置节点摘要和当前节点范围，输出可执行、可验证、事实谨慎的结果。',
+        '基于用户给出的目标、前置节点摘要、同一 thread 历史和当前工作区快照，输出可执行、可验证、事实谨慎的结果。',
         allowWrite
-            ? '当前任务允许写入；如果需要创建或更新文件，请明确写出安全的相对文件名，并用 fenced code block 给出完整文件内容。codexmate 只会物化明确、安全、位于任务工作目录内的文本类 artifact。'
+            ? '当前任务允许写入；如果需要创建或更新文件，优先使用 fenced code block：```codexmate-file action="write" path="相对路径"。代码块内容会写入任务工作目录内对应文本文件。删除文件请单独写一行 CODEXMATE_DELETE_FILE: 相对路径。只允许安全相对路径。'
             : '当前任务是只读/验证节点，不要声称修改了文件。',
+        '查询/读取文件时，先依据用户要求和工作区快照回答；如果快照不足，说明缺口，不要编造。',
         '回答使用中文，避免空泛总结。'
     ].join('\n');
+    const currentUserMessage = [
+        finalPrompt,
+        workspaceContext ? '\n--- codexmate workspace snapshot ---' : '',
+        workspaceContext
+    ].filter(Boolean).join('\n');
     const startedAt = Date.now();
     const body = {
         model: requestConfig.model,
         messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: finalPrompt }
+            ...historyMessages.map((message) => ({
+                role: message.role === 'assistant' ? 'assistant' : 'user',
+                content: String(message.content || '')
+            })),
+            { role: 'user', content: currentUserMessage }
         ],
         temperature: Number.isFinite(requestConfig.temperature) ? requestConfig.temperature : 0.2,
         stream: false
@@ -16610,6 +16636,15 @@ async function runOpenAiChatTaskNode(node, context = {}) {
             prompt: node.prompt || ''
         })
         : { files: [], warnings: [] };
+    const workspaceOperations = success && typeof applyWorkspaceFileOperations === 'function'
+        ? applyWorkspaceFileOperations(text, context.cwd || process.cwd(), { allowWrite })
+        : { files: [], warnings: [] };
+    const threadAppend = threadId && typeof appendWorkspaceChatThread === 'function' && !!threadStoreDir
+        ? appendWorkspaceChatThread(threadStoreDir, threadId, [
+            { role: 'user', content: finalPrompt },
+            { role: 'assistant', content: text || errorMessage }
+        ], { cwd: context.cwd || process.cwd() })
+        : { ok: false, error: 'thread id is empty' };
     return {
         success,
         error: errorMessage,
@@ -16622,13 +16657,21 @@ async function runOpenAiChatTaskNode(node, context = {}) {
             text,
             response: result.payload || null,
             durationMs: Date.now() - startedAt,
-            materializedFiles: materialized.files
+            messageCount: body.messages.length,
+            threadId,
+            threadStore: threadAppend && threadAppend.file ? threadAppend.file : '',
+            materializedFiles: materialized.files,
+            workspaceFiles: workspaceOperations.files
         },
         logs: [
             { at: toIsoTime(Date.now()), level: 'info', message: `OpenAI Chat request provider=${requestConfig.providerName} model=${requestConfig.model} status=${result.status || 0}` },
+            ...(threadId ? [{ at: toIsoTime(Date.now()), level: 'info', message: `workspace chat thread=${threadId} messages=${body.messages.length}` }] : []),
             ...(success ? [{ at: toIsoTime(Date.now()), level: 'info', message: truncateTaskText(text, 1200) }] : [{ at: toIsoTime(Date.now()), level: 'error', message: errorMessage }]),
             ...materialized.files.map((file) => ({ at: toIsoTime(Date.now()), level: 'info', message: `materialized artifact ${file.relativePath} (${file.bytes} bytes)` })),
-            ...materialized.warnings.map((warning) => ({ at: toIsoTime(Date.now()), level: 'warn', message: warning }))
+            ...workspaceOperations.files.map((file) => ({ at: toIsoTime(Date.now()), level: 'info', message: `workspace ${file.operation} ${file.relativePath} (${file.bytes} bytes)` })),
+            ...materialized.warnings.map((warning) => ({ at: toIsoTime(Date.now()), level: 'warn', message: warning })),
+            ...workspaceOperations.warnings.map((warning) => ({ at: toIsoTime(Date.now()), level: 'warn', message: warning })),
+            ...(threadAppend && threadAppend.error ? [{ at: toIsoTime(Date.now()), level: 'warn', message: threadAppend.error }] : [])
         ]
     };
 }
@@ -16747,6 +16790,7 @@ async function runTaskPlanInternal(plan, options = {}) {
                 plan,
                 taskId,
                 runId,
+                threadId,
                 allowWrite: plan.allowWrite === true,
                 dryRun: plan.dryRun === true,
                 cwd

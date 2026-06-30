@@ -43,6 +43,7 @@ test('buildTaskPlan generates OpenAI Chat orchestration nodes and follow-ups', (
     assert.ok(Array.isArray(plan.nodes));
     assert.ok(plan.nodes.some((node) => node.kind === 'openai-chat'));
     assert.ok(plan.nodes.some((node) => node.title.includes('验证')));
+    assert.ok(plan.nodes.filter((node) => node.kind === 'openai-chat').every((node) => node.retryLimit === 2));
     assert.strictEqual(plan.followUps.length, 1);
     assert.strictEqual(plan.nodes[plan.nodes.length - 1].kind, 'openai-chat');
 });

@@ -148,8 +148,8 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.input\.placeholder'\)/);
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.context\.workspace\.auto'\)/);
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.context\.thread\.auto'\)/);
-    assert.match(orchestrationPanel, /class="task-chat-context-row" role="group" :aria-label="t\('orchestration\.chat\.context\.aria'\)"/);
-    assert.match(orchestrationPanel, /class="task-chat-context-chip"/);
+    assert.match(orchestrationPanel, /class="task-chat-context-row task-chat-context-row-primary" role="group" :aria-label="t\('orchestration\.chat\.context\.aria'\)"/);
+    assert.match(orchestrationPanel, /class="task-chat-context-chip task-chat-context-chip-strong"/);
     assert.match(orchestrationPanel, /class="task-chat-context-chip task-chat-context-action" @click="taskOrchestration\.settingsOpen = true">配置<\/button>/);
     assert.match(orchestrationPanel, /@change="taskOrchestration\.selectedEngine === 'workflow' \? null : taskOrchestration\.workflowIdsText = ''"/);
     assert.doesNotMatch(orchestrationPanel, /task-thread-suggestion-card/);

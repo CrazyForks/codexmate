@@ -4347,12 +4347,18 @@ return function render(_ctx, _cache) {
                           ]),
                           _createElementVNode("div", { class: "task-chat-execute-caption" }, _toDisplayString(_ctx.t('orchestration.chat.input.workCaption')), 1 /* TEXT */),
                           _createElementVNode("div", {
-                            class: "task-chat-context-row",
+                            class: "task-chat-context-row task-chat-context-row-primary",
                             role: "group",
                             "aria-label": _ctx.t('orchestration.chat.context.aria')
                           }, [
-                            _createElementVNode("span", { class: "task-chat-context-chip" }, _toDisplayString(_ctx.taskOrchestration.workspacePath.trim() ? _ctx.t('orchestration.chat.context.workspace.value', { value: _ctx.taskOrchestration.workspacePath.trim() }) : _ctx.t('orchestration.chat.context.workspace.auto')), 1 /* TEXT */),
-                            _createElementVNode("span", { class: "task-chat-context-chip" }, _toDisplayString(_ctx.taskOrchestration.threadId.trim() ? _ctx.t('orchestration.chat.context.thread.value', { value: _ctx.taskOrchestration.threadId.trim() }) : _ctx.t('orchestration.chat.context.thread.auto')), 1 /* TEXT */),
+                            _createElementVNode("span", { class: "task-chat-context-chip task-chat-context-chip-strong" }, [
+                              _createElementVNode("small", null, _toDisplayString(_ctx.t('orchestration.plan.summary.cwd')), 1 /* TEXT */),
+                              _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestrationWorkspacePath || _ctx.taskOrchestration.workspacePath.trim() || _ctx.t('orchestration.chat.context.workspace.auto')), 1 /* TEXT */)
+                            ]),
+                            _createElementVNode("span", { class: "task-chat-context-chip task-chat-context-chip-strong" }, [
+                              _createElementVNode("small", null, _toDisplayString(_ctx.t('orchestration.plan.summary.threadId')), 1 /* TEXT */),
+                              _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.threadId.trim() || (_ctx.taskOrchestrationSelectedRun && _ctx.taskOrchestrationSelectedRun.threadId) || _ctx.t('orchestration.chat.context.thread.auto')), 1 /* TEXT */)
+                            ]),
                             _createElementVNode("span", { class: "task-chat-context-chip" }, _toDisplayString(_ctx.taskOrchestrationDraftMetrics.hasTarget ? _ctx.t('orchestration.chat.context.sequence.value', { count: _ctx.taskOrchestrationDraftMetrics.requestCount }) : _ctx.t('orchestration.chat.context.sequence.empty')), 1 /* TEXT */),
                             _createElementVNode("span", { class: "task-chat-context-chip" }, _toDisplayString(_ctx.taskOrchestration.runMode === 'dry-run' ? _ctx.t('orchestration.runMode.dryRun') : (_ctx.taskOrchestration.runMode === 'read' ? _ctx.t('orchestration.runMode.readOnly') : _ctx.t('orchestration.runMode.write') )), 1 /* TEXT */),
                             _createElementVNode("button", {
@@ -4775,6 +4781,20 @@ return function render(_ctx, _cache) {
                                                               key: file.path || file.relativePath,
                                                               class: "task-materialized-file"
                                                             }, _toDisplayString(file.relativePath || file.path) + " · " + _toDisplayString(file.bytes || 0) + " bytes", 1 /* TEXT */))
+                                                          }), 128 /* KEYED_FRAGMENT */))
+                                                        ]))
+                                                      : _createCommentVNode("v-if", true),
+                                                    (node.output.workspaceFiles && node.output.workspaceFiles.length)
+                                                      ? (_openBlock(), _createElementBlock("div", {
+                                                          key: 1,
+                                                          class: "task-materialized-files task-workspace-files"
+                                                        }, [
+                                                          _createElementVNode("div", { class: "task-node-deps" }, _toDisplayString(_ctx.t('orchestration.detail.node.workspaceFiles')), 1 /* TEXT */),
+                                                          (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(node.output.workspaceFiles, (file) => {
+                                                            return (_openBlock(), _createElementBlock("div", {
+                                                              key: file.path || file.relativePath,
+                                                              class: "task-materialized-file"
+                                                            }, _toDisplayString([String(file.operation || '').trim().toUpperCase(), String(file.relativePath || file.path || '').trim(), Number.isFinite(Number(file.bytes)) ? (Number(file.bytes) + ' bytes') : '', typeof file.existed === 'boolean' ? (file.existed ? 'existed' : 'new') : ''].filter(Boolean).join(' · ')), 1 /* TEXT */))
                                                           }), 128 /* KEYED_FRAGMENT */))
                                                         ]))
                                                       : _createCommentVNode("v-if", true)

@@ -2194,7 +2194,8 @@ test('continueTaskThreadFromUi inherits selected run workspace and thread', () =
 
     assert.strictEqual(context.taskOrchestration.threadId, 'thread-existing');
     assert.strictEqual(context.taskOrchestration.workspacePath, '/tmp/existing-workspace');
-    assert.strictEqual(context.taskOrchestration.target, 'Create 2048 page');
+    assert.strictEqual(context.taskOrchestration.title, '');
+    assert.strictEqual(context.taskOrchestration.target, '');
     assert.strictEqual(context.taskOrchestration.selectedEngine, 'openai-chat');
     assert.strictEqual(context.taskOrchestration.workflowIdsText, '');
     assert.strictEqual(context.taskOrchestration.runMode, 'write');

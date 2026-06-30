@@ -51,6 +51,31 @@ function formatTaskConversationMeta(items) {
     return items.filter(Boolean).join(' · ');
 }
 
+function collectTaskRunWorkspaceFileLines(detail) {
+    const run = detail && detail.run && typeof detail.run === 'object' ? detail.run : null;
+    const nodes = Array.isArray(detail && detail.nodes)
+        ? detail.nodes
+        : (Array.isArray(run && run.nodes) ? run.nodes : []);
+    const files = [];
+    for (const node of nodes) {
+        const output = node && node.output && typeof node.output === 'object' ? node.output : null;
+        const workspaceFiles = Array.isArray(output && output.workspaceFiles) ? output.workspaceFiles : [];
+        const materializedFiles = Array.isArray(output && output.materializedFiles) ? output.materializedFiles : [];
+        for (const file of workspaceFiles) {
+            if (!file || typeof file !== 'object') continue;
+            const op = String(file.operation || '').trim().toUpperCase() || 'FILE';
+            const filePath = String(file.relativePath || file.path || '').trim();
+            if (filePath) files.push(`${op} ${filePath}`);
+        }
+        for (const file of materializedFiles) {
+            if (!file || typeof file !== 'object') continue;
+            const filePath = String(file.relativePath || file.path || '').trim();
+            if (filePath) files.push(`WRITE ${filePath}`);
+        }
+    }
+    return Array.from(new Set(files)).slice(0, 6);
+}
+
 function normalizeTaskWorkspacePath(value) {
     return String(value || '').trim().replace(/\\+/g, '/').replace(/\/$/, '');
 }
@@ -176,13 +201,23 @@ function createTaskConversationMessages(taskOrchestration, t = null) {
     const detail = state.selectedRunDetail && typeof state.selectedRunDetail === 'object' ? state.selectedRunDetail : null;
     const detailRun = detail && detail.run && typeof detail.run === 'object' ? detail.run : null;
     if (detail) {
+        const fileLines = collectTaskRunWorkspaceFileLines(detail);
+        const resultLines = [];
+        if (detailRun && detailRun.summary) {
+            resultLines.push(detailRun.summary);
+        } else {
+            resultLines.push(translateTaskText(t, 'orchestration.chat.assistant.contextFallback', '已选中一个历史任务，继续时会继承它的线程和工作区。'));
+        }
+        if (fileLines.length > 0) {
+            resultLines.push(translateTaskText(t, 'orchestration.chat.assistant.filesSummary', `文件操作：${fileLines.join('；')}`, { files: fileLines.join('；') }));
+        }
         messages.push({
             id: 'context-run',
             role: 'assistant',
-            label: translateTaskText(t, 'orchestration.chat.assistant.contextLabel', '上一轮上下文'),
-            text: detailRun && detailRun.summary
-                ? detailRun.summary
-                : translateTaskText(t, 'orchestration.chat.assistant.contextFallback', '已选中一个历史任务，继续时会继承它的线程和工作区。'),
+            label: detailRun && detailRun.status === 'success'
+                ? translateTaskText(t, 'orchestration.chat.assistant.resultLabel', '实现结果')
+                : translateTaskText(t, 'orchestration.chat.assistant.contextLabel', '上一轮上下文'),
+            text: resultLines.join('\n'),
             meta: formatTaskConversationMeta([
                 detail.threadId ? translateTaskText(t, 'orchestration.chat.meta.thread', `线程 ${detail.threadId}`, { value: detail.threadId }) : '',
                 detail.cwd ? translateTaskText(t, 'orchestration.chat.meta.workspace', `工作区 ${detail.cwd}`, { value: detail.cwd }) : '',

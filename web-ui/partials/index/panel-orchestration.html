@@ -233,9 +233,15 @@
                                         <div class="task-chat-execute-caption">
                                             {{ t('orchestration.chat.input.workCaption') }}
                                         </div>
-                                        <div class="task-chat-context-row" role="group" :aria-label="t('orchestration.chat.context.aria')">
-                                            <span class="task-chat-context-chip">{{ taskOrchestration.workspacePath.trim() ? t('orchestration.chat.context.workspace.value', { value: taskOrchestration.workspacePath.trim() }) : t('orchestration.chat.context.workspace.auto') }}</span>
-                                            <span class="task-chat-context-chip">{{ taskOrchestration.threadId.trim() ? t('orchestration.chat.context.thread.value', { value: taskOrchestration.threadId.trim() }) : t('orchestration.chat.context.thread.auto') }}</span>
+                                        <div class="task-chat-context-row task-chat-context-row-primary" role="group" :aria-label="t('orchestration.chat.context.aria')">
+                                            <span class="task-chat-context-chip task-chat-context-chip-strong">
+                                                <small>{{ t('orchestration.plan.summary.cwd') }}</small>
+                                                <strong>{{ taskOrchestrationWorkspacePath || taskOrchestration.workspacePath.trim() || t('orchestration.chat.context.workspace.auto') }}</strong>
+                                            </span>
+                                            <span class="task-chat-context-chip task-chat-context-chip-strong">
+                                                <small>{{ t('orchestration.plan.summary.threadId') }}</small>
+                                                <strong>{{ taskOrchestration.threadId.trim() || (taskOrchestrationSelectedRun && taskOrchestrationSelectedRun.threadId) || t('orchestration.chat.context.thread.auto') }}</strong>
+                                            </span>
                                             <span class="task-chat-context-chip">{{ taskOrchestrationDraftMetrics.hasTarget ? t('orchestration.chat.context.sequence.value', { count: taskOrchestrationDraftMetrics.requestCount }) : t('orchestration.chat.context.sequence.empty') }}</span>
                                             <span class="task-chat-context-chip">{{ taskOrchestration.runMode === 'dry-run' ? t('orchestration.runMode.dryRun') : (taskOrchestration.runMode === 'read' ? t('orchestration.runMode.readOnly') : t('orchestration.runMode.write') ) }}</span>
                                             <button type="button" class="task-chat-context-chip task-chat-context-action" @click="taskOrchestration.settingsOpen = true">配置</button>
@@ -439,6 +445,10 @@
                                                             <div v-if="node.output.materializedFiles && node.output.materializedFiles.length" class="task-materialized-files">
                                                                 <div class="task-node-deps">{{ t('orchestration.detail.node.materializedFiles') }}</div>
                                                                 <div v-for="file in node.output.materializedFiles" :key="file.path || file.relativePath" class="task-materialized-file">{{ file.relativePath || file.path }} · {{ file.bytes || 0 }} bytes</div>
+                                                            </div>
+                                                            <div v-if="node.output.workspaceFiles && node.output.workspaceFiles.length" class="task-materialized-files task-workspace-files">
+                                                                <div class="task-node-deps">{{ t('orchestration.detail.node.workspaceFiles') }}</div>
+                                                                <div v-for="file in node.output.workspaceFiles" :key="file.path || file.relativePath" class="task-materialized-file">{{ [String(file.operation || '').trim().toUpperCase(), String(file.relativePath || file.path || '').trim(), Number.isFinite(Number(file.bytes)) ? (Number(file.bytes) + ' bytes') : '', typeof file.existed === 'boolean' ? (file.existed ? 'existed' : 'new') : ''].filter(Boolean).join(' · ') }}</div>
                                                             </div>
                                                         </div>
                                                         <pre class="task-log-block">{{ formatTaskNodeLogs(node.logs) }}</pre>

@@ -816,8 +816,8 @@ export function createTaskOrchestrationMethods(options = {}) {
             const continuedEngine = normalizeTaskSelectedEngine(detail.engine || state.selectedEngine || 'openai-chat');
             state.threadId = String(detail.threadId || state.threadId || '').trim();
             state.workspacePath = String(detail.cwd || state.workspacePath || '').trim();
-            state.title = String(detail.title || state.title || '').trim();
-            state.target = String(detail.target || state.target || '').trim();
+            state.title = '';
+            state.target = '';
             state.selectedEngine = continuedEngine;
             state.workflowIdsText = continuedEngine === 'workflow'
                 ? (Array.isArray(detail.plan && detail.plan.workflowIds) ? detail.plan.workflowIds.join('\n') : '')
