@@ -2259,6 +2259,48 @@
     white-space: nowrap;
 }
 
+#panel-orchestration .task-thread-result-card {
+    border-color: rgba(34, 197, 94, 0.28);
+    background: linear-gradient(180deg, rgba(34, 197, 94, 0.09), rgba(248, 250, 252, 0.88));
+}
+
+#panel-orchestration .task-thread-result-summary {
+    margin-bottom: 8px;
+}
+
+#panel-orchestration .task-result-target {
+    display: grid;
+    gap: 3px;
+    padding: 8px 10px;
+    border: 1px solid rgba(148, 163, 184, 0.20);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+#panel-orchestration .task-result-target + .task-result-target {
+    margin-top: 6px;
+}
+
+#panel-orchestration .task-result-label {
+    color: var(--color-text-muted);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+#panel-orchestration .task-result-copy {
+    color: var(--color-text-primary);
+    font-size: 0.82rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+#panel-orchestration .task-result-receipt .task-result-copy {
+    font-size: 0.92rem;
+    font-weight: 800;
+}
+
 #panel-orchestration .task-thread-run-details {
     margin-top: 8px;
     color: var(--color-text-secondary);

@@ -204,6 +204,35 @@
                                         </template>
                                     </section>
 
+                                    <section
+                                        v-if="taskOrchestrationSelectedRun && taskOrchestrationSelectedRun.run"
+                                        class="selector-section task-plan-card task-thread-message-card task-thread-result-card">
+                                        <div class="task-thread-card-label">AI · {{ t('orchestration.result.title') }}</div>
+                                        <div class="task-thread-run-summary task-thread-result-summary">
+                                            <span :class="['pill', taskRunStatusTone(taskOrchestrationSelectedRun.run.status)]">{{ taskOrchestrationSelectedRun.run.status }}</span>
+                                            <span class="task-thread-run-summary-copy">{{ taskOrchestrationSelectedRun.run.summary || taskOrchestrationSelectedRun.run.runId || taskOrchestration.selectedRunId }}</span>
+                                        </div>
+                                        <div v-if="taskOrchestration.target" class="task-result-target">
+                                            <span class="task-result-label">{{ t('orchestration.result.target') }}</span>
+                                            <span class="task-result-copy">{{ taskOrchestration.target }}</span>
+                                        </div>
+                                        <div class="task-result-target task-result-receipt">
+                                            <span class="task-result-label">{{ t('orchestration.result.receipt') }}</span>
+                                            <span class="task-result-copy">{{ t('orchestration.result.completed', { target: taskOrchestration.target || taskOrchestrationSelectedRun.run.summary || taskOrchestrationSelectedRun.run.runId || taskOrchestration.selectedRunId }) }}</span>
+                                        </div>
+                                        <div class="task-result-target">
+                                            <span class="task-result-label">{{ t('orchestration.result.summary') }}</span>
+                                            <span class="task-result-copy">{{ taskOrchestrationSelectedRun.run.summary || taskOrchestrationSelectedRun.run.runId || taskOrchestration.selectedRunId }}</span>
+                                        </div>
+                                    </section>
+
+                                    <section
+                                        v-else-if="taskOrchestration.selectedRunError"
+                                        class="selector-section task-plan-card task-thread-message-card task-thread-result-card">
+                                        <div class="task-thread-card-label">AI · {{ t('orchestration.result.title') }}</div>
+                                        <div class="task-issue-item">{{ taskOrchestration.selectedRunError }}</div>
+                                    </section>
+
                                     </div>
                                     <div class="task-thread-composer">
                                         <label class="task-quick-target-field task-chat-composer">
