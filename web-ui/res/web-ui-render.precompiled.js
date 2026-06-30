@@ -4306,46 +4306,7 @@ return function render(_ctx, _cache) {
                                     ]))
                                   : _createCommentVNode("v-if", true)
                               ]))
-                            : _createCommentVNode("v-if", true),
-                          (_ctx.taskOrchestrationSelectedRun && _ctx.taskOrchestrationSelectedRun.run)
-                            ? (_openBlock(), _createElementBlock("section", {
-                                key: 2,
-                                class: "selector-section task-plan-card task-thread-message-card task-thread-result-card"
-                              }, [
-                                _createElementVNode("div", { class: "task-thread-card-label" }, "AI · " + _toDisplayString(_ctx.t('orchestration.result.title')), 1 /* TEXT */),
-                                _createElementVNode("div", { class: "task-thread-run-summary task-thread-result-summary" }, [
-                                  _createElementVNode("span", {
-                                    class: _normalizeClass(['pill', _ctx.taskRunStatusTone(_ctx.taskOrchestrationSelectedRun.run.status)])
-                                  }, _toDisplayString(_ctx.taskOrchestrationSelectedRun.run.status), 3 /* TEXT, CLASS */),
-                                  _createElementVNode("span", { class: "task-thread-run-summary-copy" }, _toDisplayString(_ctx.taskOrchestrationSelectedRun.run.summary || _ctx.taskOrchestrationSelectedRun.run.runId || _ctx.taskOrchestration.selectedRunId), 1 /* TEXT */)
-                                ]),
-                                (_ctx.taskOrchestration.target)
-                                  ? (_openBlock(), _createElementBlock("div", {
-                                      key: 0,
-                                      class: "task-result-target"
-                                    }, [
-                                      _createElementVNode("span", { class: "task-result-label" }, _toDisplayString(_ctx.t('orchestration.result.target')), 1 /* TEXT */),
-                                      _createElementVNode("span", { class: "task-result-copy" }, _toDisplayString(_ctx.taskOrchestration.target), 1 /* TEXT */)
-                                    ]))
-                                  : _createCommentVNode("v-if", true),
-                                _createElementVNode("div", { class: "task-result-target task-result-receipt" }, [
-                                  _createElementVNode("span", { class: "task-result-label" }, _toDisplayString(_ctx.t('orchestration.result.receipt')), 1 /* TEXT */),
-                                  _createElementVNode("span", { class: "task-result-copy" }, _toDisplayString(_ctx.t('orchestration.result.completed', { target: _ctx.taskOrchestration.target || _ctx.taskOrchestrationSelectedRun.run.summary || _ctx.taskOrchestrationSelectedRun.run.runId || _ctx.taskOrchestration.selectedRunId })), 1 /* TEXT */)
-                                ]),
-                                _createElementVNode("div", { class: "task-result-target" }, [
-                                  _createElementVNode("span", { class: "task-result-label" }, _toDisplayString(_ctx.t('orchestration.result.summary')), 1 /* TEXT */),
-                                  _createElementVNode("span", { class: "task-result-copy" }, _toDisplayString(_ctx.taskOrchestrationSelectedRun.run.summary || _ctx.taskOrchestrationSelectedRun.run.runId || _ctx.taskOrchestration.selectedRunId), 1 /* TEXT */)
-                                ])
-                              ]))
-                            : (_ctx.taskOrchestration.selectedRunError)
-                              ? (_openBlock(), _createElementBlock("section", {
-                                  key: 3,
-                                  class: "selector-section task-plan-card task-thread-message-card task-thread-result-card"
-                                }, [
-                                  _createElementVNode("div", { class: "task-thread-card-label" }, "AI · " + _toDisplayString(_ctx.t('orchestration.result.title')), 1 /* TEXT */),
-                                  _createElementVNode("div", { class: "task-issue-item" }, _toDisplayString(_ctx.taskOrchestration.selectedRunError), 1 /* TEXT */)
-                                ]))
-                              : _createCommentVNode("v-if", true)
+                            : _createCommentVNode("v-if", true)
                         ], 8 /* PROPS */, ["aria-label"]),
                         _createElementVNode("div", { class: "task-thread-composer" }, [
                           _createElementVNode("label", { class: "task-quick-target-field task-chat-composer" }, [

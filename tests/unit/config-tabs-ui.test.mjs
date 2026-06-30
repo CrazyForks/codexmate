@@ -172,13 +172,6 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /t\('orchestration\.workbench\.ready'\)/);
     assert.doesNotMatch(orchestrationPanel, />\{\{ taskOrchestrationWorkspaceQueue\.length \}\} queued</);
     assert.doesNotMatch(orchestrationPanel, />Ready</);
-    assert.match(orchestrationPanel, /class="[^"]*task-thread-message-card[^"]*task-thread-result-card[^"]*"/);
-    assert.match(orchestrationPanel, /v-if="taskOrchestrationSelectedRun && taskOrchestrationSelectedRun\.run"/);
-    assert.match(orchestrationPanel, /t\('orchestration\.result\.title'\)/);
-    assert.match(orchestrationPanel, /t\('orchestration\.result\.target'\)/);
-    assert.match(orchestrationPanel, /t\('orchestration\.result\.completed', \{ target: taskOrchestration\.target/);
-    assert.match(orchestrationPanel, /t\('orchestration\.result\.summary'\)/);
-    assert.match(orchestrationPanel, /\{\{ taskOrchestration\.target \}\}/);
     assert.match(orchestrationPanel, /taskOrchestration.workspaceTab === 'queue'/);
     assert.match(orchestrationPanel, /taskOrchestration.workspaceTab === 'runs'/);
     assert.match(orchestrationPanel, /taskOrchestration.workspaceTab === 'detail'/);
@@ -219,8 +212,6 @@ test('config template keeps expected config tabs in top and side navigation', ()
         assert.match(styles, /#panel-orchestration \.task-project-item\.active\s*\{[\s\S]*box-shadow:\s*inset 3px 0 0 rgba\(199, 116, 98, 0\.56\);/);
         assert.match(styles, /#panel-orchestration \.task-chat-panel\s*\{[\s\S]*border:\s*0;[\s\S]*background:\s*transparent;[\s\S]*box-shadow:\s*none;/);
         assert.match(styles, /#panel-orchestration \.task-chat-thread\s*\{[\s\S]*padding:\s*8px 8px 188px;[\s\S]*scroll-padding-bottom:\s*188px;/);
-        assert.match(styles, /#panel-orchestration \.task-thread-result-card\s*\{[\s\S]*border-color:\s*rgba\(34, 197, 94, 0\.28\);/);
-        assert.match(styles, /#panel-orchestration \.task-result-copy\s*\{[\s\S]*overflow-wrap:\s*anywhere;/);
         assert.match(styles, /#panel-orchestration \.task-thread-composer\s*\{[\s\S]*position:\s*fixed;[\s\S]*bottom:\s*16px;[\s\S]*width:\s*min\(872px, calc\(100vw - 48px\)\);/);
         assert.match(styles, /#panel-orchestration \.task-thread-message-card\s*\{[\s\S]*width:\s*min\(100%, 660px\);/);
         assert.doesNotMatch(styles, /task-panel-toolbar/);
