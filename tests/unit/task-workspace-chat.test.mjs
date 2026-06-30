@@ -55,9 +55,12 @@ test('workspace chat applies create update read context and delete within cwd', 
 
 test('workspace chat rejects path traversal and honors allowWrite', () => {
     const cwd = tempDir();
-    const blocked = applyWorkspaceFileOperations('```codexmate-file action="write" path="../escape.txt"\nnope\n```', cwd, { allowWrite: true });
+    const escapedFilename = `escape-${path.basename(cwd)}-${process.pid}.txt`;
+    const escapedPath = path.join(cwd, '..', escapedFilename);
+    fs.rmSync(escapedPath, { force: true });
+    const blocked = applyWorkspaceFileOperations(`\`\`\`codexmate-file action="write" path="../${escapedFilename}"\nnope\n\`\`\``, cwd, { allowWrite: true });
     assert.ok(blocked.warnings.some((item) => item.includes('escapes cwd')));
-    assert.strictEqual(fs.existsSync(path.join(cwd, '..', 'escape.txt')), false);
+    assert.strictEqual(fs.existsSync(escapedPath), false);
 
     const dry = applyWorkspaceFileOperations('```codexmate-file action="write" path="safe.txt"\nnope\n```', cwd, { allowWrite: false });
     assert.ok(dry.warnings.some((item) => item.includes('allowWrite is false')));
