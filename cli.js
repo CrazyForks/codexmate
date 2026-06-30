@@ -16177,6 +16177,20 @@ function pickTaskProviderModel(providerName, provider, config) {
     return savedModel || (activeProvider === providerName ? activeModel : '') || firstProviderModel;
 }
 
+function pickTaskProviderTemperature(provider) {
+    const raw = provider && Object.prototype.hasOwnProperty.call(provider, 'temperature')
+        ? provider.temperature
+        : undefined;
+    if (raw === undefined || raw === null || String(raw).trim() === '') {
+        return 0.2;
+    }
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < 0 || value > 2) {
+        return 0.2;
+    }
+    return value;
+}
+
 function resolveTaskOpenAiChatConfig() {
     const configResult = readConfigOrVirtualDefault();
     const config = configResult && configResult.config && typeof configResult.config === 'object' ? configResult.config : {};
@@ -16223,7 +16237,8 @@ function resolveTaskOpenAiChatConfig() {
         endpointUrl: buildOpenAiChatEndpointUrl(baseUrl),
         apiKey,
         extraHeaders,
-        model
+        model,
+        temperature: pickTaskProviderTemperature(provider)
     };
 }
 
@@ -16566,7 +16581,7 @@ async function runOpenAiChatTaskNode(node, context = {}) {
             { role: 'system', content: systemPrompt },
             { role: 'user', content: finalPrompt }
         ],
-        temperature: 0.2,
+        temperature: Number.isFinite(requestConfig.temperature) ? requestConfig.temperature : 0.2,
         stream: false
     };
     const result = await postOpenAiChatCompletion(requestConfig, body, {

@@ -183,10 +183,11 @@ test('runOpenAiChatTaskNode uses configured OpenAI Chat provider without spawnin
         resolveTaskOpenAiChatConfig() {
             return {
                 providerName: 'mock-openai',
-                model: 'deepseek-v4-pro',
+                model: 'glm-5.2',
                 endpointUrl: 'http://127.0.0.1:18183/v1/chat/completions',
                 apiKey: 'sk-unit-secret',
-                extraHeaders: {}
+                extraHeaders: {},
+                temperature: 0.7
             };
         },
         postOpenAiChatCompletion(config, body) {
@@ -225,10 +226,11 @@ test('runOpenAiChatTaskNode uses configured OpenAI Chat provider without spawnin
 
     assert.strictEqual(result.success, true);
     assert.strictEqual(result.output.provider, 'mock-openai');
-    assert.strictEqual(result.output.model, 'deepseek-v4-pro');
+    assert.strictEqual(result.output.model, 'glm-5.2');
     assert.strictEqual(result.output.text, 'mock-openai-chat-ok');
     assert.strictEqual(requests.length, 1);
-    assert.strictEqual(requests[0].body.model, 'deepseek-v4-pro');
+    assert.strictEqual(requests[0].body.model, 'glm-5.2');
+    assert.strictEqual(requests[0].body.temperature, 0.7);
     assert.strictEqual(requests[0].body.messages[0].role, 'system');
     assert.strictEqual(requests[0].body.messages[1].role, 'user');
     assert.match(requests[0].body.messages[1].content, /dependency done/);

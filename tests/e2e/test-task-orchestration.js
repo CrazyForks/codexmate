@@ -34,8 +34,8 @@ const server = http.createServer((req, res) => {
     }) + '\\n');
     if (req.method === 'GET' && requestPath === '/v1/models') {
       const body = JSON.stringify({ object: 'list', data: [
-        { id: 'deepseek-v4-pro', object: 'model' },
-        { id: 'deepseek-v4-flash', object: 'model' }
+        { id: 'glm-5.2', object: 'model' },
+        { id: 'glm-5.2-flash', object: 'model' }
       ] });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(body, 'utf-8') });
       res.end(body, 'utf-8');
@@ -123,15 +123,16 @@ function writeOpenAiChatConfig(tmpHome, baseUrl) {
     fs.mkdirSync(configDir, { recursive: true });
     fs.writeFileSync(path.join(configDir, 'codexmate-init.json'), JSON.stringify({ version: 1, mode: 'task-openai-chat-e2e' }), 'utf-8');
     fs.writeFileSync(path.join(configDir, 'config.toml'), [
-        'model = "deepseek-v4-pro"',
-        'model_provider = "local-openai-chat"',
+        'model = "glm-5.2"',
+        'model_provider = "new-api-chat"',
         '',
-        '[model_providers.local-openai-chat]',
-        'name = "Local OpenAI Chat"',
+        '[model_providers.new-api-chat]',
+        'name = "New API Chat"',
         `base_url = "${baseUrl}/v1"`,
         'wire_api = "chat_completions"',
         'preferred_auth_method = "sk-task-e2e-secret"',
-        'models = ["deepseek-v4-pro", "deepseek-v4-flash"]',
+        'temperature = 0.7',
+        'models = ["glm-5.2", "glm-5.2-flash"]',
         ''
     ].join('\n'), 'utf-8');
 }
@@ -142,7 +143,7 @@ function assertOpenAiRunPayload(payload, label) {
     assert(nodes.length > 0, `${label} should include nodes`);
     assert(nodes.every(node => node.kind === 'openai-chat'), `${label} should use OpenAI Chat nodes`);
     assert(nodes.every(node => node.status === 'success'), `${label} nodes should all succeed`);
-    assert(nodes.some(node => node.output && node.output.provider === 'local-openai-chat'), `${label} should record provider`);
+    assert(nodes.some(node => node.output && node.output.provider === 'new-api-chat'), `${label} should record provider`);
     assert(JSON.stringify(payload).indexOf('sk-task-e2e-secret') === -1, `${label} must not leak api key`);
 }
 
@@ -152,7 +153,8 @@ function assertOpenAiRequests(mock, minCount, label) {
     for (const item of chatRequests) {
         assert(item.method === 'POST', `${label} chat request should be POST`);
         assert(item.authorization === 'Bearer sk-task-e2e-secret', `${label} should pass bearer auth`);
-        assert(item.body && item.body.model === 'deepseek-v4-pro', `${label} should pass selected model`);
+        assert(item.body && item.body.model === 'glm-5.2', `${label} should pass selected model`);
+        assert(item.body.temperature === 0.7, `${label} should pass configured temperature`);
         assert(Array.isArray(item.body.messages) && item.body.messages.length >= 2, `${label} should send chat messages`);
         assert(item.body.messages.some(message => message.role === 'system'), `${label} should include system prompt`);
         assert(item.body.messages.some(message => message.role === 'user'), `${label} should include user prompt`);
@@ -395,7 +397,7 @@ module.exports = async function testTaskOrchestration(ctx) {
         ], { env });
         assert(openAiLogsResult.status === 0, `OpenAI Chat task logs failed: ${openAiLogsResult.stderr || openAiLogsResult.stdout}`);
         const openAiLogsPayload = parseJsonOutput(openAiLogsResult.stdout);
-        assert(String(openAiLogsPayload.logs || '').includes('OpenAI Chat request provider=local-openai-chat'), 'OpenAI Chat logs should include provider request');
+        assert(String(openAiLogsPayload.logs || '').includes('OpenAI Chat request provider=new-api-chat'), 'OpenAI Chat logs should include provider request');
 
         const rawPlanDefaultCwdPath = path.join(tmpHome, 'task-raw-plan-default-cwd.json');
         const rawPlanDefaultCwd = path.join(tmpHome, 'task-raw-plan-default-cwd-workspace');
