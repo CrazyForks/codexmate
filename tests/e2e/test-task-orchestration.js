@@ -123,8 +123,16 @@ function writeOpenAiChatConfig(tmpHome, baseUrl) {
     fs.mkdirSync(configDir, { recursive: true });
     fs.writeFileSync(path.join(configDir, 'codexmate-init.json'), JSON.stringify({ version: 1, mode: 'task-openai-chat-e2e' }), 'utf-8');
     fs.writeFileSync(path.join(configDir, 'config.toml'), [
-        'model = "glm-5.2"',
-        'model_provider = "new-api-chat"',
+        'model = "gpt-5.3-codex"',
+        'model_provider = "local"',
+        'task_openai_chat_provider = "new-api-chat"',
+        '',
+        '[model_providers.local]',
+        'name = "Local Codex"',
+        'base_url = "http://127.0.0.1:9/v1"',
+        'wire_api = "responses"',
+        'preferred_auth_method = "sk-codex-tab-secret"',
+        'models = ["gpt-5.3-codex"]',
         '',
         '[model_providers.new-api-chat]',
         'name = "New API Chat"',
@@ -150,6 +158,7 @@ function assertOpenAiRunPayload(payload, label) {
 function assertOpenAiRequests(mock, minCount, label) {
     const chatRequests = mock.readRequests().filter(item => item.path === '/v1/chat/completions');
     assert(chatRequests.length >= minCount, `${label} should call /v1/chat/completions at least ${minCount} times, got ${chatRequests.length}`);
+    assert(!JSON.stringify(chatRequests).includes('sk-codex-tab-secret'), `${label} must not use the Codex tab provider key`);
     for (const item of chatRequests) {
         assert(item.method === 'POST', `${label} chat request should be POST`);
         assert(item.authorization === 'Bearer sk-task-e2e-secret', `${label} should pass bearer auth`);

@@ -16191,10 +16191,20 @@ function pickTaskProviderTemperature(provider) {
     return value;
 }
 
+function pickTaskOpenAiChatProviderName(config) {
+    const taskProvider = typeof config.task_openai_chat_provider === 'string'
+        ? config.task_openai_chat_provider.trim()
+        : '';
+    if (taskProvider) {
+        return taskProvider;
+    }
+    return typeof config.model_provider === 'string' ? config.model_provider.trim() : '';
+}
+
 function resolveTaskOpenAiChatConfig() {
     const configResult = readConfigOrVirtualDefault();
     const config = configResult && configResult.config && typeof configResult.config === 'object' ? configResult.config : {};
-    const providerName = typeof config.model_provider === 'string' ? config.model_provider.trim() : '';
+    const providerName = pickTaskOpenAiChatProviderName(config);
     if (!providerName) {
         return { error: '未设置当前 OpenAI Chat 提供商' };
     }

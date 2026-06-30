@@ -136,6 +136,62 @@ test('buildTaskOpenAiChatStatus surfaces OpenAI Chat config errors', () => {
     });
 });
 
+test('resolveTaskOpenAiChatConfig uses task provider without changing Codex provider key', () => {
+    const source = [
+        extractBlockBySignature(cliSource, 'function pickTaskProviderModel(providerName, provider, config) {'),
+        extractBlockBySignature(cliSource, 'function pickTaskProviderTemperature(provider) {'),
+        extractBlockBySignature(cliSource, 'function pickTaskOpenAiChatProviderName(config) {'),
+        extractBlockBySignature(cliSource, 'function resolveTaskOpenAiChatConfig() {')
+    ].join('\n\n');
+    const resolveTaskOpenAiChatConfig = instantiateFunction(source, 'resolveTaskOpenAiChatConfig', {
+        readCurrentModels() {
+            return {};
+        },
+        readConfigOrVirtualDefault() {
+            return {
+                config: {
+                    model_provider: 'local',
+                    model: 'gpt-5.3-codex',
+                    task_openai_chat_provider: 'new-api-chat',
+                    model_providers: {
+                        local: {
+                            base_url: 'https://codex.example.test/v1',
+                            wire_api: 'responses',
+                            preferred_auth_method: 'sk-codex-tab-secret',
+                            models: ['gpt-5.3-codex']
+                        },
+                        'new-api-chat': {
+                            base_url: 'https://api.42w.shop/v1',
+                            wire_api: 'chat_completions',
+                            preferred_auth_method: 'sk-task-e2e-secret',
+                            temperature: 0.7,
+                            models: ['glm-5.2']
+                        }
+                    }
+                }
+            };
+        },
+        resolveOpenaiBridgeUpstream() {
+            throw new Error('bridge should not be used');
+        },
+        OPENAI_BRIDGE_SETTINGS_FILE: '/tmp/openai-bridge-settings.json',
+        buildOpenAiChatEndpointUrl(baseUrl) {
+            return `${String(baseUrl).replace(/\/+$/, '')}/chat/completions`;
+        },
+        isValidHttpUrl(value) {
+            return /^https?:\/\//.test(String(value || ''));
+        }
+    });
+
+    const result = resolveTaskOpenAiChatConfig();
+    assert.strictEqual(result.providerName, 'new-api-chat');
+    assert.strictEqual(result.baseUrl, 'https://api.42w.shop/v1');
+    assert.strictEqual(result.endpointUrl, 'https://api.42w.shop/v1/chat/completions');
+    assert.strictEqual(result.apiKey, 'sk-task-e2e-secret');
+    assert.strictEqual(result.model, 'glm-5.2');
+    assert.strictEqual(result.temperature, 0.7);
+});
+
 test('runOpenAiChatTaskNode fails before request when OpenAI Chat auth is missing', async () => {
     const source = extractBlockBySignature(cliSource, 'async function runOpenAiChatTaskNode(node, context = {}) {');
     let requested = false;
