@@ -46,10 +46,10 @@
                                         type="button"
                                         :class="['task-project-item', { active: workspace.active }]"
                                         :aria-selected="workspace.active ? 'true' : 'false'"
-                                        :title="workspace.path || workspace.meta"
+                                        :title="workspace.path ? t('orchestration.workspace.pathHidden') : workspace.meta"
                                         @click="selectTaskWorkspace(workspace.path)">
                                         <span class="task-project-item-title">{{ workspace.label }}</span>
-                                        <span class="task-project-item-meta">{{ workspace.meta }}</span>
+                                        <span class="task-project-item-meta">{{ workspace.path ? t('orchestration.workspace.pathHidden') : workspace.meta }}</span>
                                         <span class="task-project-item-stats">{{ t('orchestration.workspace.counts', { runs: workspace.runCount, queue: workspace.queueCount }) }}</span>
                                     </button>
                                 </div>
@@ -72,8 +72,8 @@
                                         class="task-session-inbox-item"
                                         @click="continueTaskWorkspaceSession(session)">
                                         <span class="task-session-inbox-main">
-                                            <span class="task-session-inbox-title">{{ session.title }}</span>
-                                            <span class="task-session-inbox-meta">{{ session.meta || session.id }}</span>
+                                            <span class="task-session-inbox-title">{{ session.type === 'queue' ? t('orchestration.workspace.sessions.queueTitle') : t('orchestration.workspace.sessions.runTitle') }}</span>
+                                            <span class="task-session-inbox-meta">{{ t('orchestration.workspace.sessions.detailsHidden') }}</span>
                                         </span>
                                         <span :class="['pill', taskRunStatusTone(session.status)]">{{ session.status }}</span>
                                     </button>
@@ -100,11 +100,11 @@
                                     <div class="task-agent-surface-grid">
                                         <div class="task-agent-surface-card">
                                             <span>{{ t('orchestration.agent.surface.workspace') }}</span>
-                                            <strong>{{ taskOrchestrationWorkspacePath || t('orchestration.chat.context.workspace.auto') }}</strong>
+                                            <strong>{{ taskOrchestrationWorkspacePath ? t('orchestration.privacy.workspace.selected') : t('orchestration.chat.context.workspace.auto') }}</strong>
                                         </div>
                                         <div class="task-agent-surface-card">
                                             <span>{{ t('orchestration.agent.surface.session') }}</span>
-                                            <strong>{{ taskOrchestration.threadId.trim() || (taskOrchestrationSelectedRun && taskOrchestrationSelectedRun.threadId) || t('orchestration.chat.context.thread.auto') }}</strong>
+                                            <strong>{{ (taskOrchestration.threadId.trim() || (taskOrchestrationSelectedRun && taskOrchestrationSelectedRun.threadId)) ? t('orchestration.privacy.thread.selected') : t('orchestration.chat.context.thread.auto') }}</strong>
                                         </div>
                                         <div class="task-agent-surface-card">
                                             <span>{{ t('orchestration.agent.surface.mode') }}</span>
@@ -231,15 +231,15 @@
                                         <div class="task-chat-context-row task-chat-context-row-primary" role="group" :aria-label="t('orchestration.chat.context.aria')">
                                             <span class="task-chat-context-chip task-chat-context-chip-strong">
                                                 <small>{{ t('orchestration.plan.summary.cwd') }}</small>
-                                                <strong>{{ taskOrchestrationWorkspacePath || taskOrchestration.workspacePath.trim() || t('orchestration.chat.context.workspace.auto') }}</strong>
+                                                <strong>{{ (taskOrchestrationWorkspacePath || taskOrchestration.workspacePath.trim()) ? t('orchestration.privacy.workspace.selected') : t('orchestration.chat.context.workspace.auto') }}</strong>
                                             </span>
                                             <span class="task-chat-context-chip task-chat-context-chip-strong">
                                                 <small>{{ t('orchestration.plan.summary.threadId') }}</small>
-                                                <strong>{{ taskOrchestration.threadId.trim() || (taskOrchestrationSelectedRun && taskOrchestrationSelectedRun.threadId) || t('orchestration.chat.context.thread.auto') }}</strong>
+                                                <strong>{{ (taskOrchestration.threadId.trim() || (taskOrchestrationSelectedRun && taskOrchestrationSelectedRun.threadId)) ? t('orchestration.privacy.thread.selected') : t('orchestration.chat.context.thread.auto') }}</strong>
                                             </span>
                                             <span class="task-chat-context-chip">{{ taskOrchestrationDraftMetrics.hasTarget ? t('orchestration.chat.context.sequence.value', { count: taskOrchestrationDraftMetrics.requestCount }) : t('orchestration.chat.context.sequence.empty') }}</span>
                                             <span class="task-chat-context-chip">{{ taskOrchestration.runMode === 'dry-run' ? t('orchestration.runMode.dryRun') : (taskOrchestration.runMode === 'read' ? t('orchestration.runMode.readOnly') : t('orchestration.runMode.write') ) }}</span>
-                                            <button type="button" class="task-chat-context-chip task-chat-context-action" @click="taskOrchestration.settingsOpen = true">配置</button>
+                                            <button type="button" class="task-chat-context-chip task-chat-context-action" @click="taskOrchestration.settingsOpen = true">{{ t('orchestration.advanced.open') }}</button>
                                         </div>
 
                                         <div class="task-action-caption">{{ t('orchestration.quick.caption') }}</div>
@@ -533,15 +533,15 @@
                                     <div v-if="taskOrchestration.openAiChatStatus" class="task-provider-status-grid">
                                         <div class="task-provider-status-row">
                                             <span>{{ t('orchestration.openai.status.provider') }}</span>
-                                            <strong>{{ taskOrchestration.openAiChatStatus.providerName || t('common.none') }}</strong>
+                                            <strong>{{ taskOrchestration.openAiChatStatus.providerName ? t('orchestration.openai.status.configured') : t('orchestration.openai.status.notSet') }}</strong>
                                         </div>
                                         <div class="task-provider-status-row">
                                             <span>{{ t('orchestration.openai.status.model') }}</span>
-                                            <strong>{{ taskOrchestration.openAiChatStatus.model || t('common.none') }}</strong>
+                                            <strong>{{ taskOrchestration.openAiChatStatus.model ? t('orchestration.openai.status.configured') : t('orchestration.openai.status.notSet') }}</strong>
                                         </div>
                                         <div class="task-provider-status-row task-provider-status-row-wide">
                                             <span>{{ t('orchestration.openai.status.endpoint') }}</span>
-                                            <strong>{{ taskOrchestration.openAiChatStatus.endpoint || t('common.none') }}</strong>
+                                            <strong>{{ taskOrchestration.openAiChatStatus.endpoint ? t('orchestration.openai.status.configured') : t('orchestration.openai.status.notSet') }}</strong>
                                         </div>
                                         <div class="task-provider-status-row">
                                             <span>{{ t('orchestration.openai.status.apiKey') }}</span>

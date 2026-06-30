@@ -4058,11 +4058,11 @@ return function render(_ctx, _cache) {
                             type: "button",
                             class: _normalizeClass(['task-project-item', { active: workspace.active }]),
                             "aria-selected": workspace.active ? 'true' : 'false',
-                            title: workspace.path || workspace.meta,
+                            title: workspace.path ? _ctx.t('orchestration.workspace.pathHidden') : workspace.meta,
                             onClick: $event => (_ctx.selectTaskWorkspace(workspace.path))
                           }, [
                             _createElementVNode("span", { class: "task-project-item-title" }, _toDisplayString(workspace.label), 1 /* TEXT */),
-                            _createElementVNode("span", { class: "task-project-item-meta" }, _toDisplayString(workspace.meta), 1 /* TEXT */),
+                            _createElementVNode("span", { class: "task-project-item-meta" }, _toDisplayString(workspace.path ? _ctx.t('orchestration.workspace.pathHidden') : workspace.meta), 1 /* TEXT */),
                             _createElementVNode("span", { class: "task-project-item-stats" }, _toDisplayString(_ctx.t('orchestration.workspace.counts', { runs: workspace.runCount, queue: workspace.queueCount })), 1 /* TEXT */)
                           ], 10 /* CLASS, PROPS */, ["aria-selected", "title", "onClick"]))
                         }), 128 /* KEYED_FRAGMENT */))
@@ -4094,8 +4094,8 @@ return function render(_ctx, _cache) {
                             onClick: $event => (_ctx.continueTaskWorkspaceSession(session))
                           }, [
                             _createElementVNode("span", { class: "task-session-inbox-main" }, [
-                              _createElementVNode("span", { class: "task-session-inbox-title" }, _toDisplayString(session.title), 1 /* TEXT */),
-                              _createElementVNode("span", { class: "task-session-inbox-meta" }, _toDisplayString(session.meta || session.id), 1 /* TEXT */)
+                              _createElementVNode("span", { class: "task-session-inbox-title" }, _toDisplayString(session.type === 'queue' ? _ctx.t('orchestration.workspace.sessions.queueTitle') : _ctx.t('orchestration.workspace.sessions.runTitle')), 1 /* TEXT */),
+                              _createElementVNode("span", { class: "task-session-inbox-meta" }, _toDisplayString(_ctx.t('orchestration.workspace.sessions.detailsHidden')), 1 /* TEXT */)
                             ]),
                             _createElementVNode("span", {
                               class: _normalizeClass(['pill', _ctx.taskRunStatusTone(session.status)])
@@ -4127,11 +4127,11 @@ return function render(_ctx, _cache) {
                         _createElementVNode("div", { class: "task-agent-surface-grid" }, [
                           _createElementVNode("div", { class: "task-agent-surface-card" }, [
                             _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.agent.surface.workspace')), 1 /* TEXT */),
-                            _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestrationWorkspacePath || _ctx.t('orchestration.chat.context.workspace.auto')), 1 /* TEXT */)
+                            _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestrationWorkspacePath ? _ctx.t('orchestration.privacy.workspace.selected') : _ctx.t('orchestration.chat.context.workspace.auto')), 1 /* TEXT */)
                           ]),
                           _createElementVNode("div", { class: "task-agent-surface-card" }, [
                             _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.agent.surface.session')), 1 /* TEXT */),
-                            _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.threadId.trim() || (_ctx.taskOrchestrationSelectedRun && _ctx.taskOrchestrationSelectedRun.threadId) || _ctx.t('orchestration.chat.context.thread.auto')), 1 /* TEXT */)
+                            _createElementVNode("strong", null, _toDisplayString((_ctx.taskOrchestration.threadId.trim() || (_ctx.taskOrchestrationSelectedRun && _ctx.taskOrchestrationSelectedRun.threadId)) ? _ctx.t('orchestration.privacy.thread.selected') : _ctx.t('orchestration.chat.context.thread.auto')), 1 /* TEXT */)
                           ]),
                           _createElementVNode("div", { class: "task-agent-surface-card" }, [
                             _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.agent.surface.mode')), 1 /* TEXT */),
@@ -4345,11 +4345,11 @@ return function render(_ctx, _cache) {
                           }, [
                             _createElementVNode("span", { class: "task-chat-context-chip task-chat-context-chip-strong" }, [
                               _createElementVNode("small", null, _toDisplayString(_ctx.t('orchestration.plan.summary.cwd')), 1 /* TEXT */),
-                              _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestrationWorkspacePath || _ctx.taskOrchestration.workspacePath.trim() || _ctx.t('orchestration.chat.context.workspace.auto')), 1 /* TEXT */)
+                              _createElementVNode("strong", null, _toDisplayString((_ctx.taskOrchestrationWorkspacePath || _ctx.taskOrchestration.workspacePath.trim()) ? _ctx.t('orchestration.privacy.workspace.selected') : _ctx.t('orchestration.chat.context.workspace.auto')), 1 /* TEXT */)
                             ]),
                             _createElementVNode("span", { class: "task-chat-context-chip task-chat-context-chip-strong" }, [
                               _createElementVNode("small", null, _toDisplayString(_ctx.t('orchestration.plan.summary.threadId')), 1 /* TEXT */),
-                              _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.threadId.trim() || (_ctx.taskOrchestrationSelectedRun && _ctx.taskOrchestrationSelectedRun.threadId) || _ctx.t('orchestration.chat.context.thread.auto')), 1 /* TEXT */)
+                              _createElementVNode("strong", null, _toDisplayString((_ctx.taskOrchestration.threadId.trim() || (_ctx.taskOrchestrationSelectedRun && _ctx.taskOrchestrationSelectedRun.threadId)) ? _ctx.t('orchestration.privacy.thread.selected') : _ctx.t('orchestration.chat.context.thread.auto')), 1 /* TEXT */)
                             ]),
                             _createElementVNode("span", { class: "task-chat-context-chip" }, _toDisplayString(_ctx.taskOrchestrationDraftMetrics.hasTarget ? _ctx.t('orchestration.chat.context.sequence.value', { count: _ctx.taskOrchestrationDraftMetrics.requestCount }) : _ctx.t('orchestration.chat.context.sequence.empty')), 1 /* TEXT */),
                             _createElementVNode("span", { class: "task-chat-context-chip" }, _toDisplayString(_ctx.taskOrchestration.runMode === 'dry-run' ? _ctx.t('orchestration.runMode.dryRun') : (_ctx.taskOrchestration.runMode === 'read' ? _ctx.t('orchestration.runMode.readOnly') : _ctx.t('orchestration.runMode.write') )), 1 /* TEXT */),
@@ -4357,7 +4357,7 @@ return function render(_ctx, _cache) {
                               type: "button",
                               class: "task-chat-context-chip task-chat-context-action",
                               onClick: $event => (_ctx.taskOrchestration.settingsOpen = true)
-                            }, "配置", 8 /* PROPS */, ["onClick"])
+                            }, _toDisplayString(_ctx.t('orchestration.advanced.open')), 9 /* TEXT, PROPS */, ["onClick"])
                           ], 8 /* PROPS */, ["aria-label"]),
                           _createElementVNode("div", { class: "task-action-caption" }, _toDisplayString(_ctx.t('orchestration.quick.caption')), 1 /* TEXT */)
                         ])
@@ -4974,15 +4974,15 @@ return function render(_ctx, _cache) {
                             }, [
                               _createElementVNode("div", { class: "task-provider-status-row" }, [
                                 _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.openai.status.provider')), 1 /* TEXT */),
-                                _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.openAiChatStatus.providerName || _ctx.t('common.none')), 1 /* TEXT */)
+                                _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.openAiChatStatus.providerName ? _ctx.t('orchestration.openai.status.configured') : _ctx.t('orchestration.openai.status.notSet')), 1 /* TEXT */)
                               ]),
                               _createElementVNode("div", { class: "task-provider-status-row" }, [
                                 _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.openai.status.model')), 1 /* TEXT */),
-                                _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.openAiChatStatus.model || _ctx.t('common.none')), 1 /* TEXT */)
+                                _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.openAiChatStatus.model ? _ctx.t('orchestration.openai.status.configured') : _ctx.t('orchestration.openai.status.notSet')), 1 /* TEXT */)
                               ]),
                               _createElementVNode("div", { class: "task-provider-status-row task-provider-status-row-wide" }, [
                                 _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.openai.status.endpoint')), 1 /* TEXT */),
-                                _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.openAiChatStatus.endpoint || _ctx.t('common.none')), 1 /* TEXT */)
+                                _createElementVNode("strong", null, _toDisplayString(_ctx.taskOrchestration.openAiChatStatus.endpoint ? _ctx.t('orchestration.openai.status.configured') : _ctx.t('orchestration.openai.status.notSet')), 1 /* TEXT */)
                               ]),
                               _createElementVNode("div", { class: "task-provider-status-row" }, [
                                 _createElementVNode("span", null, _toDisplayString(_ctx.t('orchestration.openai.status.apiKey')), 1 /* TEXT */),

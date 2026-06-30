@@ -150,7 +150,13 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.context\.thread\.auto'\)/);
     assert.match(orchestrationPanel, /class="task-chat-context-row task-chat-context-row-primary" role="group" :aria-label="t\('orchestration\.chat\.context\.aria'\)"/);
     assert.match(orchestrationPanel, /class="task-chat-context-chip task-chat-context-chip-strong"/);
-    assert.match(orchestrationPanel, /class="task-chat-context-chip task-chat-context-action" @click="taskOrchestration\.settingsOpen = true">配置<\/button>/);
+    assert.doesNotMatch(orchestrationPanel, />配置<\/button>/);
+    assert.doesNotMatch(orchestrationPanel, /<strong>\{\{ taskOrchestrationWorkspacePath \|\| taskOrchestration\.workspacePath\.trim\(\)/);
+    assert.doesNotMatch(orchestrationPanel, /taskOrchestration\.openAiChatStatus\.endpoint \|\| t\('common\.none'\)/);
+    assert.doesNotMatch(orchestrationPanel, /taskOrchestration\.openAiChatStatus\.model \|\| t\('common\.none'\)/);
+    assert.doesNotMatch(orchestrationPanel, /session\.title/);
+    assert.doesNotMatch(orchestrationPanel, /session\.meta \|\| session\.id/);
+    assert.match(orchestrationPanel, /class="task-chat-context-chip task-chat-context-action" @click="taskOrchestration\.settingsOpen = true">\{\{ t\('orchestration\.advanced\.open'\) \}\}<\/button>/);
     assert.match(orchestrationPanel, /@change="taskOrchestration\.selectedEngine === 'workflow' \? null : taskOrchestration\.workflowIdsText = ''"/);
     assert.doesNotMatch(orchestrationPanel, /task-thread-suggestion-card/);
     assert.doesNotMatch(orchestrationPanel, /task-thread-readiness-card/);
