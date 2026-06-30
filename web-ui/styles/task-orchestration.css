@@ -1061,6 +1061,20 @@
     gap: 8px;
 }
 
+.task-chat-primary-action {
+    flex: 1 1 180px;
+    display: grid;
+    place-items: center;
+    align-self: stretch;
+}
+
+.task-chat-primary-button {
+    min-width: 168px;
+    min-height: 44px;
+    justify-content: center;
+    font-weight: 800;
+}
+
 .task-chat-execute-caption {
     margin-top: 8px;
     color: var(--color-text-secondary);
@@ -1779,27 +1793,67 @@
 }
 
 #panel-orchestration .task-chat-bubble-row {
+    position: relative;
+    justify-content: flex-start;
     gap: 8px;
     margin: 0;
+    padding: 1px 0 6px 28px;
+}
+
+#panel-orchestration .task-chat-bubble-row::before {
+    content: '•';
+    position: absolute;
+    top: 4px;
+    left: 8px;
+    color: #64748B;
+    font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+#panel-orchestration .task-chat-bubble-row.is-user::before {
+    content: '›';
+    top: 2px;
+    color: #2563EB;
+    font-size: 20px;
 }
 
 #panel-orchestration .task-chat-bubble {
-    max-width: min(78%, 640px);
-    padding: 9px 12px;
-    border-radius: 16px;
+    max-width: min(100%, 760px);
+    padding: 0 0 5px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     box-shadow: none;
+}
+
+#panel-orchestration .task-chat-bubble-row.is-user .task-chat-bubble,
+#panel-orchestration .task-chat-bubble-row.is-assistant .task-chat-bubble {
+    border-radius: 0;
+    background: transparent;
 }
 
 #panel-orchestration .task-chat-bubble-label {
     margin-bottom: 3px;
+    color: #64748B;
+    font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
     font-size: 10px;
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
 
 #panel-orchestration .task-chat-bubble-text {
+    color: #0F172A;
+    font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
     font-size: 14px;
-    line-height: 1.48;
+    line-height: 1.5;
+}
+
+#panel-orchestration .task-chat-bubble-meta {
+    margin-top: 5px;
+    color: #64748B;
+    font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
 }
 
 #panel-orchestration .task-thread-plan-request {
@@ -1807,8 +1861,7 @@
 }
 
 #panel-orchestration .task-thread-plan-request .task-chat-bubble {
-    max-width: min(72%, 620px);
-    border-radius: 16px 16px 5px 16px;
+    max-width: min(100%, 760px);
 }
 
 #panel-orchestration .task-thread-message-card {
@@ -2034,7 +2087,23 @@
 #panel-orchestration .task-thread-composer .task-chat-composer {
     grid-column: 1;
     grid-row: 1 / span 2;
-    display: block;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 8px;
+}
+
+#panel-orchestration .task-thread-composer .task-composer-prompt-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    padding-top: 7px;
+    color: #2563EB;
+    font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
 }
 
 #panel-orchestration .task-thread-composer .task-textarea-goal {
@@ -2060,9 +2129,19 @@
     grid-row: 1 / span 2;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     align-self: center;
     margin-top: 0;
+}
+
+#panel-orchestration .task-thread-composer .task-chat-execute-caption {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin: -1px 2px 0 28px;
+    color: #64748B;
+    font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+    font-size: 11px;
+    line-height: 1.35;
 }
 
 #panel-orchestration .task-thread-composer .task-action-row-prominent {
@@ -2789,15 +2868,29 @@
 }
 
 #panel-orchestration .task-chat-action-buttons {
-    justify-content: flex-end;
+    justify-content: center;
 }
 
 #panel-orchestration .task-chat-action-buttons .btn-tool {
-    min-width: 76px;
+    min-width: 168px;
 }
 
 #panel-orchestration .task-chat-action-buttons .btn-primary {
-    min-width: 90px;
+    min-width: 168px;
+}
+
+#panel-orchestration .task-chat-primary-button {
+    border-color: #1D4ED8;
+    background: #2563EB;
+    color: #FFFFFF;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.24);
+}
+
+#panel-orchestration .task-chat-primary-button:hover:not(:disabled),
+#panel-orchestration .task-chat-primary-button:focus-visible:not(:disabled) {
+    border-color: #1E40AF;
+    background: #1D4ED8;
+    color: #FFFFFF;
 }
 
 #panel-orchestration .task-side-workbench-card .task-thread-run-details {

@@ -4311,6 +4311,10 @@ return function render(_ctx, _cache) {
                         _createElementVNode("div", { class: "task-thread-composer" }, [
                           _createElementVNode("label", { class: "task-quick-target-field task-chat-composer" }, [
                             _createElementVNode("span", { class: "selector-label" }, _toDisplayString(_ctx.t('orchestration.chat.input.label')), 1 /* TEXT */),
+                            _createElementVNode("span", {
+                              class: "task-composer-prompt-glyph",
+                              "aria-hidden": "true"
+                            }, "›"),
                             _withDirectives(_createElementVNode("textarea", {
                               "onUpdate:modelValue": $event => ((_ctx.taskOrchestration.chatDraft) = $event),
                               class: "task-textarea task-textarea-goal task-quick-target",
@@ -4323,22 +4327,10 @@ return function render(_ctx, _cache) {
                             _createElementVNode("span", { class: "task-field-hint" }, _toDisplayString(_ctx.t('orchestration.chat.input.hint')), 1 /* TEXT */)
                           ]),
                           _createElementVNode("div", { class: "task-chat-send-row" }, [
-                            _createElementVNode("div", { class: "task-chat-action-buttons" }, [
+                            _createElementVNode("div", { class: "task-chat-action-buttons task-chat-primary-action" }, [
                               _createElementVNode("button", {
                                 type: "button",
-                                class: "btn-tool",
-                                onClick: $event => (_ctx.submitTaskOrchestrationChatMessage()),
-                                disabled: !_ctx.taskOrchestration.chatDraft.trim()
-                              }, _toDisplayString(_ctx.t('orchestration.chat.input.send')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                              _createElementVNode("button", {
-                                type: "button",
-                                class: "btn-tool",
-                                onClick: $event => (_ctx.previewTaskPlanFromChat()),
-                                disabled: _ctx.taskOrchestration.running || _ctx.taskOrchestration.planning || (!_ctx.taskOrchestration.target.trim() && !_ctx.taskOrchestration.chatDraft.trim())
-                              }, _toDisplayString(_ctx.taskOrchestration.planning ? _ctx.t('orchestration.actions.planning') : _ctx.t('orchestration.chat.input.discuss')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
-                              _createElementVNode("button", {
-                                type: "button",
-                                class: "btn-tool btn-primary",
+                                class: "btn-tool btn-primary task-chat-primary-button",
                                 onClick: $event => (_ctx.planAndRunTaskOrchestrationFromChat()),
                                 disabled: _ctx.taskOrchestration.running || _ctx.taskOrchestration.planning || (!_ctx.taskOrchestration.target.trim() && !_ctx.taskOrchestration.chatDraft.trim())
                               }, _toDisplayString(_ctx.taskOrchestration.running ? _ctx.t('orchestration.actions.processing') : (_ctx.taskOrchestration.planning ? _ctx.t('orchestration.actions.planning') : _ctx.t('orchestration.chat.input.work'))), 9 /* TEXT, PROPS */, ["onClick", "disabled"])

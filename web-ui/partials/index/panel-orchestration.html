@@ -208,6 +208,7 @@
                                     <div class="task-thread-composer">
                                         <label class="task-quick-target-field task-chat-composer">
                                             <span class="selector-label">{{ t('orchestration.chat.input.label') }}</span>
+                                            <span class="task-composer-prompt-glyph" aria-hidden="true">›</span>
                                             <textarea
                                                 v-model="taskOrchestration.chatDraft"
                                                 class="task-textarea task-textarea-goal task-quick-target"
@@ -217,14 +218,8 @@
                                             <span class="task-field-hint">{{ t('orchestration.chat.input.hint') }}</span>
                                         </label>
                                         <div class="task-chat-send-row">
-                                            <div class="task-chat-action-buttons">
-                                                <button type="button" class="btn-tool" @click="submitTaskOrchestrationChatMessage()" :disabled="!taskOrchestration.chatDraft.trim()">
-                                                    {{ t('orchestration.chat.input.send') }}
-                                                </button>
-                                                <button type="button" class="btn-tool" @click="previewTaskPlanFromChat()" :disabled="taskOrchestration.running || taskOrchestration.planning || (!taskOrchestration.target.trim() && !taskOrchestration.chatDraft.trim())">
-                                                    {{ taskOrchestration.planning ? t('orchestration.actions.planning') : t('orchestration.chat.input.discuss') }}
-                                                </button>
-                                                <button type="button" class="btn-tool btn-primary" @click="planAndRunTaskOrchestrationFromChat()" :disabled="taskOrchestration.running || taskOrchestration.planning || (!taskOrchestration.target.trim() && !taskOrchestration.chatDraft.trim())">
+                                            <div class="task-chat-action-buttons task-chat-primary-action">
+                                                <button type="button" class="btn-tool btn-primary task-chat-primary-button" @click="planAndRunTaskOrchestrationFromChat()" :disabled="taskOrchestration.running || taskOrchestration.planning || (!taskOrchestration.target.trim() && !taskOrchestration.chatDraft.trim())">
                                                     {{ taskOrchestration.running ? t('orchestration.actions.processing') : (taskOrchestration.planning ? t('orchestration.actions.planning') : t('orchestration.chat.input.work')) }}
                                                 </button>
                                             </div>

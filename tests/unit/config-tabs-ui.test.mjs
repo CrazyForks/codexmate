@@ -113,10 +113,10 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /class="task-agent-surface-grid"/);
     assert.match(orchestrationPanel, /class="task-chat-thread" role="log" :aria-label="t\('orchestration\.chat\.thread\.aria'\)"/);
     assert.match(orchestrationPanel, /class="task-thread-composer"/);
-    assert.match(orchestrationPanel, /class="task-chat-action-buttons"/);
-    assert.match(orchestrationPanel, /@click="previewTaskPlanFromChat\(\)"/);
+    assert.match(orchestrationPanel, /class="task-chat-action-buttons task-chat-primary-action"/);
+    assert.doesNotMatch(orchestrationPanel, /@click="previewTaskPlanFromChat\(\)"/);
     assert.match(orchestrationPanel, /@click="planAndRunTaskOrchestrationFromChat\(\)"/);
-    assert.match(orchestrationPanel, /t\('orchestration\.chat\.input\.discuss'\)/);
+    assert.doesNotMatch(orchestrationPanel, /t\('orchestration\.chat\.input\.discuss'\)/);
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.input\.work'\)/);
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.input\.workCaption'\)/);
     assert.match(orchestrationPanel, /class="[^\"]*task-thread-message-card[^\"]*task-thread-plan-card[^\"]*"/);
@@ -143,7 +143,7 @@ test('config template keeps expected config tabs in top and side navigation', ()
     assert.match(orchestrationPanel, /class="[^"]*task-chat-composer[^"]*"/);
     assert.match(orchestrationPanel, /v-model="taskOrchestration\.chatDraft"/);
     assert.match(orchestrationPanel, /@keydown\.enter\.exact\.prevent="submitTaskOrchestrationChatMessage\(\)"/);
-    assert.match(orchestrationPanel, /@click="submitTaskOrchestrationChatMessage\(\)"/);
+    assert.doesNotMatch(orchestrationPanel, /@click="submitTaskOrchestrationChatMessage\(\)"/);
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.input\.label'\)/);
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.input\.placeholder'\)/);
     assert.match(orchestrationPanel, /t\('orchestration\.chat\.context\.workspace\.auto'\)/);
