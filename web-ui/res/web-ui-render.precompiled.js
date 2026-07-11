@@ -6656,18 +6656,26 @@ return function render(_ctx, _cache) {
                 role: "tabpanel",
                 "aria-labelledby": "tab-prompts"
               }, [
-                _createElementVNode("div", { class: "segmented-control" }, [
+                _createElementVNode("div", {
+                  class: "prompts-md-tabs",
+                  role: "tablist",
+                  "aria-label": _ctx.t('tab.prompts')
+                }, [
                   _createElementVNode("button", {
                     type: "button",
-                    class: _normalizeClass(['segment', { active: _ctx.promptsSubTab === 'codex' }]),
+                    class: _normalizeClass(['prompts-md-tab', { active: _ctx.promptsSubTab === 'codex' }]),
+                    role: "tab",
+                    "aria-selected": _ctx.promptsSubTab === 'codex',
                     onClick: $event => (_ctx.switchPromptsSubTab('codex'))
-                  }, _toDisplayString(_ctx.t('prompts.subTab.codex')), 11 /* TEXT, CLASS, PROPS */, ["onClick"]),
+                  }, _toDisplayString(_ctx.t('prompts.subTab.codex')), 11 /* TEXT, CLASS, PROPS */, ["aria-selected", "onClick"]),
                   _createElementVNode("button", {
                     type: "button",
-                    class: _normalizeClass(['segment', { active: _ctx.promptsSubTab === 'claude-project' }]),
+                    class: _normalizeClass(['prompts-md-tab', { active: _ctx.promptsSubTab === 'claude-project' }]),
+                    role: "tab",
+                    "aria-selected": _ctx.promptsSubTab === 'claude-project',
                     onClick: $event => (_ctx.switchPromptsSubTab('claude-project'))
-                  }, _toDisplayString(_ctx.t('prompts.subTab.project')), 11 /* TEXT, CLASS, PROPS */, ["onClick"])
-                ]),
+                  }, _toDisplayString(_ctx.t('prompts.subTab.project')), 11 /* TEXT, CLASS, PROPS */, ["aria-selected", "onClick"])
+                ], 8 /* PROPS */, ["aria-label"]),
                 (_ctx.promptsSubTab === 'claude-project')
                   ? (_openBlock(), _createElementBlock("div", {
                       key: 0,
@@ -7095,6 +7103,37 @@ return function render(_ctx, _cache) {
                 _createTextVNode(" " + _toDisplayString(_ctx.t('field.useBuiltinTransform')), 1 /* TEXT */)
               ])
             ]),
+            (_ctx.newProvider.useTransform)
+              ? (_openBlock(), _createElementBlock("div", {
+                  key: 0,
+                  class: "form-group"
+                }, [
+                  _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.transformMaxRetries')), 1 /* TEXT */),
+                  _withDirectives(_createElementVNode("input", {
+                    "onUpdate:modelValue": $event => ((_ctx.newProvider.openaiBridgeMaxRetries) = $event),
+                    type: "number",
+                    min: "2",
+                    max: "10",
+                    step: "1",
+                    class: _normalizeClass(['form-input', { invalid: !!_ctx.providerFieldError('add', 'openaiBridgeMaxRetries') }]),
+                    onBlur: $event => (_ctx.normalizeProviderDraft('add'))
+                  }, null, 42 /* CLASS, PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "onBlur"]), [
+                    [
+                      _vModelText,
+                      _ctx.newProvider.openaiBridgeMaxRetries,
+                      void 0,
+                      { number: true }
+                    ]
+                  ]),
+                  _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('hint.transformMaxRetries')), 1 /* TEXT */),
+                  (_ctx.providerFieldError('add', 'openaiBridgeMaxRetries'))
+                    ? (_openBlock(), _createElementBlock("div", {
+                        key: 0,
+                        class: "form-hint form-error"
+                      }, _toDisplayString(_ctx.providerFieldError('add', 'openaiBridgeMaxRetries')), 1 /* TEXT */))
+                    : _createCommentVNode("v-if", true)
+                ]))
+              : _createCommentVNode("v-if", true),
             _createElementVNode("div", { class: "btn-group" }, [
               _createElementVNode("button", {
                 class: "btn btn-cancel",
@@ -7207,6 +7246,37 @@ return function render(_ctx, _cache) {
                 ], 8 /* PROPS */, ["onClick", "title", "aria-label"])
               ])
             ]),
+            (_ctx.editingProvider.useTransform)
+              ? (_openBlock(), _createElementBlock("div", {
+                  key: 0,
+                  class: "form-group"
+                }, [
+                  _createElementVNode("label", { class: "form-label" }, _toDisplayString(_ctx.t('field.transformMaxRetries')), 1 /* TEXT */),
+                  _withDirectives(_createElementVNode("input", {
+                    "onUpdate:modelValue": $event => ((_ctx.editingProvider.openaiBridgeMaxRetries) = $event),
+                    type: "number",
+                    min: "2",
+                    max: "10",
+                    step: "1",
+                    class: _normalizeClass(['form-input', { invalid: !!_ctx.providerFieldError('edit', 'openaiBridgeMaxRetries') }]),
+                    onBlur: $event => (_ctx.normalizeProviderDraft('edit'))
+                  }, null, 42 /* CLASS, PROPS, NEED_HYDRATION */, ["onUpdate:modelValue", "onBlur"]), [
+                    [
+                      _vModelText,
+                      _ctx.editingProvider.openaiBridgeMaxRetries,
+                      void 0,
+                      { number: true }
+                    ]
+                  ]),
+                  _createElementVNode("div", { class: "form-hint" }, _toDisplayString(_ctx.t('hint.transformMaxRetries')), 1 /* TEXT */),
+                  (_ctx.providerFieldError('edit', 'openaiBridgeMaxRetries'))
+                    ? (_openBlock(), _createElementBlock("div", {
+                        key: 0,
+                        class: "form-hint form-error"
+                      }, _toDisplayString(_ctx.providerFieldError('edit', 'openaiBridgeMaxRetries')), 1 /* TEXT */))
+                    : _createCommentVNode("v-if", true)
+                ]))
+              : _createCommentVNode("v-if", true),
             _createElementVNode("div", { class: "btn-group" }, [
               _createElementVNode("button", {
                 class: "btn btn-cancel",
