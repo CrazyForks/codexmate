@@ -74,6 +74,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 showAgentsModal: false,
                 promptsSubTab: 'codex',
                 projectClaudeMdPath: '',
+                promptPresets: [],
+                selectedPromptPresetId: '',
+                promptPresetNameDraft: '',
+                promptPresetRenameDraft: {},
+                promptPresetSaving: false,
+                __skipNextPromptsSubTabLoad: false,
                 projectPathOptions: [],
                 projectPathOptionsLoading: false,
                 showSkillsModal: false,
@@ -736,6 +742,10 @@ document.addEventListener('DOMContentLoaded', () => {
             promptsSubTab(newVal) {
                 if (typeof this.persistWebUiPreferences === 'function') {
                     this.persistWebUiPreferences({ promptsSubTab: newVal });
+                }
+                if (this.__skipNextPromptsSubTabLoad) {
+                    this.__skipNextPromptsSubTabLoad = false;
+                    return;
                 }
                 if (this.mainTab === 'prompts' && typeof this.loadPromptsContent === 'function') {
                     this.loadPromptsContent();

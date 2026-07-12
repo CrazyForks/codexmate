@@ -96,8 +96,17 @@ test('Japanese orchestration template copy stays localized', () => {
     }
 });
 
-test('provider cache and local Web preference settings are localized in every locale', () => {
+test('provider cache, prompt sidebar, and local Web preference settings are localized in every locale', () => {
     const keys = [
+        'side.prompts.meta',
+        'side.prompts.presets',
+        'side.prompts.presets.meta',
+        'prompts.presets.addCurrent',
+        'prompts.presets.defaultName.project',
+        'prompts.presets.confirm.addCurrentTitle',
+        'prompts.presets.confirm.addCurrentMessage',
+        'prompts.presets.toast.pasted',
+        'prompts.presets.selectPlaceholder',
         'announcement.providerCache.open',
         'announcement.project.eyebrow',
         'announcement.project.title',

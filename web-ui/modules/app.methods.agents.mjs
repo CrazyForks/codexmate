@@ -708,8 +708,193 @@ export function createAgentsMethods(options = {}) {
             }
         },
 
+
+        normalizePromptPresetName(name) {
+            return typeof name === 'string' ? name.trim() : '';
+        },
+        buildPromptPresetId() {
+            const randomPart = Math.random().toString(36).slice(2, 8);
+            return `prompt-preset-${Date.now()}-${randomPart}`;
+        },
+        getPromptPresetRenameDraft(preset) {
+            if (!preset || !preset.id) return '';
+            if (Object.prototype.hasOwnProperty.call(this.promptPresetRenameDraft || {}, preset.id)) {
+                return this.promptPresetRenameDraft[preset.id];
+            }
+            return preset.name || '';
+        },
+        setPromptPresetRenameDraft(id, value) {
+            if (!id) return;
+            this.promptPresetRenameDraft = {
+                ...(this.promptPresetRenameDraft || {}),
+                [id]: value
+            };
+        },
+        formatPromptPresetTime(value) {
+            if (typeof value !== 'string' || !value) {
+                return this.t('common.none');
+            }
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                return value;
+            }
+            return date.toLocaleString();
+        },
+        findPromptPresetByName(name, excludeId = '') {
+            const normalizedName = this.normalizePromptPresetName(name).toLowerCase();
+            return (Array.isArray(this.promptPresets) ? this.promptPresets : []).find((preset) => {
+                if (!preset || preset.id === excludeId) return false;
+                return this.normalizePromptPresetName(preset.name).toLowerCase() === normalizedName;
+            }) || null;
+        },
+        async persistPromptPresets() {
+            if (typeof this.persistWebUiPreferences === 'function') {
+                await this.persistWebUiPreferences({ promptPresets: this.promptPresets });
+            }
+        },
+        getCurrentPromptPresetDefaultName() {
+            if (this.promptsSubTab === 'claude-project') {
+                const projectPath = typeof this.projectClaudeMdPath === 'string' ? this.projectClaudeMdPath.trim() : '';
+                return projectPath
+                    ? this.t('prompts.presets.defaultName.project', { path: projectPath })
+                    : this.t('prompts.subTab.project');
+            }
+            const fileName = typeof this.agentsPath === 'string' && this.agentsPath.trim()
+                ? (this.agentsPath.trim().split(/[\\/]/).filter(Boolean).pop() || '')
+                : '';
+            return fileName || this.t('prompts.subTab.codex');
+        },
+        async saveEditorPromptAsPreset() {
+            if (this.promptPresetSaving || this.agentsLoading || this.agentsDiffVisible) return;
+            const name = this.getCurrentPromptPresetDefaultName();
+            const content = typeof this.agentsContent === 'string' ? this.agentsContent : '';
+            if (!content.trim()) {
+                this.showMessage(this.t('prompts.presets.error.emptyContent'), 'error');
+                return;
+            }
+            const confirmed = await this.requestConfirmDialog({
+                title: this.t('prompts.presets.confirm.addCurrentTitle'),
+                message: this.t('prompts.presets.confirm.addCurrentMessage', { name }),
+                confirmText: this.t('prompts.presets.addCurrent'),
+                cancelText: this.t('common.cancel'),
+                danger: false
+            });
+            if (!confirmed) return;
+            this.promptPresetNameDraft = name;
+            await this.saveCurrentPromptAsPreset();
+        },
+        async saveCurrentPromptAsPreset() {
+            if (this.promptPresetSaving || this.agentsLoading) return;
+            const draftName = this.normalizePromptPresetName(this.promptPresetNameDraft);
+            const name = draftName || this.normalizePromptPresetName(this.getCurrentPromptPresetDefaultName());
+            const content = typeof this.agentsContent === 'string' ? this.agentsContent : '';
+            if (!name) {
+                this.showMessage(this.t('prompts.presets.error.emptyName'), 'error');
+                return;
+            }
+            if (!content.trim()) {
+                this.showMessage(this.t('prompts.presets.error.emptyContent'), 'error');
+                return;
+            }
+            const existing = this.findPromptPresetByName(name);
+            if (existing) {
+                const confirmed = await this.requestConfirmDialog({
+                    title: this.t('prompts.presets.confirm.overwriteTitle'),
+                    message: this.t('prompts.presets.confirm.overwriteMessage', { name }),
+                    confirmText: this.t('prompts.presets.confirm.overwriteConfirm'),
+                    cancelText: this.t('common.cancel'),
+                    danger: false
+                });
+                if (!confirmed) return;
+            }
+            this.promptPresetSaving = true;
+            try {
+                const now = new Date().toISOString();
+                if (existing) {
+                    this.promptPresets = this.promptPresets.map((preset) => preset.id === existing.id
+                        ? { ...preset, name, content, updatedAt: now }
+                        : preset);
+                    this.selectedPromptPresetId = existing.id;
+                } else {
+                    const preset = {
+                        id: this.buildPromptPresetId(),
+                        name,
+                        content,
+                        updatedAt: now
+                    };
+                    this.promptPresets = [preset, ...this.promptPresets];
+                    this.selectedPromptPresetId = preset.id;
+                }
+                this.promptPresetNameDraft = '';
+                await this.persistPromptPresets();
+                this.showMessage(this.t('prompts.presets.toast.saved'), 'success');
+            } finally {
+                this.promptPresetSaving = false;
+            }
+        },
+        async applyPromptPresetToEditor(preset) {
+            if (!preset || typeof preset.content !== 'string' || !preset.content) return;
+            this.agentsContent = preset.content;
+            this.onAgentsContentInput();
+            this.selectedPromptPresetId = preset.id;
+            this.showMessage(this.t('prompts.presets.toast.pasted'), 'success');
+        },
+        async applyPromptPresetSelection(event) {
+            const select = event && event.target;
+            const presetId = select && typeof select.value === 'string' ? select.value : '';
+            if (!presetId) return;
+            const preset = (Array.isArray(this.promptPresets) ? this.promptPresets : []).find((item) => item && item.id === presetId);
+            await this.applyPromptPresetToEditor(preset);
+            if (select) select.value = '';
+        },
+        async renamePromptPreset(preset) {
+            if (!preset || !preset.id) return;
+            const name = this.normalizePromptPresetName(this.getPromptPresetRenameDraft(preset));
+            if (!name) {
+                this.showMessage(this.t('prompts.presets.error.emptyName'), 'error');
+                return;
+            }
+            const existing = this.findPromptPresetByName(name, preset.id);
+            if (existing) {
+                this.showMessage(this.t('prompts.presets.error.duplicateName'), 'error');
+                return;
+            }
+            if (name === preset.name) {
+                this.showMessage(this.t('toast.noChanges'), 'info');
+                return;
+            }
+            const now = new Date().toISOString();
+            this.promptPresets = this.promptPresets.map((item) => item.id === preset.id
+                ? { ...item, name, updatedAt: now }
+                : item);
+            const drafts = { ...(this.promptPresetRenameDraft || {}) };
+            delete drafts[preset.id];
+            this.promptPresetRenameDraft = drafts;
+            await this.persistPromptPresets();
+            this.showMessage(this.t('prompts.presets.toast.renamed'), 'success');
+        },
+        async deletePromptPreset(preset) {
+            if (!preset || !preset.id) return;
+            const confirmed = await this.requestConfirmDialog({
+                title: this.t('prompts.presets.confirm.deleteTitle'),
+                message: this.t('prompts.presets.confirm.deleteMessage', { name: preset.name || '' }),
+                confirmText: this.t('common.delete'),
+                cancelText: this.t('common.cancel'),
+                danger: true
+            });
+            if (!confirmed) return;
+            this.promptPresets = this.promptPresets.filter((item) => item.id !== preset.id);
+            if (this.selectedPromptPresetId === preset.id) {
+                this.selectedPromptPresetId = '';
+            }
+            const drafts = { ...(this.promptPresetRenameDraft || {}) };
+            delete drafts[preset.id];
+            this.promptPresetRenameDraft = drafts;
+            await this.persistPromptPresets();
+            this.showMessage(this.t('prompts.presets.toast.deleted'), 'success');
+        },
         switchPromptsSubTab(subTab) {
-            const normalized = subTab === 'claude-project' ? 'claude-project' : 'codex';
+            const normalized = subTab === 'claude-project' ? subTab : 'codex';
             if (normalized === 'claude-project' && !this.projectPathOptions.length && !this.projectPathOptionsLoading) {
                 this.loadProjectPathOptions();
             }

@@ -32,6 +32,7 @@
                     </div>
                 </div>
 
+
                 <div class="prompts-editor">
                     <div class="prompts-editor-toolbar">
                         <div class="form-hint">
@@ -83,6 +84,68 @@
                             </div>
                         </div>
                     </div>
+                    <div class="prompt-presets-inline-row">
+                        <div class="prompt-presets-inline-group">
+                            <label class="prompt-presets-inline-label">{{ t('prompts.presets.title') }}</label>
+                            <select
+                                class="form-input prompt-presets-select"
+                                :disabled="agentsLoading || agentsSaving || agentsDiffVisible || !promptPresets.length"
+                                :title="t('prompts.presets.title')"
+                                @change="applyPromptPresetSelection($event)">
+                                <option value="">{{ t('prompts.presets.selectPlaceholder') }}</option>
+                                <option v-for="preset in promptPresets" :key="preset.id" :value="preset.id">{{ preset.name }}</option>
+                            </select>
+                        </div>
+                        <div class="prompt-presets-inline-group prompt-presets-inline-group--save">
+                            <input
+                                type="text"
+                                class="form-input prompt-presets-name-input"
+                                v-model="promptPresetNameDraft"
+                                :placeholder="t('prompts.presets.namePlaceholder')"
+                                :disabled="agentsLoading || agentsSaving || agentsDiffVisible"
+                                @keydown.enter.prevent="saveCurrentPromptAsPreset">
+                            <button
+                                type="button"
+                                class="btn-mini btn-confirm-mini"
+                                @click="saveCurrentPromptAsPreset"
+                                :disabled="promptPresetSaving || agentsLoading || agentsSaving || agentsDiffVisible"
+                                :title="t('prompts.presets.saveCurrent')">
+                                {{ t('prompts.presets.saveCurrent') }}
+                            </button>
+                        </div>
+                    </div>
+                        <details class="prompt-presets-panel">
+                            <summary class="prompt-presets-summary">
+                                <span>{{ t('prompts.presets.title') }}</span>
+                                <small>{{ t('prompts.presets.hint') }}</small>
+                            </summary>
+                            <div class="form-group prompt-presets-body">
+                                <div class="editor-frame prompt-presets-frame">
+                                    <div v-if="!promptPresets.length" class="state-message prompt-presets-empty">{{ t('prompts.presets.empty') }}</div>
+                                    <div v-else class="prompt-presets-list">
+                                        <article v-for="preset in promptPresets" :key="preset.id" class="prompt-preset-row">
+                                            <div class="prompt-preset-main">
+                                                <input
+                                                    type="text"
+                                                    class="form-input prompt-preset-name"
+                                                    :value="getPromptPresetRenameDraft(preset)"
+                                                    @input="setPromptPresetRenameDraft(preset.id, $event.target.value)"
+                                                    @keydown.enter.prevent="renamePromptPreset(preset)"
+                                                    :aria-label="t('prompts.presets.renameAria')">
+                                                <div class="form-hint">{{ t('prompts.presets.updatedAt', { time: formatPromptPresetTime(preset.updatedAt) }) }}</div>
+                                                <pre class="prompt-preset-preview">{{ preset.content }}</pre>
+                                            </div>
+                                            <div class="prompts-editor-actions prompt-preset-actions">
+                                                <button type="button" class="btn-mini" @click="renamePromptPreset(preset)">{{ t('common.save') }}</button>
+                                                <button type="button" class="btn-mini" @click="applyPromptPresetToEditor(preset)">{{ t('common.paste') }}</button>
+                                                <button type="button" class="btn-mini btn-danger-mini" @click="deletePromptPreset(preset)">{{ t('common.delete') }}</button>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+
 
                     <div class="form-group">
                         <div v-if="agentsDiffVisible">
