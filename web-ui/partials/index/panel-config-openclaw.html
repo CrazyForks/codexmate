@@ -11,6 +11,27 @@
                     <button type="button" :class="['segment', { active: configMode === 'openclaw' }]" @click="switchConfigMode('openclaw')">{{ t('tab.config.openclaw') }}</button>
                 </div>
                 <div class="openclaw-layout">
+                    <section class="settings-card settings-card--wide openclaw-summary-card" aria-label="OpenClaw 当前摘要">
+                        <div class="settings-card-body">
+                            <div class="openclaw-summary-header">
+                                <div>
+                                    <div class="summary-eyebrow">OPENCLAW</div>
+                                    <div class="summary-title">配置与本地诊断</div>
+                                </div>
+                                <div class="summary-note">配置摘要</div>
+                            </div>
+                            <div class="openclaw-summary-grid">
+                                <div v-for="item in getOpenclawStatusSummaryItems()" :key="item.key" :class="['openclaw-summary-item', item.tone || '']">
+                                    <div class="summary-item-label">{{ item.label }}</div>
+                                    <div class="summary-item-value">{{ item.value }}</div>
+                                </div>
+                            </div>
+                            <div class="openclaw-diagnostic-note">
+                                本页仅管理配置与工作区文件。
+                            </div>
+                        </div>
+                    </section>
+
                     <section class="settings-card settings-card--wide openclaw-workspace-card">
                         <div class="settings-card-body">
                             <div class="openclaw-tools-grid">
@@ -18,27 +39,29 @@
                                     <div class="tool-icon">📄</div>
                                     <div class="tool-content">
                                         <div class="tool-title">AGENTS.md</div>
-                                        <div class="tool-meta">{{ agentsLoading ? t('config.modelLoading') : t('openclaw.agents.hint') }}</div>
+                                        <div class="tool-meta">{{ agentsLoading ? t('config.modelLoading') : 'Workspace file' }}</div>
                                     </div>
                                     <svg class="tool-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M9 18l6-6-6-6"/>
                                     </svg>
                                 </button>
 
-                                <div class="openclaw-workspace-card">
-                                    <label class="workspace-label" for="openclaw-workspace-file">{{ t('openclaw.workspaceFile') }}</label>
-                                    <div class="workspace-input-group">
-                                        <input
-                                            id="openclaw-workspace-file"
-                                            class="form-input"
-                                            v-model="openclawWorkspaceFileName"
-                                            :placeholder="t('openclaw.workspace.placeholder')">
-                                        <button class="btn-tool" @click="openOpenclawWorkspaceEditor" :disabled="loading || !!initError || agentsLoading">
-                                            {{ agentsLoading ? t('config.modelLoading') : t('openclaw.workspace.open') }}
-                                        </button>
+                                <button
+                                    v-for="fileName in getOpenclawQuickWorkspaceFiles()"
+                                    :key="fileName"
+                                    type="button"
+                                    class="openclaw-tool-btn"
+                                    @click="openOpenclawQuickWorkspaceFile(fileName)"
+                                    :disabled="loading || !!initError || agentsLoading">
+                                    <div class="tool-icon">📄</div>
+                                    <div class="tool-content">
+                                        <div class="tool-title">{{ fileName }}</div>
+                                        <div class="tool-meta">Workspace file</div>
                                     </div>
-                                    <div class="workspace-meta">{{ t('openclaw.workspace.hint') }}</div>
-                                </div>
+                                    <svg class="tool-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 18l6-6-6-6"/>
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                     </section>
@@ -60,6 +83,11 @@
                                         <div class="card-content">
                                             <div class="card-title">{{ name }}</div>
                                             <div class="card-subtitle">{{ openclawSubtitle(config) }}</div>
+                                            <div v-if="openclawHasContent(config)" class="openclaw-config-summary-mini">
+                                                <span v-for="item in getOpenclawConfigSummary(config).slice(0, 3)" :key="item.key">
+                                                    {{ item.label }}: {{ item.value }}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="card-trailing">
