@@ -149,6 +149,16 @@ export function createDashboardComputed() {
                         version: '',
                         commandPath: '',
                         error: ''
+                    },
+                    {
+                        id: 'kilocode',
+                        name: 'KiloCode CLI',
+                        packageName: '@kilocode/cli',
+                        installed: false,
+                        bin: 'kilo',
+                        version: '',
+                        commandPath: '',
+                        error: ''
                     }
                 ];
             const action = this.normalizeInstallAction(this.installCommandAction);
@@ -163,6 +173,10 @@ export function createDashboardComputed() {
                     termuxCommand
                 };
             });
+        },
+        currentInstalledCommandCards() {
+            const targets = Array.isArray(this.installTargetCards) ? this.installTargetCards : [];
+            return targets.filter((target) => target && target.installed === true);
         },
         installRegistryPreview() {
             return this.resolveInstallRegistryUrl(this.installRegistryPreset, this.installRegistryCustom);

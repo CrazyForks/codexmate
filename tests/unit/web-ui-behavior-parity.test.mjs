@@ -1,4 +1,4 @@
-﻿import assert from 'assert';
+import assert from 'assert';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import {
@@ -533,6 +533,20 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'opencodeAutoCompact',
         'opencodeMaxTokens',
         'opencodeReasoningEffort',
+        'kilocodeConfigPath',
+        'kilocodeConfigExists',
+        'kilocodeContent',
+        'kilocodeLoading',
+        'kilocodeSaving',
+        'kilocodeStarting',
+        'kilocodeError',
+        'kilocodeProviders',
+        'kilocodeProvider',
+        'kilocodeBaseUrl',
+        'kilocodeModel',
+        'kilocodeApiKey',
+        'kilocodeShowKey',
+        'kilocodeAutoSaveSignature',
         'sessionTimelineStyle',
         'providerCacheError',
         'providerCacheLoadedAt',
@@ -696,6 +710,15 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'setToolConfigPermission',
         'opencodeProviderCatalog',
         'opencodeModelCatalogForProvider',
+        'refreshKilocodeSelectionFromSummary',
+        'loadKilocodeConfig',
+        'saveKilocodeConfig',
+        'hasKilocodeStoredKey',
+        'kilocodeConfigSignature',
+        'normalizeKilocodeProviderNameForUi',
+        'selectKilocodeProvider',
+        'autoSaveKilocodeConfig',
+        'startKilocode',
         'fillOpencodeProvider',
         'refreshOpencodeSelectionFromSummary',
         'loadOpencodeConfig',
@@ -957,7 +980,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'sessionContextUtilization',
         'isLocalProviderDisabled',
         'sessionTimelineProgressPercent',
-        'activeSessionWorkspaceSummary'
+        'activeSessionWorkspaceSummary',
+        'currentInstalledCommandCards'
     ];
     const allowedMissingCurrentComputedKeys = [
         'hasLocalAndProxy',

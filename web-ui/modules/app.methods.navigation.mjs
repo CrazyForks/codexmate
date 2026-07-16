@@ -148,6 +148,9 @@
             }
             this.configMode = configModeSet.has(normalizedMode) ? normalizedMode : 'codex';
             if (this.mainTab === 'config') {
+                if (this.configMode === 'kilocode' && typeof this.loadKilocodeConfig === 'function') {
+                    this.loadKilocodeConfig();
+                }
                 if (this.configMode === 'claude') {
                     const expectedMainTab = 'config';
                     const expectedConfigMode = 'claude';
@@ -458,6 +461,9 @@
             if (targetTab === previousTab) {
                 switchState.ticket += 1;
                 switchState.pendingTarget = '';
+                if (targetTab === 'config' && this.configMode === 'kilocode' && typeof this.loadKilocodeConfig === 'function') {
+                    void this.loadKilocodeConfig();
+                }
                 if (targetTab === 'dashboard' && !this.__doctorLoadedOnce) {
                     void loadDoctorOverview(this);
                 }
@@ -490,6 +496,9 @@
                 switchState.pendingTarget = '';
                 const result = switchMainTabHelper.call(this, targetTab);
                 persistNavState(this);
+                if (targetTab === 'config' && this.configMode === 'kilocode' && typeof this.loadKilocodeConfig === 'function') {
+                    void this.loadKilocodeConfig();
+                }
                 if (targetTab === 'dashboard') {
                     void loadDoctorOverview(this);
                 }
@@ -508,6 +517,9 @@
                 liveState.pendingTarget = '';
                 switchMainTabHelper.call(this, pendingTarget);
                 persistNavState(this);
+                if (pendingTarget === 'config' && this.configMode === 'kilocode' && typeof this.loadKilocodeConfig === 'function') {
+                    void this.loadKilocodeConfig();
+                }
                 if (pendingTarget === 'dashboard') {
                     void loadDoctorOverview(this);
                 }
