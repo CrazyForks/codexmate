@@ -225,7 +225,7 @@ export function createSessionActionMethods(options = {}) {
         isDeleteAvailable(session) {
             if (!session) return false;
             const source = String(session.source || '').trim().toLowerCase();
-            if (source !== 'codex' && source !== 'claude') return false;
+            if (source !== 'codex' && source !== 'claude' && source !== 'pi') return false;
             const sessionId = typeof session.sessionId === 'string' ? session.sessionId.trim() : '';
             const filePath = typeof session.filePath === 'string' ? session.filePath.trim() : '';
             return !!sessionId || !!filePath;

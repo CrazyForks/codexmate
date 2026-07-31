@@ -3512,7 +3512,7 @@ return function render(_ctx, _cache) {
                                       ]),
                                       _createElementVNode("div", { class: "session-actions" }, [
                                         _createElementVNode("button", {
-                                          class: "btn-session-refresh",
+                                          class: "btn-session-refresh has-label",
                                           onClick: _ctx.loadActiveSessionDetail,
                                           disabled: _ctx.sessionDetailLoading || !_ctx.activeSession,
                                           title: _ctx.sessionDetailLoading ? _ctx.t('sessions.preview.loading') : _ctx.t('sessions.preview.refresh'),
@@ -3530,12 +3530,13 @@ return function render(_ctx, _cache) {
                                             _createElementVNode("path", { d: "M13.5 8a5.5 5.5 0 0 1-9.4 3.8" }),
                                             _createElementVNode("polyline", { points: "2.5 2 2.5 5 5.5 5" }),
                                             _createElementVNode("polyline", { points: "13.5 14 13.5 11 10.5 11" })
-                                          ]))
+                                          ])),
+                                          _createElementVNode("span", { class: "session-action-label" }, _toDisplayString(_ctx.t('sessions.preview.refresh')), 1 /* TEXT */)
                                         ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"]),
                                         (_ctx.isDeleteAvailable(_ctx.activeSession))
                                           ? (_openBlock(), _createElementBlock("button", {
                                               key: 0,
-                                              class: "btn-session-delete",
+                                              class: "btn-session-delete has-label",
                                               onClick: $event => (_ctx.deleteSession(_ctx.activeSession)),
                                               disabled: !_ctx.activeSession || _ctx.sessionsLoading || _ctx.sessionDeleting[_ctx.getSessionExportKey(_ctx.activeSession)],
                                               title: (_ctx.activeSession && _ctx.sessionDeleting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleting') : _ctx.t('sessions.preview.moving')) : (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleteHard') : _ctx.t('sessions.preview.moveToTrash')),
@@ -3552,11 +3553,12 @@ return function render(_ctx, _cache) {
                                                 _createElementVNode("polyline", { points: "3 4 4 4 13 4" }),
                                                 _createElementVNode("path", { d: "M5.5 4V2.5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V4" }),
                                                 _createElementVNode("path", { d: "M12 4v9.5a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 4 13.5V4" })
-                                              ]))
+                                              ])),
+                                              _createElementVNode("span", { class: "session-action-label" }, _toDisplayString((_ctx.activeSession && _ctx.sessionDeleting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleting') : _ctx.t('sessions.preview.moving')) : (_ctx.sessionTrashEnabled === false ? _ctx.t('sessions.preview.deleteHard') : _ctx.t('sessions.preview.moveToTrash'))), 1 /* TEXT */)
                                             ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"]))
                                           : _createCommentVNode("v-if", true),
                                         _createElementVNode("button", {
-                                          class: "btn-session-export",
+                                          class: "btn-session-export has-label",
                                           onClick: $event => (_ctx.exportSession(_ctx.activeSession)),
                                           disabled: !_ctx.activeSession || _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)],
                                           title: (_ctx.activeSession && _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? _ctx.t('sessions.preview.exporting') : _ctx.t('sessions.preview.export'),
@@ -3573,28 +3575,8 @@ return function render(_ctx, _cache) {
                                             _createElementVNode("path", { d: "M8 2v8" }),
                                             _createElementVNode("polyline", { points: "4 7 8 10.5 12 7" }),
                                             _createElementVNode("path", { d: "M2.5 12v1.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V12" })
-                                          ]))
-                                        ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"]),
-                                        _createElementVNode("button", {
-                                          class: "btn-session-open session-brief-copy",
-                                          onClick: _ctx.copySessionWorkspaceBrief,
-                                          disabled: !_ctx.activeSessionWorkspaceSummary.available,
-                                          title: _ctx.t('sessions.workspace.copy'),
-                                          "aria-label": _ctx.t('sessions.workspace.copy')
-                                        }, [
-                                          (_openBlock(), _createElementBlock("svg", {
-                                            viewBox: "0 0 16 16",
-                                            fill: "none",
-                                            stroke: "currentColor",
-                                            "stroke-width": "1.8",
-                                            "stroke-linecap": "round",
-                                            "stroke-linejoin": "round"
-                                          }, [
-                                            _createElementVNode("path", { d: "M4 2.5h6.5L13 5v8.5H4z" }),
-                                            _createElementVNode("path", { d: "M10.5 2.5V5H13" }),
-                                            _createElementVNode("path", { d: "M6 8h5" }),
-                                            _createElementVNode("path", { d: "M6 10.5h5" })
-                                          ]))
+                                          ])),
+                                          _createElementVNode("span", { class: "session-action-label" }, _toDisplayString((_ctx.activeSession && _ctx.sessionExporting[_ctx.getSessionExportKey(_ctx.activeSession)]) ? _ctx.t('sessions.preview.exporting') : _ctx.t('sessions.preview.export')), 1 /* TEXT */)
                                         ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"]),
                                         _createElementVNode("div", { class: "session-link-group" }, [
                                           _createElementVNode("button", {
@@ -3638,7 +3620,7 @@ return function render(_ctx, _cache) {
                                           ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"])
                                         ]),
                                         _createElementVNode("button", {
-                                          class: "btn-session-open",
+                                          class: "btn-session-open has-label",
                                           onClick: $event => (_ctx.copySessionPath(_ctx.activeSession)),
                                           disabled: !_ctx.activeSession || !_ctx.getSessionFilePath(_ctx.activeSession),
                                           title: _ctx.t('sessions.preview.copyPath'),
@@ -3653,7 +3635,8 @@ return function render(_ctx, _cache) {
                                             "stroke-linejoin": "round"
                                           }, [
                                             _createElementVNode("path", { d: "M2 5.5V12.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7.5a1 1 0 0 0-1-1H8L6.5 5H3a1 1 0 0 0-1 1z" })
-                                          ]))
+                                          ])),
+                                          _createElementVNode("span", { class: "session-action-label" }, _toDisplayString(_ctx.t('sessions.preview.copyPath')), 1 /* TEXT */)
                                         ], 8 /* PROPS */, ["onClick", "disabled", "title", "aria-label"])
                                       ])
                                     ], 512 /* NEED_PATCH */),

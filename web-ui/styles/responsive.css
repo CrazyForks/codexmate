@@ -366,6 +366,14 @@ textarea:focus-visible {
         height: 44px;
     }
 
+    .btn-session-export.has-label,
+    .btn-session-open.has-label,
+    .btn-session-refresh.has-label,
+    .btn-session-delete.has-label {
+        width: auto;
+        height: 44px;
+        padding: 0 14px;
+    }
     .session-link-group .btn-session-open {
         width: 44px;
         height: 44px;
@@ -583,6 +591,10 @@ textarea:focus-visible {
         width: 100%;
         min-width: 0;
         height: 40px;
+    }
+
+    .session-actions .session-action-label {
+        display: none;
     }
 
     .session-preview-body {
