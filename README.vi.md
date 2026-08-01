@@ -4,7 +4,7 @@
 
 # Codex Mate
 
-**Một dashboard duy nhất cho tất cả AI coding agent cục bộ của bạn. Chuyển đổi provider, quản lý phiên làm việc và điều phối tác vụ giữa Codex, Claude Code và OpenClaw. Không cloud, trung tâm điều khiển agent hoàn toàn cục bộ.**
+**Một dashboard duy nhất cho tất cả AI coding agent cục bộ của bạn. Chuyển đổi provider, quản lý phiên làm việc và điều phối tác vụ giữa Codex, Claude Code, Gemini CLI, CodeBuddy Code, Pi, OpenCode, KiloCode và OpenClaw. Không cloud, trung tâm điều khiển agent hoàn toàn cục bộ.**
 
 <p>
   <a href="https://sakurabytecore.github.io/codexmate/">[Tài liệu]</a>
@@ -41,7 +41,7 @@
 
 Bạn có bao giờ cảm thấy rối khi phải quản lý nhiều AI agent cục bộ? Mỗi tool lại có định dạng cấu hình, nơi lưu phiên và thư mục skill riêng.
 
-**Codex Mate** cung cấp một trung tâm điều khiển thống nhất để giải quyết sự hỗn loạn đó. Đây là CLI + Web UI ưu tiên cục bộ, được thiết kế để quản lý [Codex](https://github.com/openai/codex), [Claude Code](https://github.com/anthropic-ai/claude-code) và [OpenClaw](https://github.com/moeru-ai/openclaw) một cách liền mạch.
+**Codex Mate** cung cấp một trung tâm điều khiển thống nhất để giải quyết sự hỗn loạn đó. Đây là CLI + Web UI ưu tiên cục bộ, được thiết kế để quản lý [Codex](https://github.com/openai/codex), [Claude Code](https://github.com/anthropic-ai/claude-code), [OpenCode](https://opencode.ai/), KiloCode và [OpenClaw](https://github.com/moeru-ai/openclaw) một cách liền mạch.
 
 ### Điểm nổi bật
 
@@ -58,7 +58,7 @@ Khác với các wrapper đơn giản, Codex Mate hoạt động như một **Ag
 
 | Tính năng | Trạng thái | Mô tả |
 | --- | --- | --- |
-| **Quản lý Provider** | ✅ | Chuyển đổi provider/model cho Codex, Claude và OpenClaw |
+| **Quản lý Provider** | ✅ | Chuyển đổi provider/model cho Codex, Claude, OpenCode, KiloCode và OpenClaw |
 | **Đồng bộ Agent trực tiếp** | ✅ | Giám sát cấu hình & trạng thái Codex/Claude theo thời gian thực |
 | **Trình duyệt phiên** | ✅ | Liệt kê, xem trước, lọc và xuất phiên (Codex/Claude/Gemini/CodeBuddy/Pi) |
 | **Phân tích sử dụng** | ✅ | Trực quan hóa xu hướng tin nhắn và dự án nổi bật |
@@ -115,7 +115,10 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 - **Claude Code**: `npm install -g @anthropic-ai/claude-code`
 - **Gemini CLI**: `npm install -g @google/gemini-cli`
 - **CodeBuddy**: `npm install -g @tencent-ai/codebuddy-code`
+- **KiloCode**: `npm install -g @kilocode/cli` (`kilo` / `kilocode`)
 - **OpenCode**: xem [tài liệu chính thức OpenCode](https://opencode.ai/)
+- **OpenClaw**: xem [kho lưu trữ OpenClaw](https://github.com/moeru-ai/openclaw)
+- **Pi**: phiên làm việc được phát hiện từ `~/.pi/agent/sessions`
 
 ---
 

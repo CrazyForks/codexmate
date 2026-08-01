@@ -4,7 +4,7 @@
 
 # Codex Mate
 
-**一站式本地 AI 编程智能体管理面板。统一管理 Codex、Claude Code、OpenCode 与 OpenClaw，支持 Provider 切换、会话管理与任务编排。纯本地优先，你的智能体控制中心。**
+**一站式本地 AI 编程智能体管理面板。统一管理 Codex、Claude Code、Gemini CLI、CodeBuddy Code、Pi、OpenCode、KiloCode 与 OpenClaw，支持 Provider 切换、会话管理与任务编排。纯本地优先，你的智能体控制中心。**
 
 <p>
   <a href="https://sakurabytecore.github.io/codexmate/">[项目文档]</a>
@@ -48,7 +48,7 @@
 
 你是否曾因管理多个本地 AI 智能体而感到疲惫？每个工具都有自己的配置格式、会话存储和 Skills 目录。
 
-**Codex Mate** 提供了一个统一的控制平面，让混乱重归有序。这是一个本地优先的 CLI + Web UI，旨在无缝管理 [Codex](https://github.com/openai/codex)、[Claude Code](https://github.com/anthropic-ai/claude-code)、[OpenCode](https://opencode.ai/) 和 [OpenClaw](https://github.com/moeru-ai/openclaw)。
+**Codex Mate** 提供了一个统一的控制平面，让混乱重归有序。这是一个本地优先的 CLI + Web UI，旨在无缝管理 [Codex](https://github.com/openai/codex)、[Claude Code](https://github.com/anthropic-ai/claude-code)、[OpenCode](https://opencode.ai/)、KiloCode 和 [OpenClaw](https://github.com/moeru-ai/openclaw)。
 
 ### 有什么独特之处？
 
@@ -68,7 +68,7 @@
 
 | 特性 | 状态 | 描述 |
 | --- | --- | --- |
-| **Provider 管理** | ✅ | 切换 Codex、Claude、OpenCode 和 OpenClaw 的 provider/model |
+| **Provider 管理** | ✅ | 切换 Codex、Claude、OpenCode、KiloCode 和 OpenClaw 的 provider/model |
 | **状态实时同步** | ✅ | 实时感知 Codex/Claude 的配置与运行状态变更 |
 | **会话浏览器** | ✅ | 跨 Codex、Claude Code、Gemini CLI、CodeBuddy Code 与 Pi 的本地会话进行检索、预览、筛选与导出 |
 | **Usage 统计** | ✅ | 可视化消息趋势与热门项目统计 |
@@ -127,7 +127,10 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 - **Claude Code**: `npm install -g @anthropic-ai/claude-code`
 - **Gemini CLI**: `npm install -g @google/gemini-cli`
 - **CodeBuddy**: `npm install -g @tencent-ai/codebuddy-code`
+- **KiloCode**: `npm install -g @kilocode/cli`（`kilo` / `kilocode`）
 - **OpenCode**: 参照 [OpenCode 官方文档](https://opencode.ai/) 安装
+- **OpenClaw**: 参见 [OpenClaw 仓库](https://github.com/moeru-ai/openclaw)
+- **Pi**: 会话从 `~/.pi/agent/sessions` 自动发现
 
 ---
 

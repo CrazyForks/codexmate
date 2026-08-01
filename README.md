@@ -4,7 +4,7 @@
 
 # Codex Mate
 
-**One dashboard for all your local AI coding agents. Switch providers, manage sessions, and orchestrate tasks across Codex, Claude Code, OpenCode, KiloCode, and OpenClaw. Zero cloud, local-first control plane.**
+**One dashboard for all your local AI coding agents. Switch providers, manage sessions, and orchestrate tasks across Codex, Claude Code, Gemini CLI, CodeBuddy Code, Pi, OpenCode, KiloCode, and OpenClaw. Zero cloud, local-first control plane.**
 
 <p>
   <a href="https://sakurabytecore.github.io/codexmate/">[Documentation]</a>
@@ -132,6 +132,8 @@ curl -fsSL https://raw.githubusercontent.com/SakuraByteCore/codexmate/main/scrip
 - **CodeBuddy**: `npm install -g @tencent-ai/codebuddy-code`
 - **KiloCode**: `npm install -g @kilocode/cli` (`kilo` / `kilocode`)
 - **OpenCode**: install from the [official OpenCode docs](https://opencode.ai/)
+- **OpenClaw**: see the [OpenClaw repository](https://github.com/moeru-ai/openclaw)
+- **Pi**: sessions are discovered from `~/.pi/agent/sessions`
 
 ---
 
