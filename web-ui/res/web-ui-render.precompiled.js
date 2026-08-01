@@ -5887,42 +5887,6 @@ return function render(_ctx, _cache) {
                   ])
                 ], 8 /* PROPS */, ["aria-label"]),
                 _createElementVNode("section", {
-                  class: "settings-card",
-                  "aria-label": _ctx.t('settings.trashConfig.title')
-                }, [
-                  _createElementVNode("div", { class: "settings-card-main" }, [
-                    _createElementVNode("div", { class: "settings-card-content" }, [
-                      _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.trashConfig.title')), 1 /* TEXT */),
-                      _createElementVNode("p", { class: "settings-card-desc" }, _toDisplayString(_ctx.t('settings.trashConfig.meta')), 1 /* TEXT */),
-                      _createElementVNode("label", { class: "settings-toggle-row" }, [
-                        _createElementVNode("input", {
-                          type: "checkbox",
-                          checked: _ctx.sessionTrashEnabled,
-                          onChange: $event => (_ctx.setSessionTrashEnabled($event.target.checked))
-                        }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange"]),
-                        _createElementVNode("span", { class: "toggle-track" }, [
-                          _createElementVNode("span", { class: "toggle-thumb" })
-                        ]),
-                        _createElementVNode("span", null, _toDisplayString(_ctx.t('settings.deleteBehavior.toggle')), 1 /* TEXT */)
-                      ]),
-                      _createElementVNode("div", { class: "settings-retention" }, [
-                        _createElementVNode("label", { for: "settings-trash-retention-days" }, _toDisplayString(_ctx.t('settings.trash.retentionLabel')), 1 /* TEXT */),
-                        _createElementVNode("input", {
-                          id: "settings-trash-retention-days",
-                          type: "number",
-                          min: "1",
-                          max: "365",
-                          value: _ctx.sessionTrashRetentionDays,
-                          onChange: $event => (_ctx.setSessionTrashRetentionDays(Number($event.target.value))),
-                          class: "settings-retention-input"
-                        }, null, 40 /* PROPS, NEED_HYDRATION */, ["value", "onChange"]),
-                        _createElementVNode("span", null, _toDisplayString(_ctx.t('settings.trash.retentionUnit')), 1 /* TEXT */)
-                      ]),
-                      _createElementVNode("p", { class: "settings-card-hint" }, _toDisplayString(_ctx.t('settings.trash.retentionHint')), 1 /* TEXT */)
-                    ])
-                  ])
-                ], 8 /* PROPS */, ["aria-label"]),
-                _createElementVNode("section", {
                   class: "settings-card settings-card--destructive",
                   "aria-label": _ctx.t('settings.reset.title')
                 }, [
@@ -5958,11 +5922,48 @@ return function render(_ctx, _cache) {
                   key: 0,
                   class: "trash-panel-shell"
                 }, [
-                  _createCommentVNode(" Empty state "),
-                  (_ctx.getSessionTrashViewState() === 'empty')
+                  _createCommentVNode(" Trash configuration "),
+                  _createElementVNode("section", {
+                    class: "settings-card trash-config-card",
+                    "aria-label": _ctx.t('settings.trashConfig.title')
+                  }, [
+                    _createElementVNode("div", { class: "settings-card-main" }, [
+                      _createElementVNode("div", { class: "settings-card-content" }, [
+                        _createElementVNode("div", { class: "settings-card-title" }, _toDisplayString(_ctx.t('settings.trashConfig.title')), 1 /* TEXT */),
+                        _createElementVNode("p", { class: "settings-card-desc" }, _toDisplayString(_ctx.t('settings.trashConfig.meta')), 1 /* TEXT */),
+                        _createElementVNode("label", { class: "settings-toggle-row" }, [
+                          _createElementVNode("input", {
+                            type: "checkbox",
+                            checked: _ctx.sessionTrashEnabled,
+                            onChange: $event => (_ctx.setSessionTrashEnabled($event.target.checked))
+                          }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "onChange"]),
+                          _createElementVNode("span", { class: "toggle-track" }, [
+                            _createElementVNode("span", { class: "toggle-thumb" })
+                          ]),
+                          _createElementVNode("span", null, _toDisplayString(_ctx.t('settings.deleteBehavior.toggle')), 1 /* TEXT */)
+                        ]),
+                        _createElementVNode("div", { class: "settings-retention" }, [
+                          _createElementVNode("label", { for: "settings-trash-retention-days" }, _toDisplayString(_ctx.t('settings.trash.retentionLabel')), 1 /* TEXT */),
+                          _createElementVNode("input", {
+                            id: "settings-trash-retention-days",
+                            type: "number",
+                            min: "1",
+                            max: "365",
+                            value: _ctx.sessionTrashRetentionDays,
+                            onChange: $event => (_ctx.setSessionTrashRetentionDays(Number($event.target.value))),
+                            class: "settings-retention-input"
+                          }, null, 40 /* PROPS, NEED_HYDRATION */, ["value", "onChange"]),
+                          _createElementVNode("span", null, _toDisplayString(_ctx.t('settings.trash.retentionUnit')), 1 /* TEXT */)
+                        ]),
+                        _createElementVNode("p", { class: "settings-card-hint" }, _toDisplayString(_ctx.t('settings.trash.retentionHint')), 1 /* TEXT */)
+                      ])
+                    ])
+                  ], 8 /* PROPS */, ["aria-label"]),
+                  _createCommentVNode(" Disabled state "),
+                  (_ctx.getSessionTrashViewState() === 'disabled')
                     ? (_openBlock(), _createElementBlock("div", {
                         key: 0,
-                        class: "trash-empty-state"
+                        class: "trash-empty-state trash-disabled-state"
                       }, [
                         (_openBlock(), _createElementBlock("svg", {
                           class: "trash-empty-svg",
@@ -5975,158 +5976,182 @@ return function render(_ctx, _cache) {
                           _createElementVNode("path", { d: "M14 22h36" }),
                           _createElementVNode("path", { d: "M24 22v-4a4 4 0 014-4h8a4 4 0 014 4v4" }),
                           _createElementVNode("path", {
-                            d: "M28 30v16M36 30v16",
-                            "stroke-width": "1.6",
+                            d: "M10 10l44 44",
+                            "stroke-width": "2",
                             "stroke-linecap": "round"
                           })
                         ])),
-                        _createElementVNode("div", { class: "trash-empty-title" }, _toDisplayString(_ctx.t('settings.trash.empty')), 1 /* TEXT */),
-                        _createElementVNode("div", { class: "trash-empty-hint" }, _toDisplayString(_ctx.t('settings.trash.emptyHint', { days: _ctx.sessionTrashRetentionDays })), 1 /* TEXT */)
+                        _createElementVNode("div", { class: "trash-empty-title" }, _toDisplayString(_ctx.t('settings.trash.disabled')), 1 /* TEXT */),
+                        _createElementVNode("div", { class: "trash-empty-hint" }, _toDisplayString(_ctx.t('settings.trash.disabledHint')), 1 /* TEXT */)
                       ]))
-                    : (_ctx.getSessionTrashViewState() === 'loading')
+                    : (_ctx.getSessionTrashViewState() === 'empty')
                       ? (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
-                          _createCommentVNode(" Loading state "),
+                          _createCommentVNode(" Empty state "),
                           _createElementVNode("div", { class: "trash-empty-state" }, [
-                            _createElementVNode("div", { class: "trash-spinner" }),
-                            _createElementVNode("div", { class: "trash-empty-title" }, _toDisplayString(_ctx.t('settings.trash.loading')), 1 /* TEXT */)
+                            (_openBlock(), _createElementBlock("svg", {
+                              class: "trash-empty-svg",
+                              viewBox: "0 0 64 64",
+                              fill: "none",
+                              stroke: "currentColor",
+                              "stroke-width": "1.2"
+                            }, [
+                              _createElementVNode("path", { d: "M20 22l4 32h16l4-32" }),
+                              _createElementVNode("path", { d: "M14 22h36" }),
+                              _createElementVNode("path", { d: "M24 22v-4a4 4 0 014-4h8a4 4 0 014 4v4" }),
+                              _createElementVNode("path", {
+                                d: "M28 30v16M36 30v16",
+                                "stroke-width": "1.6",
+                                "stroke-linecap": "round"
+                              })
+                            ])),
+                            _createElementVNode("div", { class: "trash-empty-title" }, _toDisplayString(_ctx.t('settings.trash.empty')), 1 /* TEXT */),
+                            _createElementVNode("div", { class: "trash-empty-hint" }, _toDisplayString(_ctx.t('settings.trash.emptyHint', { days: _ctx.sessionTrashRetentionDays })), 1 /* TEXT */)
                           ])
                         ], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */))
-                      : (_ctx.getSessionTrashViewState() === 'retry')
+                      : (_ctx.getSessionTrashViewState() === 'loading')
                         ? (_openBlock(), _createElementBlock(_Fragment, { key: 2 }, [
-                            _createCommentVNode(" Error state "),
+                            _createCommentVNode(" Loading state "),
                             _createElementVNode("div", { class: "trash-empty-state" }, [
-                              (_openBlock(), _createElementBlock("svg", {
-                                class: "trash-empty-svg",
-                                viewBox: "0 0 64 64",
-                                fill: "none",
-                                stroke: "currentColor",
-                                "stroke-width": "1.2"
-                              }, [
-                                _createElementVNode("circle", {
-                                  cx: "32",
-                                  cy: "32",
-                                  r: "22"
-                                }),
-                                _createElementVNode("path", {
-                                  d: "M32 20v16M32 44v2",
-                                  "stroke-width": "2",
-                                  "stroke-linecap": "round"
-                                })
-                              ])),
-                              _createElementVNode("div", { class: "trash-empty-title" }, _toDisplayString(_ctx.t('settings.trash.retry')), 1 /* TEXT */),
-                              _createElementVNode("button", {
-                                class: "btn-tool",
-                                onClick: $event => (_ctx.loadSessionTrash({ forceRefresh: true }))
-                              }, _toDisplayString(_ctx.t('common.retry')), 9 /* TEXT, PROPS */, ["onClick"])
+                              _createElementVNode("div", { class: "trash-spinner" }),
+                              _createElementVNode("div", { class: "trash-empty-title" }, _toDisplayString(_ctx.t('settings.trash.loading')), 1 /* TEXT */)
                             ])
                           ], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */))
-                        : (_openBlock(), _createElementBlock(_Fragment, { key: 3 }, [
-                            _createCommentVNode(" List state "),
-                            _createElementVNode("div", { class: "trash-toolbar" }, [
-                              _createElementVNode("div", { class: "trash-toolbar-left" }, [
-                                _createElementVNode("span", { class: "trash-toolbar-count" }, _toDisplayString(_ctx.t('settings.trash.count', { count: _ctx.sessionTrashCount })), 1 /* TEXT */),
-                                _createElementVNode("span", { class: "trash-toolbar-retention" }, _toDisplayString(_ctx.t('settings.trash.retentionShort', { days: _ctx.sessionTrashRetentionDays })), 1 /* TEXT */)
-                              ]),
-                              _createElementVNode("div", { class: "trash-toolbar-right" }, [
-                                _createElementVNode("button", {
-                                  class: "btn-mini",
-                                  onClick: $event => (_ctx.loadSessionTrash({ forceRefresh: true })),
-                                  disabled: _ctx.sessionTrashLoading,
-                                  "aria-label": _ctx.t('sessions.refresh'),
-                                  title: _ctx.t('sessions.refresh')
+                        : (_ctx.getSessionTrashViewState() === 'retry')
+                          ? (_openBlock(), _createElementBlock(_Fragment, { key: 3 }, [
+                              _createCommentVNode(" Error state "),
+                              _createElementVNode("div", { class: "trash-empty-state" }, [
+                                (_openBlock(), _createElementBlock("svg", {
+                                  class: "trash-empty-svg",
+                                  viewBox: "0 0 64 64",
+                                  fill: "none",
+                                  stroke: "currentColor",
+                                  "stroke-width": "1.2"
                                 }, [
-                                  (_openBlock(), _createElementBlock("svg", {
-                                    viewBox: "0 0 24 24",
-                                    fill: "none",
-                                    stroke: "currentColor",
+                                  _createElementVNode("circle", {
+                                    cx: "32",
+                                    cy: "32",
+                                    r: "22"
+                                  }),
+                                  _createElementVNode("path", {
+                                    d: "M32 20v16M32 44v2",
                                     "stroke-width": "2",
-                                    class: "btn-icon-sm"
-                                  }, [
-                                    _createElementVNode("path", { d: "M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16" })
-                                  ]))
-                                ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"]),
+                                    "stroke-linecap": "round"
+                                  })
+                                ])),
+                                _createElementVNode("div", { class: "trash-empty-title" }, _toDisplayString(_ctx.t('settings.trash.retry')), 1 /* TEXT */),
                                 _createElementVNode("button", {
-                                  class: "btn-mini delete",
-                                  onClick: _ctx.clearSessionTrash,
-                                  disabled: _ctx.sessionTrashClearing || _ctx.sessionTrashLoading || !(Number(_ctx.sessionTrashCount) > 0)
-                                }, _toDisplayString(_ctx.sessionTrashClearing ? _ctx.t('settings.trash.clearing') : _ctx.t('settings.trash.clearShort')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                  class: "btn-tool",
+                                  onClick: $event => (_ctx.loadSessionTrash({ forceRefresh: true }))
+                                }, _toDisplayString(_ctx.t('common.retry')), 9 /* TEXT, PROPS */, ["onClick"])
                               ])
-                            ]),
-                            _createElementVNode("div", { class: "trash-list" }, [
-                              (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.visibleSessionTrashItems, (item) => {
-                                return (_openBlock(), _createElementBlock("div", {
-                                  key: item.trashId,
-                                  class: "trash-item"
-                                }, [
-                                  _createElementVNode("div", { class: "trash-item-body" }, [
-                                    _createElementVNode("div", { class: "trash-item-main" }, [
-                                      _createElementVNode("div", { class: "trash-item-title" }, _toDisplayString(item.title || item.sessionId), 1 /* TEXT */),
-                                      _createElementVNode("div", { class: "trash-item-meta" }, [
-                                        _createElementVNode("span", {
-                                          class: "session-source",
-                                          "data-source": item.source
-                                        }, _toDisplayString(item.sourceLabel), 9 /* TEXT, PROPS */, ["data-source"]),
-                                        _createElementVNode("span", { class: "trash-item-time" }, _toDisplayString(item.deletedAt || item.updatedAt || _ctx.t('sessions.unknownTime')), 1 /* TEXT */),
-                                        (item.cwd)
-                                          ? (_openBlock(), _createElementBlock("span", {
-                                              key: 0,
-                                              class: "trash-item-cwd"
-                                            }, _toDisplayString(item.cwd), 1 /* TEXT */))
-                                          : _createCommentVNode("v-if", true)
-                                      ])
-                                    ]),
-                                    _createElementVNode("div", { class: "trash-item-actions" }, [
-                                      _createElementVNode("button", {
-                                        class: "trash-action-btn restore",
-                                        onClick: $event => (_ctx.restoreSessionTrash(item)),
-                                        disabled: _ctx.sessionTrashLoading || _ctx.sessionTrashClearing || _ctx.isSessionTrashActionBusy(item),
-                                        "aria-label": _ctx.sessionTrashRestoring[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.restoring') : _ctx.t('settings.trash.restore'),
-                                        title: _ctx.sessionTrashRestoring[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.restoring') : _ctx.t('settings.trash.restore')
-                                      }, [
-                                        (_openBlock(), _createElementBlock("svg", {
-                                          viewBox: "0 0 24 24",
-                                          fill: "none",
-                                          stroke: "currentColor",
-                                          "stroke-width": "2"
-                                        }, [
-                                          _createElementVNode("path", { d: "M3 12a9 9 0 119 9" }),
-                                          _createElementVNode("path", { d: "M3 4v6h6" })
-                                        ]))
-                                      ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"]),
-                                      _createElementVNode("button", {
-                                        class: "trash-action-btn delete",
-                                        onClick: $event => (_ctx.purgeSessionTrash(item)),
-                                        disabled: _ctx.sessionTrashLoading || _ctx.sessionTrashClearing || _ctx.isSessionTrashActionBusy(item),
-                                        "aria-label": _ctx.sessionTrashPurging[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.purging') : _ctx.t('settings.trash.purge'),
-                                        title: _ctx.sessionTrashPurging[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.purging') : _ctx.t('settings.trash.purge')
-                                      }, [
-                                        (_openBlock(), _createElementBlock("svg", {
-                                          viewBox: "0 0 24 24",
-                                          fill: "none",
-                                          stroke: "currentColor",
-                                          "stroke-width": "2"
-                                        }, [
-                                          _createElementVNode("path", { d: "M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6" })
-                                        ]))
-                                      ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"])
-                                    ])
-                                  ])
-                                ]))
-                              }), 128 /* KEYED_FRAGMENT */)),
-                              (_ctx.sessionTrashHasMoreItems)
-                                ? (_openBlock(), _createElementBlock("div", {
-                                    key: 0,
-                                    class: "trash-list-footer"
+                            ], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */))
+                          : (_openBlock(), _createElementBlock(_Fragment, { key: 4 }, [
+                              _createCommentVNode(" List state "),
+                              _createElementVNode("div", { class: "trash-toolbar" }, [
+                                _createElementVNode("div", { class: "trash-toolbar-left" }, [
+                                  _createElementVNode("span", { class: "trash-toolbar-count" }, _toDisplayString(_ctx.t('settings.trash.count', { count: _ctx.sessionTrashCount })), 1 /* TEXT */),
+                                  _createElementVNode("span", { class: "trash-toolbar-retention" }, _toDisplayString(_ctx.t('settings.trash.retentionShort', { days: _ctx.sessionTrashRetentionDays })), 1 /* TEXT */)
+                                ]),
+                                _createElementVNode("div", { class: "trash-toolbar-right" }, [
+                                  _createElementVNode("button", {
+                                    class: "btn-mini",
+                                    onClick: $event => (_ctx.loadSessionTrash({ forceRefresh: true })),
+                                    disabled: _ctx.sessionTrashLoading,
+                                    "aria-label": _ctx.t('sessions.refresh'),
+                                    title: _ctx.t('sessions.refresh')
                                   }, [
-                                    _createElementVNode("button", {
-                                      class: "btn-tool btn-tool-compact",
-                                      onClick: _ctx.loadMoreSessionTrashItems,
-                                      disabled: _ctx.sessionTrashLoading || _ctx.sessionTrashClearing
-                                    }, _toDisplayString(_ctx.t('settings.trash.loadMoreItems', { count: _ctx.sessionTrashHiddenCount })), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                    (_openBlock(), _createElementBlock("svg", {
+                                      viewBox: "0 0 24 24",
+                                      fill: "none",
+                                      stroke: "currentColor",
+                                      "stroke-width": "2",
+                                      class: "btn-icon-sm"
+                                    }, [
+                                      _createElementVNode("path", { d: "M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16" })
+                                    ]))
+                                  ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"]),
+                                  _createElementVNode("button", {
+                                    class: "btn-mini delete",
+                                    onClick: _ctx.clearSessionTrash,
+                                    disabled: _ctx.sessionTrashClearing || _ctx.sessionTrashLoading || !(Number(_ctx.sessionTrashCount) > 0)
+                                  }, _toDisplayString(_ctx.sessionTrashClearing ? _ctx.t('settings.trash.clearing') : _ctx.t('settings.trash.clearShort')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                ])
+                              ]),
+                              _createElementVNode("div", { class: "trash-list" }, [
+                                (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.visibleSessionTrashItems, (item) => {
+                                  return (_openBlock(), _createElementBlock("div", {
+                                    key: item.trashId,
+                                    class: "trash-item"
+                                  }, [
+                                    _createElementVNode("div", { class: "trash-item-body" }, [
+                                      _createElementVNode("div", { class: "trash-item-main" }, [
+                                        _createElementVNode("div", { class: "trash-item-title" }, _toDisplayString(item.title || item.sessionId), 1 /* TEXT */),
+                                        _createElementVNode("div", { class: "trash-item-meta" }, [
+                                          _createElementVNode("span", {
+                                            class: "session-source",
+                                            "data-source": item.source
+                                          }, _toDisplayString(item.sourceLabel), 9 /* TEXT, PROPS */, ["data-source"]),
+                                          _createElementVNode("span", { class: "trash-item-time" }, _toDisplayString(item.deletedAt || item.updatedAt || _ctx.t('sessions.unknownTime')), 1 /* TEXT */),
+                                          (item.cwd)
+                                            ? (_openBlock(), _createElementBlock("span", {
+                                                key: 0,
+                                                class: "trash-item-cwd"
+                                              }, _toDisplayString(item.cwd), 1 /* TEXT */))
+                                            : _createCommentVNode("v-if", true)
+                                        ])
+                                      ]),
+                                      _createElementVNode("div", { class: "trash-item-actions" }, [
+                                        _createElementVNode("button", {
+                                          class: "trash-action-btn restore",
+                                          onClick: $event => (_ctx.restoreSessionTrash(item)),
+                                          disabled: _ctx.sessionTrashLoading || _ctx.sessionTrashClearing || _ctx.isSessionTrashActionBusy(item),
+                                          "aria-label": _ctx.sessionTrashRestoring[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.restoring') : _ctx.t('settings.trash.restore'),
+                                          title: _ctx.sessionTrashRestoring[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.restoring') : _ctx.t('settings.trash.restore')
+                                        }, [
+                                          (_openBlock(), _createElementBlock("svg", {
+                                            viewBox: "0 0 24 24",
+                                            fill: "none",
+                                            stroke: "currentColor",
+                                            "stroke-width": "2"
+                                          }, [
+                                            _createElementVNode("path", { d: "M3 12a9 9 0 119 9" }),
+                                            _createElementVNode("path", { d: "M3 4v6h6" })
+                                          ]))
+                                        ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"]),
+                                        _createElementVNode("button", {
+                                          class: "trash-action-btn delete",
+                                          onClick: $event => (_ctx.purgeSessionTrash(item)),
+                                          disabled: _ctx.sessionTrashLoading || _ctx.sessionTrashClearing || _ctx.isSessionTrashActionBusy(item),
+                                          "aria-label": _ctx.sessionTrashPurging[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.purging') : _ctx.t('settings.trash.purge'),
+                                          title: _ctx.sessionTrashPurging[_ctx.getSessionTrashActionKey(item)] ? _ctx.t('settings.trash.purging') : _ctx.t('settings.trash.purge')
+                                        }, [
+                                          (_openBlock(), _createElementBlock("svg", {
+                                            viewBox: "0 0 24 24",
+                                            fill: "none",
+                                            stroke: "currentColor",
+                                            "stroke-width": "2"
+                                          }, [
+                                            _createElementVNode("path", { d: "M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6" })
+                                          ]))
+                                        ], 8 /* PROPS */, ["onClick", "disabled", "aria-label", "title"])
+                                      ])
+                                    ])
                                   ]))
-                                : _createCommentVNode("v-if", true)
-                            ])
-                          ], 64 /* STABLE_FRAGMENT */))
+                                }), 128 /* KEYED_FRAGMENT */)),
+                                (_ctx.sessionTrashHasMoreItems)
+                                  ? (_openBlock(), _createElementBlock("div", {
+                                      key: 0,
+                                      class: "trash-list-footer"
+                                    }, [
+                                      _createElementVNode("button", {
+                                        class: "btn-tool btn-tool-compact",
+                                        onClick: _ctx.loadMoreSessionTrashItems,
+                                        disabled: _ctx.sessionTrashLoading || _ctx.sessionTrashClearing
+                                      }, _toDisplayString(_ctx.t('settings.trash.loadMoreItems', { count: _ctx.sessionTrashHiddenCount })), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                    ]))
+                                  : _createCommentVNode("v-if", true)
+                              ])
+                            ], 64 /* STABLE_FRAGMENT */))
                 ]))
               : _createCommentVNode("v-if", true)
           ], 512 /* NEED_PATCH */), [

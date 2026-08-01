@@ -333,3 +333,51 @@ test('zh-tw fallback resolves through zh before en', () => {
     // For a hypothetical missing key, it would fall back to zh then en
     assert.strictEqual(tFallback('nonexistent.key.xyz'), 'nonexistent.key.xyz');
 });
+
+test('all locale key sets stay aligned across the five supported languages', () => {
+    const baselineKeys = Object.keys(DICT.zh).sort();
+    const baselineKeySet = new Set(baselineKeys);
+    // ja keeps a legacy unused key not present in other locales
+    const allowedExtraKeys = Object.freeze({
+        ja: new Set(['sessions.preview.openStandalone'])
+    });
+    for (const code of expectedLocales) {
+        const localeKeys = Object.keys(DICT[code]);
+        const missingFromLocale = baselineKeys.filter((key) => !Object.prototype.hasOwnProperty.call(DICT[code], key));
+        const extraInLocale = localeKeys.filter((key) => !baselineKeySet.has(key));
+        const allowedExtra = allowedExtraKeys[code] || new Set();
+        const unexpectedExtra = extraInLocale.filter((key) => !allowedExtra.has(key));
+        assert.deepStrictEqual(missingFromLocale, [], `${code} must define every key present in zh baseline`);
+        assert.deepStrictEqual(unexpectedExtra, [], `${code} defines keys beyond zh baseline (${extraInLocale.join(', ')})`);
+    }
+});
+
+test('every t() key referenced by templates and app modules exists in all locales', () => {
+    const partialDir = path.join(repoRoot, 'web-ui', 'partials');
+    const moduleDir = path.join(repoRoot, 'web-ui', 'modules');
+    const referenceKeyPattern = /\bt\('([a-zA-Z0-9]+\.[a-zA-Z0-9_.]+)'(?:\s*,\s*\{[^}]*\})?\)/g;
+    const referencedKeys = new Set();
+    const walk = (dir) => {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+            const full = path.join(dir, entry.name);
+            if (entry.isDirectory()) { walk(full); continue; }
+            if (!/\.(?:html|mjs|js)$/.test(entry.name)) continue;
+            const content = fs.readFileSync(full, 'utf8');
+            let match;
+            while ((match = referenceKeyPattern.exec(content)) !== null) {
+                referencedKeys.add(match[1]);
+            }
+        }
+    };
+    walk(partialDir);
+    walk(moduleDir);
+    for (const key of referencedKeys) {
+        for (const code of expectedLocales) {
+            assert.strictEqual(
+                typeof DICT[code][key],
+                'string',
+                `${code} should define referenced key: ${key}`
+            );
+        }
+    }
+});

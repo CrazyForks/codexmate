@@ -860,7 +860,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'getOpenclawConfigSummary',
         'getOpenclawQuickWorkspaceFiles',
         'getOpenclawStatusSummaryItems',
-        'openOpenclawQuickWorkspaceFile'
+        'openOpenclawQuickWorkspaceFile',
+        'applySessionTrashEnabledChange'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',

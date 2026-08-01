@@ -308,9 +308,36 @@ export function createSessionActionMethods(options = {}) {
 
         setSessionTrashEnabled(value) {
             const enabled = this.normalizeSessionTrashEnabled(value);
+            const changed = this.sessionTrashEnabled !== enabled;
             this.sessionTrashEnabled = enabled;
             if (typeof this.persistWebUiPreferences === 'function') {
                 this.persistWebUiPreferences({ sessionTrashEnabled: enabled });
+            }
+            // 关闭/开启回收站后立即反映当前状态，无需用户手动刷新
+            if (changed && typeof this.applySessionTrashEnabledChange === 'function') {
+                this.applySessionTrashEnabledChange(enabled);
+            }
+        },
+
+        applySessionTrashEnabledChange(enabled) {
+            if (typeof this.invalidateSessionTrashRequests === 'function') {
+                this.invalidateSessionTrashRequests();
+            }
+            if (enabled) {
+                // 重新开启：立即拉取最新回收站内容
+                if (typeof this.loadSessionTrash === 'function') {
+                    void this.loadSessionTrash({ forceRefresh: true });
+                }
+            } else {
+                // 关闭回收站：即时清空已展示的列表与计数，避免残留陈旧数据需手动刷新
+                this.sessionTrashItems = [];
+                this.sessionTrashVisibleCount = 0;
+                this.sessionTrashTotalCount = 0;
+                this.sessionTrashCountLoadedOnce = false;
+                this.sessionTrashLoadedOnce = false;
+                this.sessionTrashLastLoadFailed = false;
+                this.sessionTrashRestoring = {};
+                this.sessionTrashPurging = {};
             }
         },
 

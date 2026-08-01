@@ -165,6 +165,15 @@ export function switchMainTab(tab) {
     ) {
         this.prepareSessionTabRender();
     }
+    const enteringTrashTab = nextTab === 'trash';
+    const shouldLoadTrashListOnTrashEnter = enteringTrashTab
+        && typeof this.loadSessionTrash === 'function'
+        && this.sessionTrashEnabled !== false;
+    if (shouldLoadTrashListOnTrashEnter) {
+        this.loadSessionTrash({
+            forceRefresh: !!this.sessionTrashLoadedOnce
+        });
+    }
     const shouldLoadTrashListOnSettingsEnter = nextTab === 'settings'
         && this.settingsTab === 'data'
         && typeof this.loadSessionTrash === 'function';

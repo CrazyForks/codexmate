@@ -89,6 +89,11 @@ export function createSessionTrashMethods(options = {}) {
         },
 
         getSessionTrashViewState() {
+            const trashEnabled = this.sessionTrashEnabled !== false;
+            // 回收站已关闭：即便残留旧列表也只展示已禁用态，不展示陈旧内容
+            if (!trashEnabled) {
+                return 'disabled';
+            }
             if (this.sessionTrashLoading && !this.sessionTrashLoadedOnce) {
                 return 'loading';
             }
