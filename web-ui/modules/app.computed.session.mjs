@@ -773,7 +773,7 @@ export function createSessionComputed() {
             const rows = currentKeys
                 .map((key) => byDay.get(key))
                 .filter(Boolean)
-                .sort((a, b) => b.key.localeCompare(a.key, 'en-US'));
+                .sort((a, b) => a.key.localeCompare(b.key, 'en-US'));
             const rowsWithCompare = rows.map((row) => {
                 if (!compareEnabled) {
                     return { ...row, compareEnabled: false, prevKey: '', prevTokenTotal: 0 };

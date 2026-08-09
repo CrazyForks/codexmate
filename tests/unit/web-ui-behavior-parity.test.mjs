@@ -729,7 +729,8 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'applyOpencodeSelection',
         'selectProjectClaudeMdPath',
         'setProjectClaudeMdPathManual',
-        'loadProjectPathOptions'
+        'loadProjectPathOptions',
+        'scrollSessionsUsageDayIntoView'
     ];
     allowedExtraCurrentMethodKeys.push(
         'normalizePackageVersion',

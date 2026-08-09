@@ -783,6 +783,7 @@ export function createSessionBrowserMethods(options = {}) {
                 this.sessionsUsageCompareEnabled = false;
             }
             void this.loadSessionsUsage({ range });
+            this.scrollSessionsUsageDayIntoView({ behavior: 'auto' });
         },
 
         toggleSessionsUsageCompare() {
@@ -801,10 +802,27 @@ export function createSessionBrowserMethods(options = {}) {
         selectSessionsUsageDay(dayKey) {
             const normalized = typeof dayKey === 'string' ? dayKey.trim() : '';
             this.sessionsUsageSelectedDayKey = normalized;
+            this.scrollSessionsUsageDayIntoView({ behavior: 'smooth', align: 'nearest' });
         },
 
         clearSessionsUsageDay() {
             this.sessionsUsageSelectedDayKey = '';
+        },
+
+        scrollSessionsUsageDayIntoView(options = {}) {
+            if (typeof document === 'undefined' || !document) return;
+            const behavior = options.behavior === 'smooth' ? 'smooth' : 'auto';
+            const inline = options.align === 'nearest' ? 'nearest' : 'end';
+            const scrollFn = () => {
+                const node = document.querySelector('.usage-wave-label.active');
+                if (!node || typeof node.scrollIntoView !== 'function') return;
+                node.scrollIntoView({ inline, block: 'nearest', behavior });
+            };
+            if (typeof this.$nextTick === 'function') {
+                this.$nextTick(scrollFn);
+            } else {
+                scrollFn();
+            }
         },
 
         async loadSessionsUsage(options = {}) {
@@ -855,7 +873,9 @@ export function createSessionBrowserMethods(options = {}) {
                     this.sessionsUsageLoadedLimit = limit;
                     this.sessionsUsageLastLoadedRange = range;
                     if (!this.sessionsUsageSelectedDayKey && Array.isArray(this.sessionUsageDailyTableRows) && this.sessionUsageDailyTableRows.length > 0) {
-                        this.sessionsUsageSelectedDayKey = this.sessionUsageDailyTableRows[0].key;
+                        const dayKeys = this.sessionUsageDailyTableRows.map((row) => row.key).filter(Boolean).sort((a, b) => b.localeCompare(a, 'en-US'));
+                        this.sessionsUsageSelectedDayKey = dayKeys[0] || this.sessionUsageDailyTableRows[this.sessionUsageDailyTableRows.length - 1].key;
+                        this.scrollSessionsUsageDayIntoView({ behavior: 'auto' });
                     }
                 }
             }

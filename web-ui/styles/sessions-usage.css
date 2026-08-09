@@ -342,12 +342,26 @@
 
 .usage-wave-labels {
     display: flex;
-    justify-content: space-between;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
     margin-top: 12px;
     padding: 0 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+}
+
+.usage-wave-labels::-webkit-scrollbar {
+    display: none;
 }
 
 .usage-wave-label {
+    flex: 0 0 auto;
+    min-width: 0;
+    white-space: nowrap;
+    scroll-snap-align: start;
     font-size: 11px;
     color: var(--color-text-muted);
     cursor: pointer;
@@ -372,6 +386,11 @@
     color: var(--color-brand);
     font-weight: 600;
     background: linear-gradient(135deg, rgba(200, 121, 99, 0.12), rgba(200, 121, 99, 0.06));
+    scroll-snap-align: center;
+}
+
+.usage-wave-label:last-child {
+    scroll-snap-align: end;
 }
 
 /* ---- 日期详情 ---- */

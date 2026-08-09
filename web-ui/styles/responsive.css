@@ -186,6 +186,24 @@ textarea:focus-visible {
 
     .mode-cards > .segmented-control {
         flex-direction: row;
+        flex-wrap: nowrap;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+    }
+
+    .mode-cards > .segmented-control::-webkit-scrollbar {
+        display: none;
+    }
+
+    .mode-cards > .segmented-control > .segment {
+        flex: 0 0 auto;
+        min-width: 0;
+        white-space: nowrap;
+        scroll-snap-align: start;
     }
 
     .prompts-editor-toolbar {
