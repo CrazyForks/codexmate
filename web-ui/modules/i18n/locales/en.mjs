@@ -231,6 +231,7 @@ const en = Object.freeze({
     'subtitle.prompts': 'Edit AGENTS.md and CLAUDE.md.',
     'prompts.subTab.codex': 'AGENTS.md (Codex)',
     'prompts.subTab.project': 'CLAUDE.md',
+    'prompts.subTab.system': 'System Prompt',
     'prompts.subTab.presets': 'Preset pool',
     'prompts.presets.title': 'Presets',
     'prompts.presets.hint': 'Manage presets.',
@@ -1575,6 +1576,16 @@ const en = Object.freeze({
     'kilocode.writeRequired': 'Enable KiloCode write access first',
     'kilocode.saved': 'KiloCode config saved',
     'kilocode.autoSaved': 'KiloCode config synced',
+    'sysPrompt.scope.label': 'Scope',
+    'sysPrompt.scope.global': 'Global (~/.pi/agent/)',
+    'sysPrompt.scope.project': 'Project (<cwd>/.pi/)',
+    'sysPrompt.mode.label': 'Mode',
+    'sysPrompt.mode.append': 'Append to default prompt (APPEND_SYSTEM.md)',
+    'sysPrompt.mode.system': 'Replace default prompt (SYSTEM.md)',
+    'sysPrompt.placeholder': 'Type system prompt content here…',
+    'sysPrompt.hint.unsaved': 'Unsaved changes detected',
+    'sysPrompt.hint.twoStepSave': 'Click preview to see the diff, then confirm to save.',
+    'sysPrompt.toast.saved': 'System prompt saved',
 });
 
 export { en };

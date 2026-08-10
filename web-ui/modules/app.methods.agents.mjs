@@ -4,6 +4,7 @@ import {
     isAgentsDiffPreviewPayloadTooLarge,
     shouldApplyAgentsDiffPreviewResponse
 } from '../logic.mjs';
+import { issueLatestRequestToken, isLatestRequestToken } from './request-token.mjs';
 
 function isValidOpenclawWorkspaceFileName(fileName) {
     if (typeof fileName !== 'string') {
@@ -17,16 +18,6 @@ function isValidOpenclawWorkspaceFileName(fileName) {
         return false;
     }
     return true;
-}
-
-function issueLatestRequestToken(context, key) {
-    const token = (Number(context[key]) || 0) + 1;
-    context[key] = token;
-    return token;
-}
-
-function isLatestRequestToken(context, key, token) {
-    return !!context && context[key] === token;
 }
 
 export function createAgentsMethods(options = {}) {
@@ -894,15 +885,17 @@ export function createAgentsMethods(options = {}) {
             this.showMessage(this.t('prompts.presets.toast.deleted'), 'success');
         },
         switchPromptsSubTab(subTab) {
-            const normalized = subTab === 'claude-project' ? subTab : 'codex';
+            const normalized = subTab === 'claude-project' || subTab === 'system' ? subTab : 'codex';
             if (normalized === 'claude-project' && !this.projectPathOptions.length && !this.projectPathOptionsLoading) {
                 this.loadProjectPathOptions();
             }
             if (this.promptsSubTab === normalized) {
-                this.loadPromptsContent();
+                if (normalized === 'system') this.loadSystemPrompt();
+                else this.loadPromptsContent();
                 return;
             }
             this.promptsSubTab = normalized;
+            if (normalized === 'system') this.loadSystemPrompt();
             this.$nextTick(() => {
                 document.querySelector('.main-panel')?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
             });

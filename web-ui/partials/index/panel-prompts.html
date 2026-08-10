@@ -8,6 +8,7 @@
                 <div class="prompts-md-tabs" role="tablist" :aria-label="t('tab.prompts')">
                     <button type="button" :class="['prompts-md-tab', { active: promptsSubTab === 'codex' }]" role="tab" :aria-selected="promptsSubTab === 'codex'" @click="switchPromptsSubTab('codex')">{{ t('prompts.subTab.codex') }}</button>
                     <button type="button" :class="['prompts-md-tab', { active: promptsSubTab === 'claude-project' }]" role="tab" :aria-selected="promptsSubTab === 'claude-project'" @click="switchPromptsSubTab('claude-project')">{{ t('prompts.subTab.project') }}</button>
+                    <button type="button" :class="['prompts-md-tab', { active: promptsSubTab === 'system' }]" role="tab" :aria-selected="promptsSubTab === 'system'" @click="switchPromptsSubTab('system')">{{ t('prompts.subTab.system') }}</button>
                 </div>
 
                 <div v-if="promptsSubTab === 'claude-project'" class="project-path-selector">
@@ -33,7 +34,7 @@
                 </div>
 
 
-                <div class="prompts-editor">
+                <div v-if="promptsSubTab !== 'system'" class="prompts-editor">
                     <div class="prompts-editor-toolbar">
                         <div class="form-hint">
                             {{ agentsPath || t('common.notLoaded') }}
@@ -188,5 +189,99 @@
                         </div>
                     </div>
 
+                </div>
+
+                <div v-if="promptsSubTab === 'system'">
+                    <div class="sys-prompt-controls">
+                        <div class="sys-prompt-control-group">
+                            <label class="form-label">{{ t('sysPrompt.scope.label') }}</label>
+                            <select class="form-input sys-prompt-select" :value="sysPromptScope" @change="switchSysPromptScope($event.target.value)" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible">
+                                <option value="global">{{ t('sysPrompt.scope.global') }}</option>
+                                <option value="project">{{ t('sysPrompt.scope.project') }}</option>
+                            </select>
+                        </div>
+                        <div class="sys-prompt-control-group">
+                            <label class="form-label">{{ t('sysPrompt.mode.label') }}</label>
+                            <select class="form-input sys-prompt-select" :value="sysPromptMode" @change="switchSysPromptMode($event.target.value)" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible">
+                                <option value="append">{{ t('sysPrompt.mode.append') }}</option>
+                                <option value="system">{{ t('sysPrompt.mode.system') }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="prompts-editor">
+                        <div class="prompts-editor-toolbar">
+                            <div class="form-hint">
+                                {{ sysPromptPath || t('common.notLoaded') }}
+                                <span v-if="sysPromptPath">
+                                    （{{ sysPromptExists ? t('common.exists') : t('common.notExistsWillCreateOnSave') }}）
+                                </span>
+                            </div>
+                            <div class="prompts-editor-actions">
+                                <div class="prompts-editor-group prompts-editor-group--secondary">
+                                    <button class="btn-mini" @click="exportSysPromptContent" :disabled="sysPromptLoading || sysPromptSaving || !sysPromptContent" :title="t('modal.agents.export')">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 11l4 4 4-4M4 17v2h16v-2"/></svg>
+                                    </button>
+                                    <button class="btn-mini" @click="copySysPromptContent" :disabled="sysPromptLoading || sysPromptSaving || !sysPromptContent" :title="t('modal.agents.copy')">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                                    </button>
+                                    <button class="btn-mini" @click="pasteSysPromptContent" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible" :title="t('common.paste')">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/></svg>
+                                    </button>
+                                </div>
+                                <div class="prompts-editor-group prompts-editor-group--workflow">
+                                    <button class="btn-mini" @click="cancelSysPromptEdit" :disabled="sysPromptSaving || sysPromptDiffLoading" :title="t('common.cancel')">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                    </button>
+                                    <button v-if="sysPromptDiffVisible" class="btn-mini" @click="resetSysPromptDiffState" :disabled="sysPromptSaving || sysPromptDiffLoading" :title="t('common.backToEdit')">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                                    </button>
+                                    <button class="btn-mini btn-confirm-mini" @click="applySystemPrompt" :disabled="sysPromptSaving || sysPromptLoading || sysPromptDiffLoading || (!sysPromptDiffVisible && !hasSysPromptContentChanged()) || (sysPromptDiffVisible && !sysPromptDiffHasChangesValue)" :title="sysPromptDiffVisible ? t('common.save') : t('common.preview')">
+                                        <svg v-if="sysPromptDiffVisible" class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                                        <svg v-else class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div v-if="sysPromptDiffVisible">
+                                <div
+                                    v-if="!sysPromptDiffLoading && !sysPromptDiffError && !sysPromptDiffTruncated && (sysPromptDiffStats.added || sysPromptDiffStats.removed)"
+                                    class="agents-diff-summary">
+                                    <span class="agents-diff-stat add">+{{ sysPromptDiffStats.added }}</span>
+                                    <span class="agents-diff-stat del">-{{ sysPromptDiffStats.removed }}</span>
+                                </div>
+                                <div v-if="sysPromptDiffLoading" class="state-message">{{ t('diff.generating') }}</div>
+                                <div v-else-if="sysPromptDiffError" class="state-message error">{{ sysPromptDiffError }}</div>
+                                <div v-else-if="sysPromptDiffTruncated" class="agents-diff-empty">{{ t('diff.tooLargeSkip') }}</div>
+                                <div v-else-if="!sysPromptDiffHasChangesValue" class="agents-diff-empty">{{ t('diff.noChanges') }}</div>
+                                <div v-else class="agents-diff-view agents-diff-editor">
+                                    <div
+                                        v-for="(line, index) in sysPromptDiffLines"
+                                        :key="'sys-prompt-diff-' + index"
+                                        :class="['agents-diff-line', line.type]">
+                                        <span class="agents-diff-line-sign">
+                                            {{ line.type === 'add' ? '+' : (line.type === 'del' ? '-' : ' ') }}
+                                        </span>
+                                        <span class="agents-diff-line-text">{{ line.value }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div :class="['editor-frame', { 'editor-frame--loading': sysPromptLoading }]">
+                                <div v-if="sysPromptLoading" class="editor-skeleton">
+                                    <div class="skeleton-line" v-for="i in 6" :key="i"></div>
+                                </div>
+                                <textarea
+                                    v-model="sysPromptContent"
+                                    class="form-input template-editor"
+                                    spellcheck="false"
+                                    :readonly="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible"
+                                    :placeholder="t('sysPrompt.placeholder')"></textarea>
+                            </div>
+                            <div v-if="sysPromptContextHint()" :class="['prompts-context-hint', { 'prompts-context-hint--warn': sysPromptContextHint().warn }]">
+                                {{ sysPromptContextHint().text }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 </div>

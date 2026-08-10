@@ -231,6 +231,7 @@ const zh = Object.freeze({
     'subtitle.prompts': '编辑 AGENTS.md 与 CLAUDE.md。',
     'prompts.subTab.codex': 'AGENTS.md (Codex)',
     'prompts.subTab.project': 'CLAUDE.md',
+    'prompts.subTab.system': 'System Prompt',
     'prompts.subTab.presets': '预设池',
     'prompts.presets.title': '预设池',
     'prompts.presets.hint': '管理预设。',
@@ -1573,6 +1574,16 @@ const zh = Object.freeze({
     'kilocode.writeRequired': '请先打开 KiloCode 写入开关',
     'kilocode.saved': 'KiloCode 配置已保存',
     'kilocode.autoSaved': 'KiloCode 配置已同步',
+    'sysPrompt.scope.label': '作用域',
+    'sysPrompt.scope.global': '全局 (~/.pi/agent/)',
+    'sysPrompt.scope.project': '项目 (<cwd>/.pi/)',
+    'sysPrompt.mode.label': '模式',
+    'sysPrompt.mode.append': '追加到默认提示词 (APPEND_SYSTEM.md)',
+    'sysPrompt.mode.system': '替换默认提示词 (SYSTEM.md)',
+    'sysPrompt.placeholder': '在此输入 system prompt 内容…',
+    'sysPrompt.hint.unsaved': '有未保存的改动',
+    'sysPrompt.hint.twoStepSave': '点击预览查看差异，确认后保存。',
+    'sysPrompt.toast.saved': 'System prompt 已保存',
 });
 
 export { zh };

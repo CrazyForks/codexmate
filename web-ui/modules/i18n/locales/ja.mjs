@@ -232,6 +232,7 @@ const ja = Object.freeze({
     'subtitle.prompts': 'AGENTS.md と CLAUDE.md を編集。',
     'prompts.subTab.codex': 'AGENTS.md (Codex)',
     'prompts.subTab.project': 'CLAUDE.md',
+    'prompts.subTab.system': 'System Prompt',
     'prompts.subTab.presets': 'プリセット',
     'prompts.presets.title': 'プリセット',
     'prompts.presets.hint': 'プリセットを管理します。',
@@ -1576,6 +1577,16 @@ const ja = Object.freeze({
     'kilocode.writeRequired': '先に KiloCode の書き込みを有効化してください',
     'kilocode.saved': 'KiloCode 設定を保存しました',
     'kilocode.autoSaved': 'KiloCode 設定を同期しました',
+    'sysPrompt.scope.label': 'スコープ',
+    'sysPrompt.scope.global': 'グローバル (~/.pi/agent/)',
+    'sysPrompt.scope.project': 'プロジェクト (<cwd>/.pi/)',
+    'sysPrompt.mode.label': 'モード',
+    'sysPrompt.mode.append': 'デフォルトに追加 (APPEND_SYSTEM.md)',
+    'sysPrompt.mode.system': 'デフォルトを置換 (SYSTEM.md)',
+    'sysPrompt.placeholder': 'システムプロンプトの内容を入力…',
+    'sysPrompt.hint.unsaved': '未保存の変更があります',
+    'sysPrompt.hint.twoStepSave': 'プレビューで差分を確認し、確認後に保存します。',
+    'sysPrompt.toast.saved': 'System prompt を保存しました',
 });
 
 export { ja };

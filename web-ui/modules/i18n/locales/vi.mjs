@@ -250,6 +250,7 @@ const vi = Object.freeze({
     'subtitle.prompts': 'Chỉnh sửa AGENTS.md và CLAUDE.md.',
     'prompts.subTab.codex': 'AGENTS.md (Codex)',
     'prompts.subTab.project': 'CLAUDE.md',
+    'prompts.subTab.system': 'System Prompt',
     'prompts.subTab.presets': 'Kho preset',
     'prompts.presets.title': 'Preset',
     'prompts.presets.hint': 'Quản lý preset.',
@@ -1545,6 +1546,16 @@ const vi = Object.freeze({
     'kilocode.writeRequired': 'Hãy bật quyền ghi KiloCode trước',
     'kilocode.saved': 'Đã lưu cấu hình KiloCode',
     'kilocode.autoSaved': 'Đã đồng bộ cấu hình KiloCode',
+    'sysPrompt.scope.label': 'Phạm vi',
+    'sysPrompt.scope.global': 'Toàn cục (~/.pi/agent/)',
+    'sysPrompt.scope.project': 'Dự án (<cwd>/.pi/)',
+    'sysPrompt.mode.label': 'Chế độ',
+    'sysPrompt.mode.append': 'Thêm vào prompt mặc định (APPEND_SYSTEM.md)',
+    'sysPrompt.mode.system': 'Thay thế prompt mặc định (SYSTEM.md)',
+    'sysPrompt.placeholder': 'Nhập nội dung system prompt…',
+    'sysPrompt.hint.unsaved': 'Có thay đổi chưa lưu',
+    'sysPrompt.hint.twoStepSave': 'Nhấn xem trước để xem diff, sau đó xác nhận để lưu.',
+    'sysPrompt.toast.saved': 'Đã lưu system prompt',
 });
 
 export { vi };

@@ -558,7 +558,26 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'providerCacheSyncing',
         'providerCacheSyncMessage',
         'showProviderCacheModal',
-        'showProviderCacheAnnouncementModal'
+        'showProviderCacheAnnouncementModal',
+        'sysPromptScope',
+        'sysPromptMode',
+        'sysPromptContent',
+        'sysPromptOriginalContent',
+        'sysPromptPath',
+        'sysPromptExists',
+        'sysPromptHash',
+        'sysPromptLoading',
+        'sysPromptSaving',
+        'sysPromptDiffVisible',
+        'sysPromptDiffLoading',
+        'sysPromptDiffError',
+        'sysPromptDiffLines',
+        'sysPromptDiffStats',
+        'sysPromptDiffTruncated',
+        'sysPromptDiffHasChangesValue',
+        'sysPromptDiffFingerprint',
+        '_sysPromptDiffPreviewRequestToken',
+        '_sysPromptOpenRequestToken'
     );
     if (parityAgainstHead) {
         const allowedExtraKeySet = new Set(allowedExtraCurrentKeys);
@@ -862,7 +881,20 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'getOpenclawQuickWorkspaceFiles',
         'getOpenclawStatusSummaryItems',
         'openOpenclawQuickWorkspaceFile',
-        'applySessionTrashEnabledChange'
+        'applySessionTrashEnabledChange',
+        'switchSysPromptScope',
+        'switchSysPromptMode',
+        'resetSysPromptDiffState',
+        'hasSysPromptContentChanged',
+        'buildSysPromptDiffFingerprint',
+        'loadSystemPrompt',
+        'prepareSysPromptDiff',
+        'cancelSysPromptEdit',
+        'applySystemPrompt',
+        'copySysPromptContent',
+        'exportSysPromptContent',
+        'pasteSysPromptContent',
+        'sysPromptContextHint'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',

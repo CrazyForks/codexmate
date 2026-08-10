@@ -12,6 +12,7 @@ import {
     SESSION_TRASH_PAGE_SIZE
 } from './app.constants.mjs';
 import { createAgentsMethods } from './app.methods.agents.mjs';
+import { createSystemPromptMethods } from './app.methods.system-prompt.mjs';
 import { createClaudeConfigMethods } from './app.methods.claude-config.mjs';
 import { createCodexConfigMethods } from './app.methods.codex-config.mjs';
 import { createInstallMethods } from './app.methods.install.mjs';
@@ -85,6 +86,7 @@ export function createAppMethods() {
         ...createSkillsMethods({ api }),
         ...createPluginsMethods(),
         ...createAgentsMethods({ api, apiWithMeta }),
+        ...createSystemPromptMethods({ api, apiWithMeta }),
         ...createProvidersMethods({ api }),
         ...createProviderCacheMethods({ api }),
         ...createWebUiPreferencesMethods({ api }),

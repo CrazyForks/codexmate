@@ -127,6 +127,9 @@ const {
     createAgentsFileController
 } = require('./cli/agents-files');
 const {
+    createSystemPromptFileController
+} = require('./cli/system-prompt-files');
+const {
     createArchiveHelperController
 } = require('./cli/archive-helpers');
 const {
@@ -308,6 +311,7 @@ const FAST_SESSION_DETAIL_PREVIEW_FILE_BYTES = 256 * 1024;
 const FAST_SESSION_DETAIL_PREVIEW_CHUNK_BYTES = 64 * 1024;
 const FAST_SESSION_DETAIL_PREVIEW_MAX_BYTES = 1024 * 1024;
 const AGENTS_FILE_NAME = 'AGENTS.md';
+const PI_AGENT_DIR = path.join(os.homedir(), '.pi', 'agent');
 const MODELS_CACHE_TTL_MS = 60 * 1000;
 const MODELS_NEGATIVE_CACHE_TTL_MS = 5 * 1000;
 const MODELS_CACHE_MAX_ENTRIES = 50;
@@ -2100,6 +2104,20 @@ const {
     readOpenclawWorkspaceFile() {
         return readOpenclawWorkspaceFile(...arguments);
     }
+});
+
+const {
+    readSystemPromptFile,
+    saveSystemPromptFile,
+    buildSystemPromptDiff
+} = createSystemPromptFileController({
+    fs,
+    path,
+    os,
+    crypto,
+    buildLineDiff,
+    CONFIG_DIR,
+    PI_AGENT_DIR
 });
 
 const {
@@ -13478,6 +13496,15 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             break;
                         case 'apply-openclaw-workspace-file':
                             result = applyOpenclawWorkspaceFile(params || {});
+                            break;
+                        case 'get-system-prompt':
+                            result = readSystemPromptFile(params || {});
+                            break;
+                        case 'apply-system-prompt':
+                            result = saveSystemPromptFile(params || {});
+                            break;
+                        case 'preview-system-prompt-diff':
+                            result = buildSystemPromptDiff(params || {});
                             break;
                         case 'switch':
                         case 'use':
