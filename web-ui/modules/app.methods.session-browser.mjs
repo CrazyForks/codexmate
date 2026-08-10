@@ -303,6 +303,7 @@ export function createSessionBrowserMethods(options = {}) {
         },
 
         onSessionSortChange() {
+            this.exitSessionBatchSelectMode();
             const normalized = this.normalizeSessionSortMode(this.sessionSortMode);
             this.sessionSortMode = normalized;
             if (typeof this.persistWebUiPreferences === 'function') {
@@ -445,6 +446,7 @@ export function createSessionBrowserMethods(options = {}) {
 
         setSessionSource(value) {
             if (this.sessionsLoading) return;
+            this.exitSessionBatchSelectMode();
             this.sessionFilterSource = value;
             this.refreshSessionPathOptions(value);
             this.persistSessionFilterCache();
@@ -478,12 +480,14 @@ export function createSessionBrowserMethods(options = {}) {
         },
 
         async onSessionPathFilterChange() {
+            this.exitSessionBatchSelectMode();
             this.persistSessionFilterCache();
             syncSessionsFilterUrl(this);
             await this.loadSessions();
         },
 
         async onSessionFilterChange() {
+            this.exitSessionBatchSelectMode();
             this.persistSessionFilterCache();
             syncSessionsFilterUrl(this);
             await this.loadSessions();
@@ -552,6 +556,7 @@ export function createSessionBrowserMethods(options = {}) {
         },
 
         async clearSessionFilters() {
+            this.exitSessionBatchSelectMode();
             this.sessionFilterSource = 'all';
             this.sessionPathFilter = '';
             this.sessionQuery = '';

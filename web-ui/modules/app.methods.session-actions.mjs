@@ -639,13 +639,14 @@ export function createSessionActionMethods(options = {}) {
             }
         },
 
-        async deleteSession(session) {
+        async deleteSession(session, batchOpts = {}) {
+            const batch = !!(batchOpts && batchOpts.batch);
             if (!this.isDeleteAvailable(session)) {
-                this.showMessage('不支持此操作', 'error');
-                return;
+                if (!batch) this.showMessage('不支持此操作', 'error');
+                return false;
             }
             const useTrash = this.sessionTrashEnabled !== false;
-            if (!useTrash && typeof this.requestConfirmDialog === 'function') {
+            if (!batch && !useTrash && typeof this.requestConfirmDialog === 'function') {
                 const confirmed = await this.requestConfirmDialog({
                     title: '直接删除会话',
                     message: '关闭回收站后，删除会话将直接永久删除，且无法恢复。',
@@ -654,12 +655,12 @@ export function createSessionActionMethods(options = {}) {
                     danger: true
                 });
                 if (!confirmed) {
-                    return;
+                    return false;
                 }
             }
             const key = this.getSessionExportKey(session);
             if (this.sessionDeleting[key]) {
-                return;
+                return false;
             }
             this.sessionDeleting[key] = true;
             try {
@@ -670,13 +671,14 @@ export function createSessionActionMethods(options = {}) {
                     filePath: session.filePath
                 });
                 if (!res || res.error) {
-                    this.showMessage((res && res.error) || '删除失败', 'error');
-                    return;
+                    const msg = (res && res.error) || (typeof this.t === 'function' ? this.t('toast.delete.fail') : '删除失败');
+                    if (!batch) this.showMessage(msg, 'error');
+                    return false;
                 }
                 this.removeSessionPin(session);
                 if (useTrash) {
                     this.invalidateSessionTrashRequests();
-                    this.showMessage('已移入回收站', 'success');
+                    if (!batch) this.showMessage('已移入回收站', 'success');
                     if (this.sessionTrashLoadedOnce) {
                         this.prependSessionTrashItem(this.buildSessionTrashItemFromSession(session, res), {
                             totalCount: res && res.totalCount !== undefined ? res.totalCount : undefined
@@ -689,7 +691,7 @@ export function createSessionActionMethods(options = {}) {
                             this.sessionTrashItems
                         );
                     }
-                } else {
+                } else if (!batch) {
                     this.showMessage('已删除', 'success');
                 }
                 if (typeof this.invalidateSessionsUsageData === 'function') {
@@ -700,10 +702,158 @@ export function createSessionActionMethods(options = {}) {
                 } catch (_) {
                     // The delete already succeeded remotely; keep the success result.
                 }
+                return true;
             } catch (_) {
-                this.showMessage(this.t('toast.delete.fail'), 'error');
+                if (!batch) {
+                    this.showMessage(this.t && this.t('toast.delete.fail') ? this.t('toast.delete.fail') : '删除失败', 'error');
+                }
+                return false;
             } finally {
                 this.sessionDeleting[key] = false;
+            }
+        },
+
+        isSessionBatchSelectable(session) {
+            return this.isDeleteAvailable(session);
+        },
+
+        isSessionSelectedForBatch(session) {
+            const key = this.getSessionExportKey(session);
+            if (!key) return false;
+            return !!this.sessionSelectedKeys[key];
+        },
+
+        toggleSessionSelectionForBatch(session) {
+            const key = this.getSessionExportKey(session);
+            if (!key) return;
+            if (this.sessionSelectedKeys[key]) {
+                const next = { ...this.sessionSelectedKeys };
+                delete next[key];
+                this.sessionSelectedKeys = next;
+                return;
+            }
+            this.sessionSelectedKeys = { ...this.sessionSelectedKeys, [key]: true };
+        },
+
+        enterSessionBatchSelectMode() {
+            if (this.sessionBatchSelectMode) return;
+            this.sessionBatchSelectMode = true;
+            this.sessionSelectedKeys = {};
+        },
+
+        exitSessionBatchSelectMode() {
+            if (!this.sessionBatchSelectMode) return;
+            this.sessionBatchSelectMode = false;
+            this.sessionSelectedKeys = {};
+        },
+
+        getSelectedBatchCount() {
+            return this.sessionsList.filter(s => this.sessionBatchSelectMode && this.isSessionSelectedForBatch(s)).length;
+        },
+
+        getVisibleBatchSelectableCount() {
+            return (this.visibleSessionsList || []).filter(s => this.isDeleteAvailable(s)).length;
+        },
+
+        isAllVisibleBatchSelected() {
+            const visible = (this.visibleSessionsList || []).filter(s => this.isDeleteAvailable(s));
+            if (visible.length === 0) return false;
+            return visible.every(s => this.isSessionSelectedForBatch(s) || this.sessionDeleting[this.getSessionExportKey(s)]);
+        },
+
+        toggleSelectAllVisibleForBatch() {
+            const visible = (this.visibleSessionsList || []).filter(s => this.isDeleteAvailable(s) && !this.sessionDeleting[this.getSessionExportKey(s)]);
+            if (visible.length === 0) return;
+            const allSelected = visible.every(s => this.isSessionSelectedForBatch(s));
+            const next = { ...this.sessionSelectedKeys };
+            if (allSelected) {
+                for (const s of visible) {
+                    delete next[this.getSessionExportKey(s)];
+                }
+            } else {
+                for (const s of visible) {
+                    next[this.getSessionExportKey(s)] = true;
+                }
+            }
+            this.sessionSelectedKeys = next;
+        },
+
+        clearSessionBatchSelection() {
+            this.sessionSelectedKeys = {};
+        },
+
+        async deleteSelectedSessions() {
+            if (this.sessionDeletingSelected) return;
+            const selected = (this.sessionsList || []).filter(s => this.isSessionSelectedForBatch(s));
+            if (selected.length === 0) {
+                if (typeof this.t === 'function') {
+                    this.showMessage(this.t('sessions.batch.emptySelection'), 'warning');
+                }
+                return;
+            }
+            const useTrash = this.sessionTrashEnabled !== false;
+            if (typeof this.requestConfirmDialog === 'function') {
+                const confirmKey = useTrash ? 'sessions.batch.deleteConfirm' : 'sessions.batch.deleteConfirmHard';
+                const confirmed = await this.requestConfirmDialog({
+                    title: this.t('sessions.batch.select'),
+                    message: this.t(confirmKey, { count: selected.length }),
+                    confirmText: this.t('sessions.batch.deleteSelected'),
+                    cancelText: this.t('common.cancel'),
+                    danger: !useTrash
+                });
+                if (!confirmed) {
+                    return;
+                }
+            }
+            this.sessionDeletingSelected = true;
+            let failed = 0;
+            const succeededKeys = [];
+            try {
+                for (const session of selected) {
+                    const ok = await this.deleteSession(session, { batch: true });
+                    if (ok) {
+                        succeededKeys.push(this.getSessionExportKey(session));
+                    } else {
+                        failed += 1;
+                    }
+                }
+                if (succeededKeys.length > 0) {
+                    if (typeof this.invalidateSessionsUsageData === 'function') {
+                        this.invalidateSessionsUsageData({ preserveList: true });
+                    }
+                    this.invalidateSessionTrashRequests();
+                    // Remove succeeded sessions from the current list in order
+                    for (const key of succeededKeys) {
+                        const session = (this.sessionsList || []).find(s => this.getSessionExportKey(s) === key);
+                        if (session) {
+                            try {
+                                await this.removeSessionFromCurrentList(session);
+                            } catch (_) {
+                                // Remote delete already succeeded; ignore local cleanup errors.
+                            }
+                        }
+                    }
+                    // Clear succeeded selections; keep failed ones selected
+                    const next = {};
+                    for (const session of selected) {
+                        const k = this.getSessionExportKey(session);
+                        if (failed > 0 && !succeededKeys.includes(k)) {
+                            next[k] = true;
+                        }
+                    }
+                    this.sessionSelectedKeys = next;
+                }
+                if (failed === 0) {
+                    const okMsg = useTrash ? '已移入回收站' : '已删除';
+                    this.showMessage(okMsg + ' · ' + succeededKeys.length, 'success');
+                    this.sessionBatchSelectMode = false;
+                } else if (failed === selected.length) {
+                    this.showMessage(this.t('sessions.batch.allFail'), 'error');
+                } else {
+                    this.showMessage(this.t('sessions.batch.partialFail', { failed }), 'warning');
+                }
+            } finally {
+                this.sessionDeletingSelected = false;
             }
         }
     };

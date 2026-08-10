@@ -276,6 +276,9 @@ export async function loadSessions(api, options = {}) {
             loadSucceeded = true;
             const rawSessions = Array.isArray(res.sessions) ? res.sessions : [];
             this.sessionsList = rawSessions.filter(s => s && typeof s === 'object');
+            if (typeof this.clearSessionBatchSelection === 'function') {
+                this.clearSessionBatchSelection();
+            }
             for (const session of this.sessionsList) {
                 const rawUpdatedAt = typeof session.updatedAt === 'string' ? session.updatedAt : '';
                 session.updatedAtLabel = formatSessionTimelineTimestamp(rawUpdatedAt);

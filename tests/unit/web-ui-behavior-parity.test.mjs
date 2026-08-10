@@ -548,6 +548,9 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'kilocodeApiKey',
         'kilocodeShowKey',
         'kilocodeAutoSaveSignature',
+        'sessionBatchSelectMode',
+        'sessionSelectedKeys',
+        'sessionDeletingSelected',
         'sessionTimelineStyle',
         'providerCacheError',
         'providerCacheLoadedAt',
@@ -894,7 +897,18 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'copySysPromptContent',
         'exportSysPromptContent',
         'pasteSysPromptContent',
-        'sysPromptContextHint'
+        'sysPromptContextHint',
+        'isSessionBatchSelectable',
+        'isSessionSelectedForBatch',
+        'toggleSessionSelectionForBatch',
+        'enterSessionBatchSelectMode',
+        'exitSessionBatchSelectMode',
+        'getSelectedBatchCount',
+        'getVisibleBatchSelectableCount',
+        'isAllVisibleBatchSelected',
+        'toggleSelectAllVisibleForBatch',
+        'clearSessionBatchSelection',
+        'deleteSelectedSessions'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',

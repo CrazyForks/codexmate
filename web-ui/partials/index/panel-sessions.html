@@ -103,6 +103,22 @@
                             <button class="btn-tool btn-tool-compact" type="button" @click="clearSessionFilters" :disabled="sessionsLoading">
                                 {{ t('common.resetFilters') }}
                             </button>
+                            <button v-if="!sessionBatchSelectMode" class="btn-tool btn-tool-compact btn-tool-batch" type="button" @click="enterSessionBatchSelectMode" :disabled="sessionsLoading" :title="t('sessions.batch.select')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M7 6V4a2 2 0 012-2h6a2 2 0 012 2v2M10 11v6M14 11v6"/><path d="M5 6l1 14a2 2 0 002 2h8a2 2 0 002-2l1-14"/></svg>
+                                <span>{{ t('sessions.batch.select') }}</span>
+                            </button>
+                            <template v-else>
+                                <button class="btn-tool btn-tool-compact" type="button" @click="toggleSelectAllVisibleForBatch" :disabled="sessionsLoading" :title="isAllVisibleBatchSelected() ? t('sessions.batch.unselectAll') : t('sessions.batch.selectAll')">
+                                    {{ isAllVisibleBatchSelected() ? t('sessions.batch.unselectAll') : t('sessions.batch.selectAll') }}
+                                </button>
+                                <button class="btn-tool btn-tool-compact btn-tool-batch-delete" type="button" @click="deleteSelectedSessions" :disabled="sessionsLoading || sessionDeletingSelected || getSelectedBatchCount() === 0" :title="getSelectedBatchCount() > 0 ? t('sessions.batch.deleteSelectedN', { count: getSelectedBatchCount() }) : t('sessions.batch.emptySelection')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M7 6V4a2 2 0 012-2h6a2 2 0 012 2v2M10 11v6M14 11v6"/><path d="M5 6l1 14a2 2 0 002 2h8a2 2 0 002-2l1-14"/></svg>
+                                    <span>{{ sessionDeletingSelected ? t('sessions.batch.deletingSelected') : (getSelectedBatchCount() > 0 ? t('sessions.batch.deleteSelectedN', { count: getSelectedBatchCount() }) : t('sessions.batch.deleteSelected')) }}</span>
+                                </button>
+                                <button class="btn-tool btn-tool-compact" type="button" @click="exitSessionBatchSelectMode" :disabled="sessionDeletingSelected" :title="t('sessions.batch.exit')">
+                                    {{ t('sessions.batch.exit') }}
+                                </button>
+                            </template>
                         </div>
                     </div>
                     <div v-if="hasActiveSessionFilters()" class="session-filter-chips" :aria-label="t('sessions.filters.copyLink')">
@@ -137,12 +153,14 @@
                         <div
                             v-for="session in visibleSessionsList"
                             :key="session.source + '-' + session.sessionId + '-' + session.filePath"
-                            v-memo="[activeSessionExportKey === getSessionExportKey(session), session.messageCount, session.updatedAt, session.title, session.sourceLabel, session.cwd, isSessionPinned(session), sessionsLoading, session.match && session.match.count]"
+                            v-memo="[activeSessionExportKey === getSessionExportKey(session), session.messageCount, session.updatedAt, session.title, session.sourceLabel, session.cwd, isSessionPinned(session), sessionsLoading, session.match && session.match.count, sessionBatchSelectMode, isSessionSelectedForBatch(session)]"
                             :class="[
                                 'session-item',
                                 {
                                     active: activeSessionExportKey === getSessionExportKey(session),
-                                    pinned: isSessionPinned(session)
+                                    pinned: isSessionPinned(session),
+                                    'batch-selected': sessionBatchSelectMode && isSessionSelectedForBatch(session),
+                                    'batch-selectable': sessionBatchSelectMode
                                 }
                             ]"
                             @click="selectSession(session)"
@@ -152,6 +170,16 @@
                             role="button"
                             :aria-current="activeSessionExportKey === getSessionExportKey(session) ? 'true' : null">
                             <div class="session-item-header">
+                                <label v-if="sessionBatchSelectMode" class="session-batch-check" @click.stop :data-session-key="getSessionExportKey(session)">
+                                    <input
+                                        type="checkbox"
+                                        :checked="isSessionSelectedForBatch(session)"
+                                        :disabled="sessionsLoading || sessionDeletingSelected || sessionDeleting[getSessionExportKey(session)] || !isSessionBatchSelectable(session)"
+                                        @change="toggleSessionSelectionForBatch(session)"
+                                        @click.stop
+                                        :aria-label="t('sessions.batch.select')">
+                                    <span class="session-batch-check-mark"></span>
+                                </label>
                                 <div class="session-item-main">
                                     <div class="session-item-title">{{ session.title || session.sessionId }}</div>
                                     <span class="session-count-badge">{{ session.messageCount == null ? '...' : session.messageCount }}</span>

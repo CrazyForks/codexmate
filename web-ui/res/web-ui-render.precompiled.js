@@ -3292,7 +3292,63 @@ return function render(_ctx, _cache) {
                           type: "button",
                           onClick: _ctx.clearSessionFilters,
                           disabled: _ctx.sessionsLoading
-                        }, _toDisplayString(_ctx.t('common.resetFilters')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                        }, _toDisplayString(_ctx.t('common.resetFilters')), 9 /* TEXT, PROPS */, ["onClick", "disabled"]),
+                        (!_ctx.sessionBatchSelectMode)
+                          ? (_openBlock(), _createElementBlock("button", {
+                              key: 0,
+                              class: "btn-tool btn-tool-compact btn-tool-batch",
+                              type: "button",
+                              onClick: _ctx.enterSessionBatchSelectMode,
+                              disabled: _ctx.sessionsLoading,
+                              title: _ctx.t('sessions.batch.select')
+                            }, [
+                              (_openBlock(), _createElementBlock("svg", {
+                                viewBox: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "2"
+                              }, [
+                                _createElementVNode("polyline", { points: "3 6 5 6 21 6" }),
+                                _createElementVNode("path", { d: "M7 6V4a2 2 0 012-2h6a2 2 0 012 2v2M10 11v6M14 11v6" }),
+                                _createElementVNode("path", { d: "M5 6l1 14a2 2 0 002 2h8a2 2 0 002-2l1-14" })
+                              ])),
+                              _createElementVNode("span", null, _toDisplayString(_ctx.t('sessions.batch.select')), 1 /* TEXT */)
+                            ], 8 /* PROPS */, ["onClick", "disabled", "title"]))
+                          : (_openBlock(), _createElementBlock(_Fragment, { key: 1 }, [
+                              _createElementVNode("button", {
+                                class: "btn-tool btn-tool-compact",
+                                type: "button",
+                                onClick: _ctx.toggleSelectAllVisibleForBatch,
+                                disabled: _ctx.sessionsLoading,
+                                title: _ctx.isAllVisibleBatchSelected() ? _ctx.t('sessions.batch.unselectAll') : _ctx.t('sessions.batch.selectAll')
+                              }, _toDisplayString(_ctx.isAllVisibleBatchSelected() ? _ctx.t('sessions.batch.unselectAll') : _ctx.t('sessions.batch.selectAll')), 9 /* TEXT, PROPS */, ["onClick", "disabled", "title"]),
+                              _createElementVNode("button", {
+                                class: "btn-tool btn-tool-compact btn-tool-batch-delete",
+                                type: "button",
+                                onClick: _ctx.deleteSelectedSessions,
+                                disabled: _ctx.sessionsLoading || _ctx.sessionDeletingSelected || _ctx.getSelectedBatchCount() === 0,
+                                title: _ctx.getSelectedBatchCount() > 0 ? _ctx.t('sessions.batch.deleteSelectedN', { count: _ctx.getSelectedBatchCount() }) : _ctx.t('sessions.batch.emptySelection')
+                              }, [
+                                (_openBlock(), _createElementBlock("svg", {
+                                  viewBox: "0 0 24 24",
+                                  fill: "none",
+                                  stroke: "currentColor",
+                                  "stroke-width": "2"
+                                }, [
+                                  _createElementVNode("polyline", { points: "3 6 5 6 21 6" }),
+                                  _createElementVNode("path", { d: "M7 6V4a2 2 0 012-2h6a2 2 0 012 2v2M10 11v6M14 11v6" }),
+                                  _createElementVNode("path", { d: "M5 6l1 14a2 2 0 002 2h8a2 2 0 002-2l1-14" })
+                                ])),
+                                _createElementVNode("span", null, _toDisplayString(_ctx.sessionDeletingSelected ? _ctx.t('sessions.batch.deletingSelected') : (_ctx.getSelectedBatchCount() > 0 ? _ctx.t('sessions.batch.deleteSelectedN', { count: _ctx.getSelectedBatchCount() }) : _ctx.t('sessions.batch.deleteSelected'))), 1 /* TEXT */)
+                              ], 8 /* PROPS */, ["onClick", "disabled", "title"]),
+                              _createElementVNode("button", {
+                                class: "btn-tool btn-tool-compact",
+                                type: "button",
+                                onClick: _ctx.exitSessionBatchSelectMode,
+                                disabled: _ctx.sessionDeletingSelected,
+                                title: _ctx.t('sessions.batch.exit')
+                              }, _toDisplayString(_ctx.t('sessions.batch.exit')), 9 /* TEXT, PROPS */, ["onClick", "disabled", "title"])
+                            ], 64 /* STABLE_FRAGMENT */))
                       ])
                     ]),
                     (_ctx.hasActiveSessionFilters())
@@ -3339,7 +3395,7 @@ return function render(_ctx, _cache) {
                                 onScrollPassive: _ctx.onSessionListScroll
                               }, [
                                 (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.visibleSessionsList, (session, __, ___, _cached) => {
-                                  const _memo = ([_ctx.activeSessionExportKey === _ctx.getSessionExportKey(session), session.messageCount, session.updatedAt, session.title, session.sourceLabel, session.cwd, _ctx.isSessionPinned(session), _ctx.sessionsLoading, session.match && session.match.count])
+                                  const _memo = ([_ctx.activeSessionExportKey === _ctx.getSessionExportKey(session), session.messageCount, session.updatedAt, session.title, session.sourceLabel, session.cwd, _ctx.isSessionPinned(session), _ctx.sessionsLoading, session.match && session.match.count, _ctx.sessionBatchSelectMode, _ctx.isSessionSelectedForBatch(session)])
                                   if (_cached && _cached.el && _cached.key === session.source + '-' + session.sessionId + '-' + session.filePath && _isMemoSame(_cached, _memo)) return _cached
                                   const _item = (_openBlock(), _createElementBlock("div", {
                                     key: session.source + '-' + session.sessionId + '-' + session.filePath,
@@ -3347,7 +3403,9 @@ return function render(_ctx, _cache) {
                                 'session-item',
                                 {
                                     active: _ctx.activeSessionExportKey === _ctx.getSessionExportKey(session),
-                                    pinned: _ctx.isSessionPinned(session)
+                                    pinned: _ctx.isSessionPinned(session),
+                                    'batch-selected': _ctx.sessionBatchSelectMode && _ctx.isSessionSelectedForBatch(session),
+                                    'batch-selectable': _ctx.sessionBatchSelectMode
                                 }
                             ]),
                                     onClick: $event => (_ctx.selectSession(session)),
@@ -3360,6 +3418,24 @@ return function render(_ctx, _cache) {
                                     "aria-current": _ctx.activeSessionExportKey === _ctx.getSessionExportKey(session) ? 'true' : null
                                   }, [
                                     _createElementVNode("div", { class: "session-item-header" }, [
+                                      (_ctx.sessionBatchSelectMode)
+                                        ? (_openBlock(), _createElementBlock("label", {
+                                            key: 0,
+                                            class: "session-batch-check",
+                                            onClick: _withModifiers(() => {}, ["stop"]),
+                                            "data-session-key": _ctx.getSessionExportKey(session)
+                                          }, [
+                                            _createElementVNode("input", {
+                                              type: "checkbox",
+                                              checked: _ctx.isSessionSelectedForBatch(session),
+                                              disabled: _ctx.sessionsLoading || _ctx.sessionDeletingSelected || _ctx.sessionDeleting[_ctx.getSessionExportKey(session)] || !_ctx.isSessionBatchSelectable(session),
+                                              onChange: $event => (_ctx.toggleSessionSelectionForBatch(session)),
+                                              onClick: _withModifiers(() => {}, ["stop"]),
+                                              "aria-label": _ctx.t('sessions.batch.select')
+                                            }, null, 40 /* PROPS, NEED_HYDRATION */, ["checked", "disabled", "onChange", "onClick", "aria-label"]),
+                                            _createElementVNode("span", { class: "session-batch-check-mark" })
+                                          ], 8 /* PROPS */, ["onClick", "data-session-key"]))
+                                        : _createCommentVNode("v-if", true),
                                       _createElementVNode("div", { class: "session-item-main" }, [
                                         _createElementVNode("div", { class: "session-item-title" }, _toDisplayString(session.title || session.sessionId), 1 /* TEXT */),
                                         _createElementVNode("span", { class: "session-count-badge" }, _toDisplayString(session.messageCount == null ? '...' : session.messageCount), 1 /* TEXT */),
