@@ -250,7 +250,7 @@ const vi = Object.freeze({
     'subtitle.prompts': 'Chỉnh sửa AGENTS.md và CLAUDE.md.',
     'prompts.subTab.codex': 'AGENTS.md (Codex)',
     'prompts.subTab.project': 'CLAUDE.md',
-    'prompts.subTab.system': 'System Prompt',
+    'prompts.subTab.system': 'System Prompt (Pi)',
     'prompts.subTab.presets': 'Kho preset',
     'prompts.presets.title': 'Preset',
     'prompts.presets.hint': 'Quản lý preset.',

@@ -63,7 +63,19 @@ function normalizeUsageTimeRange(value) {
 function normalizePromptsSubTab(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
     if (normalized === 'claude-project') return normalized;
+    if (normalized === 'system') return normalized;
     return 'codex';
+}
+
+function normalizeSysPromptScope(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    if (normalized === 'project') return normalized;
+    return 'global';
+}
+
+function normalizeSysPromptMode(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return normalized === 'append' ? 'append' : 'system';
 }
 
 function normalizePromptPresets(value) {
@@ -333,6 +345,8 @@ export function createWebUiPreferencesMethods(options = {}) {
                     : this.configTemplateDiffConfirmEnabled !== false,
                 sessionsUsageTimeRange: normalizeUsageTimeRange(hasOwn(source, 'sessionsUsageTimeRange') ? source.sessionsUsageTimeRange : this.sessionsUsageTimeRange),
                 promptsSubTab: normalizePromptsSubTab(hasOwn(source, 'promptsSubTab') ? source.promptsSubTab : this.promptsSubTab),
+                sysPromptScope: normalizeSysPromptScope(hasOwn(source, 'sysPromptScope') ? source.sysPromptScope : this.sysPromptScope),
+                sysPromptMode: normalizeSysPromptMode(hasOwn(source, 'sysPromptMode') ? source.sysPromptMode : this.sysPromptMode),
                 promptPresets: normalizePromptPresets(hasOwn(source, 'promptPresets') ? source.promptPresets : this.promptPresets),
                 projectClaudeMdPath: typeof source.projectClaudeMdPath === 'string'
                     ? source.projectClaudeMdPath
@@ -385,6 +399,12 @@ export function createWebUiPreferencesMethods(options = {}) {
                 }
                 if (typeof source.promptsSubTab === 'string') {
                     this.promptsSubTab = normalizePromptsSubTab(source.promptsSubTab);
+                }
+                if (typeof source.sysPromptScope === 'string') {
+                    this.sysPromptScope = normalizeSysPromptScope(source.sysPromptScope);
+                }
+                if (typeof source.sysPromptMode === 'string') {
+                    this.sysPromptMode = normalizeSysPromptMode(source.sysPromptMode);
                 }
                 if (Array.isArray(source.promptPresets)) {
                     this.promptPresets = normalizePromptPresets(source.promptPresets);

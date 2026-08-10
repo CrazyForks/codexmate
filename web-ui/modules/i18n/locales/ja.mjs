@@ -232,7 +232,7 @@ const ja = Object.freeze({
     'subtitle.prompts': 'AGENTS.md と CLAUDE.md を編集。',
     'prompts.subTab.codex': 'AGENTS.md (Codex)',
     'prompts.subTab.project': 'CLAUDE.md',
-    'prompts.subTab.system': 'System Prompt',
+    'prompts.subTab.system': 'System Prompt (Pi)',
     'prompts.subTab.presets': 'プリセット',
     'prompts.presets.title': 'プリセット',
     'prompts.presets.hint': 'プリセットを管理します。',

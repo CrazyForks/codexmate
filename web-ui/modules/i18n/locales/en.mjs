@@ -231,7 +231,7 @@ const en = Object.freeze({
     'subtitle.prompts': 'Edit AGENTS.md and CLAUDE.md.',
     'prompts.subTab.codex': 'AGENTS.md (Codex)',
     'prompts.subTab.project': 'CLAUDE.md',
-    'prompts.subTab.system': 'System Prompt',
+    'prompts.subTab.system': 'System Prompt (Pi)',
     'prompts.subTab.presets': 'Preset pool',
     'prompts.presets.title': 'Presets',
     'prompts.presets.hint': 'Manage presets.',

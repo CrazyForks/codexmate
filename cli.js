@@ -1015,7 +1015,19 @@ function normalizeUsageTimeRangePreference(value) {
 
 function normalizePromptsSubTabPreference(value) {
     const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-    return normalized === 'claude-project' ? 'claude-project' : 'codex';
+    if (normalized === 'claude-project') return normalized;
+    if (normalized === 'system') return normalized;
+    return 'codex';
+}
+
+function normalizeSysPromptScopePreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return normalized === 'project' ? 'project' : 'global';
+}
+
+function normalizeSysPromptModePreference(value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return normalized === 'append' ? 'append' : 'system';
 }
 
 function normalizeSidebarCollapsedPreference(value) {
@@ -1088,6 +1100,8 @@ function normalizeWebUiPreferences(value = {}) {
         configTemplateDiffConfirmEnabled: normalizeBooleanPreference(source.configTemplateDiffConfirmEnabled, true),
         sessionsUsageTimeRange: normalizeUsageTimeRangePreference(source.sessionsUsageTimeRange),
         promptsSubTab: normalizePromptsSubTabPreference(source.promptsSubTab),
+        sysPromptScope: normalizeSysPromptScopePreference(source.sysPromptScope),
+        sysPromptMode: normalizeSysPromptModePreference(source.sysPromptMode),
         projectClaudeMdPath: typeof source.projectClaudeMdPath === 'string' ? source.projectClaudeMdPath : '',
         sidebarCollapsed: normalizeSidebarCollapsedPreference(source.sidebarCollapsed),
         starPrompted: normalizeBooleanPreference(source.starPrompted, false),

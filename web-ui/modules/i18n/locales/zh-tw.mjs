@@ -231,7 +231,7 @@ const zhTw = Object.freeze({
     'subtitle.prompts': '編輯 AGENTS.md 與 CLAUDE.md。',
     'prompts.subTab.codex': 'AGENTS.md (Codex)',
     'prompts.subTab.project': 'CLAUDE.md',
-    'prompts.subTab.system': 'System Prompt',
+    'prompts.subTab.system': 'System Prompt (Pi)',
     'prompts.subTab.presets': '預設池',
     'prompts.presets.title': '預設池',
     'prompts.presets.hint': '管理預設。',

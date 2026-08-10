@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 agentsModalTitle: 'AGENTS.md 编辑器',
                 agentsModalHint: '保存后会写入目标 AGENTS.md（与 config.toml 同级）。',
                 sysPromptScope: 'global',
-                sysPromptMode: 'append',
+                sysPromptMode: 'system',
                 sysPromptContent: '',
                 sysPromptOriginalContent: '',
                 sysPromptPath: '',
@@ -768,11 +768,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     return;
                 }
-                if (newTab === 'prompts' && typeof this.loadPromptsContent === 'function') {
+                if (newTab === 'prompts') {
                     if (this.promptsSubTab === 'claude-project' && !this.projectPathOptions.length && !this.projectPathOptionsLoading && typeof this.loadProjectPathOptions === 'function') {
                         this.loadProjectPathOptions();
                     }
-                    this.loadPromptsContent();
+                    if (this.promptsSubTab === 'system') {
+                        if (typeof this.loadSystemPrompt === 'function') this.loadSystemPrompt();
+                    } else if (typeof this.loadPromptsContent === 'function') {
+                        this.loadPromptsContent();
+                    }
                 }
             },
             promptsSubTab(newVal) {
@@ -783,13 +787,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.__skipNextPromptsSubTabLoad = false;
                     return;
                 }
-                if (this.mainTab === 'prompts' && typeof this.loadPromptsContent === 'function') {
-                    this.loadPromptsContent();
+                if (this.mainTab === 'prompts') {
+                    if (this.promptsSubTab === 'system') {
+                        if (typeof this.loadSystemPrompt === 'function') this.loadSystemPrompt();
+                    } else if (typeof this.loadPromptsContent === 'function') {
+                        this.loadPromptsContent();
+                    }
                 }
             },
             projectClaudeMdPath(newPath) {
                 if (typeof this.persistWebUiPreferences === 'function') {
                     this.persistWebUiPreferences({ projectClaudeMdPath: newPath || '' });
+                }
+            },
+            sysPromptScope(newVal) {
+                if (typeof this.persistWebUiPreferences === 'function') {
+                    this.persistWebUiPreferences({ sysPromptScope: newVal });
+                }
+            },
+            sysPromptMode(newVal) {
+                if (typeof this.persistWebUiPreferences === 'function') {
+                    this.persistWebUiPreferences({ sysPromptMode: newVal });
                 }
             }
         },
