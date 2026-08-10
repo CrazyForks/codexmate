@@ -26,7 +26,6 @@ import { createProvidersMethods } from './app.methods.providers.mjs';
 import { createProviderCacheMethods } from './app.methods.provider-cache.mjs';
 import { createRuntimeMethods } from './app.methods.runtime.mjs';
 import { createToolConfigPermissionMethods } from './app.methods.tool-config-permissions.mjs';
-import { createTaskOrchestrationMethods } from './app.methods.task-orchestration.mjs';
 import { createSessionActionMethods } from './app.methods.session-actions.mjs';
 import { createSessionBrowserMethods } from './app.methods.session-browser.mjs';
 import { createSessionTimelineMethods } from './app.methods.session-timeline.mjs';
@@ -104,7 +103,6 @@ export function createAppMethods() {
         }),
         ...createKilocodeConfigMethods({ api }),
         ...createInstallMethods({ api }),
-        ...createRuntimeMethods({ api }),
-        ...createTaskOrchestrationMethods({ api })
+        ...createRuntimeMethods({ api })
     };
 }

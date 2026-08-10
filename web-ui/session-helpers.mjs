@@ -85,7 +85,6 @@ export function switchMainTab(tab) {
     const leavingSessions = previousTab === 'sessions' && nextTab !== 'sessions';
     const enteringSessionsTab = nextTab === 'sessions';
     const enteringUsageTab = nextTab === 'usage';
-    const enteringOrchestrationTab = nextTab === 'orchestration';
     const enteringPluginsTab = nextTab === 'plugins';
     emitSessionLoadDebug(this, 'switchMainTab:start', `from=${previousTab}\nto=${nextTab}`);
     this.mainTab = nextTab;
@@ -140,21 +139,6 @@ export function switchMainTab(tab) {
     }
     if (enteringUsageTab && !this.sessionsUsageLoadedOnce && typeof this.loadSessionsUsage === 'function') {
         this.loadSessionsUsage();
-    }
-    if (enteringOrchestrationTab && typeof this.loadTaskOrchestrationOverview === 'function') {
-        let orchestrationOverviewLoad = null;
-        try {
-            orchestrationOverviewLoad = this.loadTaskOrchestrationOverview({
-                silent: true,
-                includeDetail: true
-            });
-        } catch (_) {
-            orchestrationOverviewLoad = null;
-        }
-        void Promise.resolve(orchestrationOverviewLoad).catch(() => {});
-    }
-    if (nextTab !== 'orchestration' && typeof this.stopTaskOrchestrationPolling === 'function') {
-        this.stopTaskOrchestrationPolling();
     }
     if (
         nextTab === 'sessions'

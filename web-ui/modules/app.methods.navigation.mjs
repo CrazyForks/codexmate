@@ -9,7 +9,6 @@
         'config',
         'sessions',
         'usage',
-        'orchestration',
         'market',
         'plugins',
         'docs',
@@ -18,7 +17,7 @@
         'prompts'
     ];
     const MAIN_TAB_SET = new Set(MAIN_TAB_ORDER);
-    const DISABLED_MAIN_TAB_SET = new Set(['orchestration']);
+    const DISABLED_MAIN_TAB_SET = new Set();
     const normalizeMainTab = (tab) => typeof tab === 'string'
         ? tab.trim().toLowerCase()
         : '';

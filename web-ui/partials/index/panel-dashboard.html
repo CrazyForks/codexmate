@@ -129,27 +129,6 @@
                                     <span>{{ sessionsUsageList.filter(session => !(session && typeof session.model === 'string' && session.model.trim())).length }}</span>
                                 </div>
                             </button>
-                            <button
-                                v-if="taskOrchestrationTabEnabled"
-                                type="button"
-                                class="doctor-card"
-                                @click="switchMainTab('orchestration')"
-                                :disabled="loading || !!initError">
-                                <div class="doctor-card-title">{{ t('dashboard.card.tasks') }}</div>
-                                <div class="doctor-card-meta">
-                                    <span>{{ taskOrchestration && taskOrchestration.loading ? t('dashboard.state.loading') : t('dashboard.state.ready') }}</span>
-                                    <span>·</span>
-                                    <span>{{ t('dashboard.tasks.queue', { running: taskOrchestrationQueueStats.running, queued: taskOrchestrationQueueStats.queued }) }}</span>
-                                </div>
-                                <div class="doctor-card-kv" v-if="taskOrchestration && taskOrchestration.planIssues && taskOrchestration.planIssues.length">
-                                    <span>{{ t('dashboard.kv.blockers') }}</span>
-                                    <span>{{ taskOrchestration.planIssues.length }}</span>
-                                </div>
-                                <div class="doctor-card-kv" v-else>
-                                    <span>{{ t('dashboard.kv.runs') }}</span>
-                                    <span>{{ taskOrchestration && taskOrchestration.runs ? taskOrchestration.runs.length : 0 }}</span>
-                                </div>
-                            </button>
                             <button type="button" class="doctor-card" @click="switchMainTab('market')" :disabled="loading || !!initError">
                                 <div class="doctor-card-title">{{ t('dashboard.card.skills') }}</div>
                                 <div class="doctor-card-meta">

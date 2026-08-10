@@ -8,7 +8,6 @@ const LEGACY_WEB_UI_PREFERENCE_KEYS = Object.freeze([
     'codexmate_prompts_sub_tab',
     'codexmate_project_claude_md_path',
     'codexmateNavState.v1',
-    'codexmateTaskOrchestrationTabEnabled',
     'codexmateSessionLoadNativeDialog',
     'codexmateSessionFilterSource',
     'codexmateSessionPathFilter',
@@ -199,10 +198,6 @@ function collectLegacyLocalStoragePreferences(storage) {
         preferences.configTemplateDiffConfirmEnabled = normalizeBoolean(read('codexmateConfigTemplateDiffConfirmEnabled'), true);
         found = true;
     }
-    if (has('codexmateTaskOrchestrationTabEnabled')) {
-        preferences.taskOrchestrationTabEnabled = normalizeBoolean(read('codexmateTaskOrchestrationTabEnabled'), true);
-        found = true;
-    }
     if (has('codexmateSessionLoadNativeDialog')) {
         preferences.sessionLoadNativeDialog = normalizeBoolean(read('codexmateSessionLoadNativeDialog'), false);
         found = true;
@@ -353,7 +348,6 @@ export function createWebUiPreferencesMethods(options = {}) {
                     : (typeof this.projectClaudeMdPath === 'string' ? this.projectClaudeMdPath : ''),
                 sidebarCollapsed: normalizeBoolean(hasOwn(source, 'sidebarCollapsed') ? source.sidebarCollapsed : this.sidebarCollapsed, false),
                 starPrompted: normalizeBoolean(hasOwn(source, 'starPrompted') ? source.starPrompted : this.starPrompted, false),
-                taskOrchestrationTabEnabled: normalizeBoolean(hasOwn(source, 'taskOrchestrationTabEnabled') ? source.taskOrchestrationTabEnabled : this.taskOrchestrationTabEnabled, true),
                 sessionLoadNativeDialog: normalizeBoolean(hasOwn(source, 'sessionLoadNativeDialog') ? source.sessionLoadNativeDialog : this.sessionLoadNativeDialog, false),
                 language: typeof source.language === 'string'
                     ? source.language
@@ -420,9 +414,6 @@ export function createWebUiPreferencesMethods(options = {}) {
                 }
                 if (hasOwn(source, 'starPrompted')) {
                     this.starPrompted = normalizeBoolean(source.starPrompted, false);
-                }
-                if (hasOwn(source, 'taskOrchestrationTabEnabled')) {
-                    this.taskOrchestrationTabEnabled = normalizeBoolean(source.taskOrchestrationTabEnabled, true);
                 }
                 if (hasOwn(source, 'sessionLoadNativeDialog')) {
                     this.sessionLoadNativeDialog = normalizeBoolean(source.sessionLoadNativeDialog, false);

@@ -63,15 +63,6 @@
                 :class="{ active: isMainTabNavActive('usage') }"
                 @pointerdown="onMainTabPointerDown('usage', $event)"
                 @click="onMainTabClick('usage', $event)">{{ t('tab.usage') }}</button>
-            <button v-if="taskOrchestrationTabEnabled" type="button" class="top-tab top-tab-disabled"
-                id="tab-orchestration"
-                role="tab"
-                data-main-tab="orchestration"
-                tabindex="-1"
-                aria-selected="false"
-                aria-disabled="true"
-                disabled
-                :title="t('orchestration.rebuilding.body')">{{ t('tab.orchestration') }}</button>
             <button type="button" class="top-tab"
                 id="tab-market"
                 role="tab"
@@ -311,23 +302,6 @@
                     </button>
                 </div>
 
-                <div v-if="taskOrchestrationTabEnabled" class="side-section" role="navigation" :aria-label="t('side.orchestration')">
-                    <div class="side-section-title">{{ t('side.orchestration') }}</div>
-                    <button
-                        id="side-tab-orchestration"
-                        data-main-tab="orchestration"
-                        class="side-item side-item-disabled"
-                        aria-disabled="true"
-                        disabled
-                        :title="t('orchestration.rebuilding.body')">
-                        <span class="side-item-icon" aria-hidden="true">T</span>
-                        <div class="side-item-title">{{ t('tab.orchestration') }}</div>
-                        <div class="side-item-meta">
-                            <span>{{ t('orchestration.rebuilding.status') }}</span>
-                            <span>{{ t('orchestration.rebuilding.title') }}</span>
-                        </div>
-                    </button>
-                </div>
 
                 <div class="side-section" role="navigation" :aria-label="t('side.skills')">
                     <div class="side-section-title">{{ t('side.skills') }}</div>
@@ -518,28 +492,6 @@
                         <div class="status-chip">
                             <span class="label">{{ t('status.totalMessages') }}</span>
                             <span class="value">{{ sessionUsageSummaryCards[1] ? sessionUsageSummaryCards[1].value : 0 }}</span>
-                        </div>
-                    </div>
-                    <div class="status-strip" v-else-if="!sessionStandalone && taskOrchestrationTabEnabled && mainTab === 'orchestration'">
-                        <div class="status-chip">
-                            <span class="label">{{ t('status.engine') }}</span>
-                            <span class="value">{{ taskOrchestration.selectedEngine === 'workflow' ? 'Workflow' : 'Codex' }}</span>
-                        </div>
-                        <div class="status-chip">
-                            <span class="label">{{ t('status.concurrency') }}</span>
-                            <span class="value">{{ taskOrchestration.concurrency }}</span>
-                        </div>
-                        <div class="status-chip">
-                            <span class="label">{{ t('status.running') }}</span>
-                            <span class="value">{{ taskOrchestrationQueueStats.running }}</span>
-                        </div>
-                        <div class="status-chip">
-                            <span class="label">{{ t('status.queued') }}</span>
-                            <span class="value">{{ taskOrchestrationQueueStats.queued }}</span>
-                        </div>
-                        <div class="status-chip">
-                            <span class="label">{{ t('status.runs') }}</span>
-                            <span class="value">{{ taskOrchestration.runs.length }}</span>
                         </div>
                     </div>
                     <div class="status-strip" v-else-if="!sessionStandalone && mainTab === 'market'">

@@ -480,45 +480,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 sidebarCollapsed: false,
                 sessionLoadNativeDialog: false,
                 starPrompted: false,
-                taskOrchestrationTabEnabled: true,
-                taskOrchestration: {
-                    loading: false,
-                    planning: false,
-                    running: false,
-                    queueAdding: false,
-                    queueStarting: false,
-                    retrying: false,
-                    target: '',
-                    chatDraft: '',
-                    title: '',
-                    notes: '',
-                    workspacePath: '',
-                    threadId: '',
-                    followUpsText: '',
-                    workflowIdsText: '',
-                    selectedEngine: 'openai-chat',
-                    runMode: 'write',
-                    concurrency: 2,
-                    autoFixRounds: 1,
-                    plan: null,
-                    planFingerprint: '',
-                    planIssues: [],
-                    planWarnings: [],
-                    overviewWarnings: [],
-                    workflows: [],
-                    queue: [],
-                    runs: [],
-                    selectedRunId: '',
-                    workspaceTab: 'queue',
-                    selectedRunDetail: null,
-                    selectedRunLoading: false,
-                    selectedRunError: '',
-                    detailRequestToken: 0,
-                    settingsOpen: false,
-                    lastLoadedAt: '',
-                    lastError: ''
-                },
-                _taskOrchestrationPollTimer: 0,
                 webhookConfig: { enabled: false, url: '', events: ['provider-switch', 'claude-md-edit'] },
                 webhookEventOptions: ['provider-switch', 'claude-md-edit'],
                 webhookSaving: false,
@@ -535,7 +496,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const url = new URL(window.location.href);
                     url.pathname = '/';
                     // Preserve startup query/hash flags while normalizing the legacy web-ui path.
-                    // Feature gates such as ?taskOrchestration=1 are consumed below after redirect.
                     window.location.replace(url.toString());
                     return;
                 }
@@ -568,15 +528,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.agentsModalTitle = this.t('modal.agents.title');
                 this.agentsModalHint = this.t('modal.agents.hint');
             }
-            try {
-                const url = new URL(window.location.href);
-                const requestedTaskOrchestration = String(url.searchParams.get('taskOrchestration') || '').trim().toLowerCase();
-                if (requestedTaskOrchestration === '1' || requestedTaskOrchestration === 'true') {
-                    this.taskOrchestrationTabEnabled = true;
-                }
-            } catch (_) {}
             {
-                const mainTabSet = new Set(['dashboard', 'config', 'sessions', 'usage', 'orchestration', 'market', 'plugins', 'docs', 'settings', 'trash', 'prompts']);
+                const mainTabSet = new Set(['dashboard', 'config', 'sessions', 'usage', 'market', 'plugins', 'docs', 'settings', 'trash', 'prompts']);
                 let urlMainTab = '';
                 try {
                     const url = new URL(window.location.href);
@@ -608,8 +561,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? this.getFirstSelectableMainTab()
                     : 'dashboard';
                 this.switchMainTab(fallbackTab);
-            } else if (!this.taskOrchestrationTabEnabled && this.mainTab === 'orchestration') {
-                this.switchMainTab('dashboard');
             }
             this.restoreSessionFilterCache();
             this.restoreSessionPinnedMap();
@@ -750,7 +701,6 @@ document.addEventListener('DOMContentLoaded', () => {
             window.removeEventListener('keydown', this.handleGlobalKeydown);
             window.removeEventListener('beforeunload', this.handleBeforeUnload);
             this.applyCompactLayoutClass(false);
-            this.stopTaskOrchestrationPolling();
             this.sessionPreviewScrollEl = null;
             this.sessionPreviewContainerEl = null;
             this.sessionPreviewHeaderEl = null;
