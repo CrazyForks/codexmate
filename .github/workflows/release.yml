@@ -1,5 +1,5 @@
 ﻿name: release
-run-name: "${{ github.event.repository.name }} ${{ inputs.tag || 'auto' }}"
+run-name: "${{ github.event.repository.name }} ${{ inputs.tag || github.ref_name || 'auto' }}"
 on:
   workflow_dispatch:
     inputs:
@@ -7,6 +7,9 @@ on:
         description: 'Tag (e.g., v0.0.1). Empty = use package.json version.'
         required: false
         default: ''
+  push:
+    tags:
+      - 'v*'
 permissions:
   contents: write
 
@@ -29,12 +32,16 @@ jobs:
         id: resolve
         env:
           INPUT_TAG: ${{ inputs.tag }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: |
           node - <<'NODE'
           const { execSync } = require('child_process');
           const fs = require('fs');
 
           const inputTagRaw = (process.env.INPUT_TAG || '').trim();
+          const refName = (process.env.GITHUB_REF_NAME || '').trim();
+          const eventName = (process.env.GITHUB_EVENT_NAME || '').trim();
           const normalizeTag = (tag) => tag.startsWith('v') ? tag.slice(1) : tag;
           const isSemver = (version) => /^\d+\.\d+\.\d+$/.test(version);
           const parseSemver = (version) => {
@@ -85,7 +92,18 @@ jobs:
           let baseSource = '';
           let tagExists = false;
 
-          if (inputTagRaw) {
+          if (eventName === 'push' && refName) {
+            if (!/^v?\d+\.\d+\.\d+$/.test(refName)) {
+              console.error('Invalid pushed tag format. Use vX.Y.Z.');
+              process.exit(1);
+            }
+            resolvedTag = refName.startsWith('v') ? refName : `v${refName}`;
+            expectedVersion = normalizeTag(resolvedTag);
+            mode = 'push';
+            tagExists = hasTag(resolvedTag);
+            baseVersion = latestVersion;
+            baseSource = 'push_tag';
+          } else if (inputTagRaw) {
             if (!/^v?\d+\.\d+\.\d+$/.test(inputTagRaw)) {
               console.error('Invalid tag format. Use vX.Y.Z or X.Y.Z.');
               process.exit(1);
@@ -171,18 +189,33 @@ jobs:
           RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
         run: |
           node -e "const pkg=require('./package.json'); const tag=process.env.RELEASE_TAG; const expected='v'+pkg.version; if(tag!==expected){ console.error('Current commit package.json '+expected+' does not match resolved release tag '+tag); process.exit(1);} console.log('Current package matches '+expected);"
+      - name: Check if release already exists
+        id: release_exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
+        run: |
+          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Release exists::Release ${RELEASE_TAG} already published. Skipping creation."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Compute release name
+        if: ${{ steps.release_exists.outputs.skip != 'true' }}
         env:
           RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
         run: |
           node -e "const p=require('./package.json'); const tag=process.env.RELEASE_TAG; const name=p.name.includes('/')? p.name.split('/')[1]: p.name; const value=name+' '+tag; console.log('RELEASE_NAME='+value);" >> "$GITHUB_ENV"
       - name: Pack npm artifact
+        if: ${{ steps.release_exists.outputs.skip != 'true' }}
         run: |
           name=$(node -e "const p=require('./package.json'); const n=p.name.replace('@','').replace('/','-'); process.stdout.write(n+'-'+p.version+'.tgz');")
           npm pack
           test -f "$name"
           echo "PACKAGE_TGZ=$name" >> "$GITHUB_ENV"
       - name: Pack standalone tarball
+        if: ${{ steps.release_exists.outputs.skip != 'true' }}
         run: |
           version=$(node -e "process.stdout.write(require('./package.json').version)")
           name="codexmate-${version}-standalone.tar.gz"
@@ -192,6 +225,7 @@ jobs:
             node_modules/ package.json LICENSE README.md README.zh.md
           echo "STANDALONE_TGZ=$name" >> "$GITHUB_ENV"
       - name: Fetch contributors from GitHub API
+        if: ${{ steps.release_exists.outputs.skip != 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
@@ -239,6 +273,7 @@ jobs:
             echo "" > "${CONTRIBUTORS_FILE}"
           fi
       - name: Generate release notes from actual commit range
+        if: ${{ steps.release_exists.outputs.skip != 'true' }}
         env:
           RELEASE_TAG: ${{ steps.resolve.outputs.release_tag }}
           TAG_EXISTS: ${{ steps.resolve.outputs.tag_exists }}
@@ -256,6 +291,7 @@ jobs:
           node tools/release/changelog.js
           test -s "${RELEASE_CHANGELOG_FILE}"
       - name: Create GitHub Release
+        if: ${{ steps.release_exists.outputs.skip != 'true' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.resolve.outputs.release_tag }}
