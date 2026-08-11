@@ -646,18 +646,6 @@ export function createSessionActionMethods(options = {}) {
                 return false;
             }
             const useTrash = this.sessionTrashEnabled !== false;
-            if (!batch && !useTrash && typeof this.requestConfirmDialog === 'function') {
-                const confirmed = await this.requestConfirmDialog({
-                    title: '直接删除会话',
-                    message: '关闭回收站后，删除会话将直接永久删除，且无法恢复。',
-                    confirmText: '直接删除',
-                    cancelText: '取消',
-                    danger: true
-                });
-                if (!confirmed) {
-                    return false;
-                }
-            }
             const key = this.getSessionExportKey(session);
             if (this.sessionDeleting[key]) {
                 return false;
@@ -792,19 +780,6 @@ export function createSessionActionMethods(options = {}) {
                 return;
             }
             const useTrash = this.sessionTrashEnabled !== false;
-            if (typeof this.requestConfirmDialog === 'function') {
-                const confirmKey = useTrash ? 'sessions.batch.deleteConfirm' : 'sessions.batch.deleteConfirmHard';
-                const confirmed = await this.requestConfirmDialog({
-                    title: this.t('sessions.batch.select'),
-                    message: this.t(confirmKey, { count: selected.length }),
-                    confirmText: this.t('sessions.batch.deleteSelected'),
-                    cancelText: this.t('common.cancel'),
-                    danger: !useTrash
-                });
-                if (!confirmed) {
-                    return;
-                }
-            }
             this.sessionDeletingSelected = true;
             let failed = 0;
             const succeededKeys = [];
