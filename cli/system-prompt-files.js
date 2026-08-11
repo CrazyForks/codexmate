@@ -8,7 +8,8 @@ function createSystemPromptFileController(deps = {}) {
         crypto,
         buildLineDiff,
         CONFIG_DIR,
-        PI_AGENT_DIR
+        PI_AGENT_DIR,
+        backupPromptBeforeWrite
     } = deps;
 
     if (!fs) throw new Error('createSystemPromptFileController 缺少 fs');
@@ -18,6 +19,7 @@ function createSystemPromptFileController(deps = {}) {
     if (typeof buildLineDiff !== 'function') throw new Error('createSystemPromptFileController 缺少 buildLineDiff');
     if (typeof CONFIG_DIR !== 'string' || !CONFIG_DIR) throw new Error('createSystemPromptFileController 缺少 CONFIG_DIR');
     if (typeof PI_AGENT_DIR !== 'string' || !PI_AGENT_DIR) throw new Error('createSystemPromptFileController 缺少 PI_AGENT_DIR');
+    if (typeof backupPromptBeforeWrite !== 'function' && typeof backupPromptBeforeWrite !== 'undefined') throw new Error('createSystemPromptFileController 备份回调无效');
 
     const MODES = {
         system: 'SYSTEM.md',
@@ -32,6 +34,12 @@ function createSystemPromptFileController(deps = {}) {
             throw new Error("Invalid system prompt mode: expected 'system' or 'append'");
         }
         return key;
+    }
+
+    function sanitizeSystemHistoryId(raw) {
+        const safe = typeof raw === 'string' ? raw.trim() : '';
+        if (!safe) return 'global';
+        return safe.replace(/[^A-Za-z0-9_.-]/g, '_').slice(0, 64) || 'global';
     }
 
     function normalizeScope(scope) {
@@ -104,16 +112,26 @@ function createSystemPromptFileController(deps = {}) {
         if (baseHash && baseHash !== current.hash) {
             return { error: '文件已被外部修改，请重新加载后再保存' };
         }
+        let sysHistoryBucket = '';
         try {
             const dir = path.dirname(target.path);
             fs.mkdirSync(dir, { recursive: true });
+            if (typeof backupPromptBeforeWrite === 'function') {
+                const bucket = 'system_' + target.scope + '_' + (target.scope === 'project'
+                    ? sanitizeSystemHistoryId(path.dirname(target.path))
+                    : 'global');
+                backupPromptBeforeWrite(bucket, target.path);
+                sysHistoryBucket = bucket;
+            }
             const finalContent = content.endsWith('\n') ? content : content + '\n';
             fs.writeFileSync(target.path, finalContent, { encoding: 'utf8', mode: 0o600 });
             try { fs.chmodSync(target.path, 0o600); } catch (_) {}
         } catch (e) {
             return { error: '写入 system prompt 失败: ' + e.message };
         }
-        return readSystemPromptFilePath(target);
+        const saved = readSystemPromptFilePath(target);
+        if (sysHistoryBucket) saved.historyBucket = sysHistoryBucket;
+        return saved;
     }
 
     function readSystemPromptFilePath(resolved) {

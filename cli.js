@@ -109,6 +109,9 @@ const {
     createSystemPromptFileController
 } = require('./cli/system-prompt-files');
 const {
+    createPromptHistoryController
+} = require('./cli/prompt-history');
+const {
     createArchiveHelperController
 } = require('./cli/archive-helpers');
 const {
@@ -2058,6 +2061,17 @@ async function fetchProviderModels(providerName, overrides = {}) {
 
 // buildAgentsDiff keeps the metaOnly optimization inside cli/agents-files.js.
 const {
+    backupPromptBeforeWrite: historyBackup,
+    listPromptHistory,
+    readPromptHistory,
+    clearPromptHistory
+} = createPromptHistoryController({
+    fs,
+    path,
+    CONFIG_DIR
+});
+
+const {
     resolveAgentsFilePath,
     validateAgentsBaseDir,
     detectProjectClaudeMdDir,
@@ -2083,6 +2097,7 @@ const {
     AGENTS_FILE_NAME,
     CLAUDE_DIR,
     CLAUDE_MD_FILE_NAME,
+    backupPromptBeforeWrite: historyBackup,
     readOpenclawAgentsFile() {
         return readOpenclawAgentsFile(...arguments);
     },
@@ -2102,7 +2117,8 @@ const {
     crypto,
     buildLineDiff,
     CONFIG_DIR,
-    PI_AGENT_DIR
+    PI_AGENT_DIR,
+    backupPromptBeforeWrite: historyBackup
 });
 
 const {
@@ -13377,6 +13393,12 @@ function createWebServer({ htmlPath, assetsDir, webDir, host, port, openBrowser 
                             break;
                         case 'preview-system-prompt-diff':
                             result = buildSystemPromptDiff(params || {});
+                            break;
+                        case 'list-prompt-history':
+                            result = listPromptHistory((params && params.bucket) || '');
+                            break;
+                        case 'get-prompt-history':
+                            result = readPromptHistory((params && params.bucket) || '', (params && params.id) || '');
                             break;
                         case 'switch':
                         case 'use':

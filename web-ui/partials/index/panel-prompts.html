@@ -65,6 +65,13 @@
                                     :title="t('common.paste')">
                                     <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/></svg>
                                 </button>
+                                <button
+                                    class="btn-mini"
+                                    @click="openPromptHistory"
+                                    :disabled="agentsSaving || agentsDiffVisible"
+                                    :title="t('common.history')">
+                                    <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2"/><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-7.5 4M3 4v4h4"/></svg>
+                                </button>
                             </div>
                             <div class="prompts-editor-group prompts-editor-group--workflow">
                                 <button class="btn-mini" @click="loadPromptsContent" :disabled="agentsSaving || agentsDiffLoading" :title="t('common.cancel')">
@@ -85,6 +92,27 @@
                             </div>
                         </div>
                     </div>
+                    <details v-if="promptHistoryVisible" class="prompt-history-panel" open>
+                        <summary class="prompt-history-summary">
+                            <span>{{ t('common.history') }}</span>
+                            <button type="button" class="btn-mini prompt-history-close" @click="closePromptHistory" :title="t('common.close')">✕</button>
+                        </summary>
+                        <div class="prompt-history-body">
+                            <ul v-if="!promptHistoryLoading && !promptHistoryError && promptHistoryItems.length" class="prompt-history-list">
+                                <li v-for="item in promptHistoryItems" :key="item.id" :class="['prompt-history-item', { active: promptHistoryPreviewId === item.id }]" @click="viewPromptHistoryItem(item)">
+                                    <span class="prompt-history-time">{{ item.id }}</span>
+                                    <span class="prompt-history-size">{{ Math.round(item.size / 1024 * 10) / 10 }} KB</span>
+                                </li>
+                            </ul>
+                            <div v-if="promptHistoryLoading" class="state-message">{{ t('diff.generating') }}</div>
+                            <div v-else-if="promptHistoryError" class="state-message error">{{ promptHistoryError }}</div>
+                            <div v-else-if="!promptHistoryItems.length" class="state-message">{{ t('toast.history.empty') }}</div>
+                            <div v-if="promptHistoryPreviewContent" class="prompt-history-preview-wrap">
+                                <pre class="prompt-history-preview">{{ promptHistoryPreviewContent }}</pre>
+                                <button type="button" class="btn-mini btn-confirm-mini" @click="applyPromptHistoryToEditor" :disabled="agentsSaving || agentsDiffVisible">{{ t('common.restoreToEditor') }}</button>
+                            </div>
+                        </div>
+                    </details>
                     <div class="prompt-presets-inline-row">
                         <div class="prompt-presets-inline-group">
                             <label class="prompt-presets-inline-label">{{ t('prompts.presets.title') }}</label>
@@ -228,6 +256,9 @@
                                     <button class="btn-mini" @click="pasteSysPromptContent" :disabled="sysPromptLoading || sysPromptSaving || sysPromptDiffVisible" :title="t('common.paste')">
                                         <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/></svg>
                                     </button>
+                                    <button class="btn-mini" @click="openSysHistory" :disabled="sysPromptSaving || sysPromptDiffVisible" :title="t('common.history')">
+                                        <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2"/><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-7.5 4M3 4v4h4"/></svg>
+                                    </button>
                                 </div>
                                 <div class="prompts-editor-group prompts-editor-group--workflow">
                                     <button class="btn-mini" @click="cancelSysPromptEdit" :disabled="sysPromptSaving || sysPromptDiffLoading" :title="t('common.cancel')">
@@ -243,6 +274,27 @@
                                 </div>
                             </div>
                         </div>
+                        <details v-if="sysHistoryVisible" class="prompt-history-panel" open>
+                            <summary class="prompt-history-summary">
+                                <span>{{ t('common.history') }}</span>
+                                <button type="button" class="btn-mini prompt-history-close" @click="closeSysHistory" :title="t('common.close')">✕</button>
+                            </summary>
+                            <div class="prompt-history-body">
+                                <ul v-if="!sysHistoryLoading && !sysHistoryError && sysHistoryItems.length" class="prompt-history-list">
+                                    <li v-for="item in sysHistoryItems" :key="item.id" :class="['prompt-history-item', { active: sysHistoryPreviewId === item.id }]" @click="viewSysHistoryItem(item)">
+                                        <span class="prompt-history-time">{{ item.id }}</span>
+                                        <span class="prompt-history-size">{{ Math.round(item.size / 1024 * 10) / 10 }} KB</span>
+                                    </li>
+                                </ul>
+                                <div v-if="sysHistoryLoading" class="state-message">{{ t('diff.generating') }}</div>
+                                <div v-else-if="sysHistoryError" class="state-message error">{{ sysHistoryError }}</div>
+                                <div v-else-if="!sysHistoryItems.length" class="state-message">{{ t('toast.history.empty') }}</div>
+                                <div v-if="sysHistoryPreviewContent" class="prompt-history-preview-wrap">
+                                    <pre class="prompt-history-preview">{{ sysHistoryPreviewContent }}</pre>
+                                    <button type="button" class="btn-mini btn-confirm-mini" @click="applySysHistoryToEditor" :disabled="sysPromptSaving || sysPromptDiffVisible">{{ t('common.restoreToEditor') }}</button>
+                                </div>
+                            </div>
+                        </details>
                         <div class="form-group">
                             <div v-if="sysPromptDiffVisible">
                                 <div

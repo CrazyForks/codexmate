@@ -223,6 +223,9 @@ export function createSystemPromptMethods(options = {}) {
                     this.showMessage(res.error, 'error');
                     return;
                 }
+                if (typeof res.historyBucket === 'string' && res.historyBucket) {
+                    this.sysHistoryBucket = res.historyBucket;
+                }
                 this.showMessage(this.t('sysPrompt.toast.saved'), 'success');
                 await this.loadSystemPrompt();
             } catch (e) {
@@ -289,6 +292,84 @@ export function createSystemPromptMethods(options = {}) {
                 return { text: this.t('sysPrompt.hint.twoStepSave'), warn: false };
             }
             return null;
+        },
+
+        resolveSysHistoryBucket() {
+            if (typeof this.sysHistoryBucket === 'string' && this.sysHistoryBucket) {
+                return this.sysHistoryBucket;
+            }
+            const scope = this.sysPromptScope || 'global';
+            return 'system_' + scope + '_global';
+        },
+
+        async openSysHistory() {
+            if (this.sysHistoryLoading) return;
+            const bucket = this.resolveSysHistoryBucket();
+            this.sysHistoryVisible = true;
+            this.sysHistoryError = '';
+            await this.loadSysHistory(bucket);
+        },
+
+        async loadSysHistory(bucketArg) {
+            if (this.sysHistoryLoading) return;
+            const bucket = typeof bucketArg === 'string' && bucketArg.trim()
+                ? bucketArg.trim()
+                : this.resolveSysHistoryBucket();
+            this.sysHistoryBucket = bucket;
+            this.sysHistoryLoading = true;
+            this.sysHistoryError = '';
+            this.sysHistoryItems = [];
+            this.sysHistoryPreviewId = '';
+            this.sysHistoryPreviewContent = '';
+            try {
+                const res = await api('list-prompt-history', { bucket });
+                if (res && res.error) {
+                    this.sysHistoryError = res.error;
+                    return;
+                }
+                this.sysHistoryItems = Array.isArray(res) ? res : [];
+            } catch (e) {
+                this.sysHistoryError = this.t('toast.load.fail');
+            } finally {
+                this.sysHistoryLoading = false;
+            }
+        },
+
+        closeSysHistory() {
+            this.sysHistoryVisible = false;
+            this.sysHistoryPreviewId = '';
+            this.sysHistoryPreviewContent = '';
+            this.sysHistoryError = '';
+        },
+
+        async viewSysHistoryItem(item) {
+            if (!item || !item.id) return;
+            if (this.sysHistoryLoading) return;
+            if (this.sysHistoryPreviewId === item.id && this.sysHistoryPreviewContent) return;
+            this.sysHistoryPreviewId = item.id;
+            this.sysHistoryPreviewContent = '';
+            try {
+                const res = await api('get-prompt-history', { bucket: this.sysHistoryBucket, id: item.id });
+                if (res && res.error) {
+                    this.sysHistoryError = res.error;
+                    this.sysHistoryPreviewId = '';
+                    return;
+                }
+                this.sysHistoryPreviewContent = typeof res.content === 'string' ? res.content : '';
+            } catch (e) {
+                this.sysHistoryError = this.t('toast.load.fail');
+                this.sysHistoryPreviewId = '';
+            }
+        },
+
+        applySysHistoryToEditor() {
+            if (!this.sysHistoryPreviewContent) return;
+            if (this.sysPromptSaving || this.sysPromptDiffVisible) return;
+            this.sysPromptContent = this.sysHistoryPreviewContent;
+            this.sysHistoryVisible = false;
+            this.sysHistoryPreviewId = '';
+            this.sysHistoryPreviewContent = '';
+            this.showMessage(this.t('toast.history.restored'), 'success');
         }
     };
 }

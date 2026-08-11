@@ -6035,6 +6035,23 @@ return function render(_ctx, _cache) {
                                 }),
                                 _createElementVNode("path", { d: "M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" })
                               ]))
+                            ], 8 /* PROPS */, ["onClick", "disabled", "title"]),
+                            _createElementVNode("button", {
+                              class: "btn-mini",
+                              onClick: _ctx.openPromptHistory,
+                              disabled: _ctx.agentsSaving || _ctx.agentsDiffVisible,
+                              title: _ctx.t('common.history')
+                            }, [
+                              (_openBlock(), _createElementBlock("svg", {
+                                class: "btn-icon-sm",
+                                viewBox: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                "stroke-width": "2"
+                              }, [
+                                _createElementVNode("path", { d: "M12 8v4l3 2" }),
+                                _createElementVNode("path", { d: "M3 12a9 9 0 1 0 9-9 9 9 0 0 0-7.5 4M3 4v4h4" })
+                              ]))
                             ], 8 /* PROPS */, ["onClick", "disabled", "title"])
                           ]),
                           _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--workflow" }, [
@@ -6109,6 +6126,72 @@ return function render(_ctx, _cache) {
                           ])
                         ])
                       ]),
+                      (_ctx.promptHistoryVisible)
+                        ? (_openBlock(), _createElementBlock("details", {
+                            key: 0,
+                            class: "prompt-history-panel",
+                            open: ""
+                          }, [
+                            _createElementVNode("summary", { class: "prompt-history-summary" }, [
+                              _createElementVNode("span", null, _toDisplayString(_ctx.t('common.history')), 1 /* TEXT */),
+                              _createElementVNode("button", {
+                                type: "button",
+                                class: "btn-mini prompt-history-close",
+                                onClick: _ctx.closePromptHistory,
+                                title: _ctx.t('common.close')
+                              }, "✕", 8 /* PROPS */, ["onClick", "title"])
+                            ]),
+                            _createElementVNode("div", { class: "prompt-history-body" }, [
+                              (!_ctx.promptHistoryLoading && !_ctx.promptHistoryError && _ctx.promptHistoryItems.length)
+                                ? (_openBlock(), _createElementBlock("ul", {
+                                    key: 0,
+                                    class: "prompt-history-list"
+                                  }, [
+                                    (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.promptHistoryItems, (item) => {
+                                      return (_openBlock(), _createElementBlock("li", {
+                                        key: item.id,
+                                        class: _normalizeClass(['prompt-history-item', { active: _ctx.promptHistoryPreviewId === item.id }]),
+                                        onClick: $event => (_ctx.viewPromptHistoryItem(item))
+                                      }, [
+                                        _createElementVNode("span", { class: "prompt-history-time" }, _toDisplayString(item.id), 1 /* TEXT */),
+                                        _createElementVNode("span", { class: "prompt-history-size" }, _toDisplayString(Math.round(item.size / 1024 * 10) / 10) + " KB", 1 /* TEXT */)
+                                      ], 10 /* CLASS, PROPS */, ["onClick"]))
+                                    }), 128 /* KEYED_FRAGMENT */))
+                                  ]))
+                                : _createCommentVNode("v-if", true),
+                              (_ctx.promptHistoryLoading)
+                                ? (_openBlock(), _createElementBlock("div", {
+                                    key: 1,
+                                    class: "state-message"
+                                  }, _toDisplayString(_ctx.t('diff.generating')), 1 /* TEXT */))
+                                : (_ctx.promptHistoryError)
+                                  ? (_openBlock(), _createElementBlock("div", {
+                                      key: 2,
+                                      class: "state-message error"
+                                    }, _toDisplayString(_ctx.promptHistoryError), 1 /* TEXT */))
+                                  : (!_ctx.promptHistoryItems.length)
+                                    ? (_openBlock(), _createElementBlock("div", {
+                                        key: 3,
+                                        class: "state-message"
+                                      }, _toDisplayString(_ctx.t('toast.history.empty')), 1 /* TEXT */))
+                                    : _createCommentVNode("v-if", true),
+                              (_ctx.promptHistoryPreviewContent)
+                                ? (_openBlock(), _createElementBlock("div", {
+                                    key: 4,
+                                    class: "prompt-history-preview-wrap"
+                                  }, [
+                                    _createElementVNode("pre", { class: "prompt-history-preview" }, _toDisplayString(_ctx.promptHistoryPreviewContent), 1 /* TEXT */),
+                                    _createElementVNode("button", {
+                                      type: "button",
+                                      class: "btn-mini btn-confirm-mini",
+                                      onClick: _ctx.applyPromptHistoryToEditor,
+                                      disabled: _ctx.agentsSaving || _ctx.agentsDiffVisible
+                                    }, _toDisplayString(_ctx.t('common.restoreToEditor')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                  ]))
+                                : _createCommentVNode("v-if", true)
+                            ])
+                          ]))
+                        : _createCommentVNode("v-if", true),
                       _createElementVNode("div", { class: "prompt-presets-inline-row" }, [
                         _createElementVNode("div", { class: "prompt-presets-inline-group" }, [
                           _createElementVNode("label", { class: "prompt-presets-inline-label" }, _toDisplayString(_ctx.t('prompts.presets.title')), 1 /* TEXT */),
@@ -6386,6 +6469,23 @@ return function render(_ctx, _cache) {
                                   }),
                                   _createElementVNode("path", { d: "M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" })
                                 ]))
+                              ], 8 /* PROPS */, ["onClick", "disabled", "title"]),
+                              _createElementVNode("button", {
+                                class: "btn-mini",
+                                onClick: _ctx.openSysHistory,
+                                disabled: _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible,
+                                title: _ctx.t('common.history')
+                              }, [
+                                (_openBlock(), _createElementBlock("svg", {
+                                  class: "btn-icon-sm",
+                                  viewBox: "0 0 24 24",
+                                  fill: "none",
+                                  stroke: "currentColor",
+                                  "stroke-width": "2"
+                                }, [
+                                  _createElementVNode("path", { d: "M12 8v4l3 2" }),
+                                  _createElementVNode("path", { d: "M3 12a9 9 0 1 0 9-9 9 9 0 0 0-7.5 4M3 4v4h4" })
+                                ]))
                               ], 8 /* PROPS */, ["onClick", "disabled", "title"])
                             ]),
                             _createElementVNode("div", { class: "prompts-editor-group prompts-editor-group--workflow" }, [
@@ -6460,6 +6560,72 @@ return function render(_ctx, _cache) {
                             ])
                           ])
                         ]),
+                        (_ctx.sysHistoryVisible)
+                          ? (_openBlock(), _createElementBlock("details", {
+                              key: 0,
+                              class: "prompt-history-panel",
+                              open: ""
+                            }, [
+                              _createElementVNode("summary", { class: "prompt-history-summary" }, [
+                                _createElementVNode("span", null, _toDisplayString(_ctx.t('common.history')), 1 /* TEXT */),
+                                _createElementVNode("button", {
+                                  type: "button",
+                                  class: "btn-mini prompt-history-close",
+                                  onClick: _ctx.closeSysHistory,
+                                  title: _ctx.t('common.close')
+                                }, "✕", 8 /* PROPS */, ["onClick", "title"])
+                              ]),
+                              _createElementVNode("div", { class: "prompt-history-body" }, [
+                                (!_ctx.sysHistoryLoading && !_ctx.sysHistoryError && _ctx.sysHistoryItems.length)
+                                  ? (_openBlock(), _createElementBlock("ul", {
+                                      key: 0,
+                                      class: "prompt-history-list"
+                                    }, [
+                                      (_openBlock(true), _createElementBlock(_Fragment, null, _renderList(_ctx.sysHistoryItems, (item) => {
+                                        return (_openBlock(), _createElementBlock("li", {
+                                          key: item.id,
+                                          class: _normalizeClass(['prompt-history-item', { active: _ctx.sysHistoryPreviewId === item.id }]),
+                                          onClick: $event => (_ctx.viewSysHistoryItem(item))
+                                        }, [
+                                          _createElementVNode("span", { class: "prompt-history-time" }, _toDisplayString(item.id), 1 /* TEXT */),
+                                          _createElementVNode("span", { class: "prompt-history-size" }, _toDisplayString(Math.round(item.size / 1024 * 10) / 10) + " KB", 1 /* TEXT */)
+                                        ], 10 /* CLASS, PROPS */, ["onClick"]))
+                                      }), 128 /* KEYED_FRAGMENT */))
+                                    ]))
+                                  : _createCommentVNode("v-if", true),
+                                (_ctx.sysHistoryLoading)
+                                  ? (_openBlock(), _createElementBlock("div", {
+                                      key: 1,
+                                      class: "state-message"
+                                    }, _toDisplayString(_ctx.t('diff.generating')), 1 /* TEXT */))
+                                  : (_ctx.sysHistoryError)
+                                    ? (_openBlock(), _createElementBlock("div", {
+                                        key: 2,
+                                        class: "state-message error"
+                                      }, _toDisplayString(_ctx.sysHistoryError), 1 /* TEXT */))
+                                    : (!_ctx.sysHistoryItems.length)
+                                      ? (_openBlock(), _createElementBlock("div", {
+                                          key: 3,
+                                          class: "state-message"
+                                        }, _toDisplayString(_ctx.t('toast.history.empty')), 1 /* TEXT */))
+                                      : _createCommentVNode("v-if", true),
+                                (_ctx.sysHistoryPreviewContent)
+                                  ? (_openBlock(), _createElementBlock("div", {
+                                      key: 4,
+                                      class: "prompt-history-preview-wrap"
+                                    }, [
+                                      _createElementVNode("pre", { class: "prompt-history-preview" }, _toDisplayString(_ctx.sysHistoryPreviewContent), 1 /* TEXT */),
+                                      _createElementVNode("button", {
+                                        type: "button",
+                                        class: "btn-mini btn-confirm-mini",
+                                        onClick: _ctx.applySysHistoryToEditor,
+                                        disabled: _ctx.sysPromptSaving || _ctx.sysPromptDiffVisible
+                                      }, _toDisplayString(_ctx.t('common.restoreToEditor')), 9 /* TEXT, PROPS */, ["onClick", "disabled"])
+                                    ]))
+                                  : _createCommentVNode("v-if", true)
+                              ])
+                            ]))
+                          : _createCommentVNode("v-if", true),
                         _createElementVNode("div", { class: "form-group" }, [
                           (_ctx.sysPromptDiffVisible)
                             ? (_openBlock(), _createElementBlock("div", { key: 0 }, [

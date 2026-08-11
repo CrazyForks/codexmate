@@ -20,6 +20,22 @@ function isValidOpenclawWorkspaceFileName(fileName) {
     return true;
 }
 
+function sanitizePromptHistoryId(raw) {
+    const safe = typeof raw === 'string' ? raw.trim() : '';
+    if (!safe) return 'global';
+    const replaced = safe.replace(/[^A-Za-z0-9_.-]/g, '_');
+    return (replaced || 'global').slice(0, 64);
+}
+
+function resolveAgentsHistoryBucket(instance) {
+    const subTab = typeof instance.promptsSubTab === 'string' ? instance.promptsSubTab : 'codex';
+    if (subTab === 'claude-project') {
+        const projectPath = (instance.projectClaudeMdPath || '').trim();
+        return 'claude-project_' + sanitizePromptHistoryId(projectPath || 'global');
+    }
+    return 'codex_global';
+}
+
 export function createAgentsMethods(options = {}) {
     const {
         api,
@@ -681,6 +697,9 @@ export function createAgentsMethods(options = {}) {
                     this.showMessage(res.error, 'error');
                     return;
                 }
+                if (typeof res.historyBucket === 'string' && res.historyBucket) {
+                    this.promptHistoryBucket = res.historyBucket;
+                }
                 const successLabel = this.agentsContext === 'openclaw-workspace'
                     ? this.t('toast.agents.saved.workspace', { name: this.agentsWorkspaceFileName || '' }).replace(/:\s*$/, '')
                     : (this.agentsContext === 'claude-project'
@@ -884,6 +903,77 @@ export function createAgentsMethods(options = {}) {
             await this.persistPromptPresets();
             this.showMessage(this.t('prompts.presets.toast.deleted'), 'success');
         },
+        async openPromptHistory() {
+            if (this.promptHistoryLoading) return;
+            const bucket = this.promptHistoryBucket || resolveAgentsHistoryBucket(this);
+            this.promptHistoryVisible = true;
+            this.promptHistoryError = '';
+            await this.loadPromptHistory(bucket);
+        },
+
+        async loadPromptHistory(bucketArg) {
+            if (this.promptHistoryLoading) return;
+            const bucket = typeof bucketArg === 'string' && bucketArg.trim()
+                ? bucketArg.trim()
+                : (this.promptHistoryBucket || resolveAgentsHistoryBucket(this));
+            this.promptHistoryBucket = bucket;
+            this.promptHistoryLoading = true;
+            this.promptHistoryError = '';
+            this.promptHistoryItems = [];
+            this.promptHistoryPreviewId = '';
+            this.promptHistoryPreviewContent = '';
+            try {
+                const res = await api('list-prompt-history', { bucket });
+                if (res && res.error) {
+                    this.promptHistoryError = res.error;
+                    return;
+                }
+                this.promptHistoryItems = Array.isArray(res) ? res : [];
+            } catch (e) {
+                this.promptHistoryError = this.t('toast.load.fail');
+            } finally {
+                this.promptHistoryLoading = false;
+            }
+        },
+
+        closePromptHistory() {
+            this.promptHistoryVisible = false;
+            this.promptHistoryPreviewId = '';
+            this.promptHistoryPreviewContent = '';
+            this.promptHistoryError = '';
+        },
+
+        async viewPromptHistoryItem(item) {
+            if (!item || !item.id) return;
+            if (this.promptHistoryLoading) return;
+            if (this.promptHistoryPreviewId === item.id && this.promptHistoryPreviewContent) return;
+            this.promptHistoryPreviewId = item.id;
+            this.promptHistoryPreviewContent = '';
+            try {
+                const res = await api('get-prompt-history', { bucket: this.promptHistoryBucket, id: item.id });
+                if (res && res.error) {
+                    this.promptHistoryError = res.error;
+                    this.promptHistoryPreviewId = '';
+                    return;
+                }
+                this.promptHistoryPreviewContent = typeof res.content === 'string' ? res.content : '';
+            } catch (e) {
+                this.promptHistoryError = this.t('toast.load.fail');
+                this.promptHistoryPreviewId = '';
+            }
+        },
+
+        applyPromptHistoryToEditor() {
+            if (!this.promptHistoryPreviewContent) return;
+            if (this.agentsSaving || this.agentsDiffVisible) return;
+            this.agentsContent = this.promptHistoryPreviewContent;
+            if (typeof this.onAgentsContentInput === 'function') this.onAgentsContentInput();
+            this.promptHistoryVisible = false;
+            this.promptHistoryPreviewId = '';
+            this.promptHistoryPreviewContent = '';
+            this.showMessage(this.t('toast.history.restored'), 'success');
+        },
+
         switchPromptsSubTab(subTab) {
             const normalized = subTab === 'claude-project' || subTab === 'system' ? subTab : 'codex';
             if (normalized === 'claude-project' && !this.projectPathOptions.length && !this.projectPathOptionsLoading) {
