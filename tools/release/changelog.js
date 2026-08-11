@@ -101,6 +101,10 @@ const CONTRIBUTOR_PROFILES = new Map([
     ['awsl233777', { login: 'awsl233777', displayName: 'Awsl' }]
 ]);
 
+const EXCLUDED_CONTRIBUTORS = new Set([
+    'anupamme'
+]);
+
 function escapeHtml(value) {
     return String(value || '')
         .replace(/&/g, '&amp;')
@@ -155,7 +159,13 @@ function listContributors(commits, externalLogins = []) {
         contributors.push({ login, displayName });
     }
 
-    return contributors;
+    return contributors.filter((contributor) => {
+        if (EXCLUDED_CONTRIBUTORS.has(contributor.login.toLowerCase()) ||
+            EXCLUDED_CONTRIBUTORS.has(contributor.displayName.toLowerCase())) {
+            return false;
+        }
+        return true;
+    });
 }
 
 function compareUrl(repository, previousTag, currentTag, currentRef) {
@@ -219,6 +229,11 @@ function formatChangelog({ repository = '', previousTag = '', currentTag = '', c
         if (directCommits.length) {
             lines.push('### Commits without PR');
             for (const commit of directCommits) {
+                const { login, displayName } = contributorProfile(commit.author);
+                if (EXCLUDED_CONTRIBUTORS.has(login.toLowerCase()) ||
+                    EXCLUDED_CONTRIBUTORS.has(displayName.toLowerCase())) {
+                    continue;
+                }
                 lines.push(`- ${commit.hash} ${commit.subject}${commit.author ? ` — ${commit.author}` : ''}`);
             }
             lines.push('');

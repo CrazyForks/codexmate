@@ -251,7 +251,7 @@ jobs:
             --repo "${GITHUB_REPOSITORY}" \
             --limit 500 \
             --json author \
-            --jq '.[].author.login' 2>/dev/null | sort -u > "${tmp_logins}" || true
+            --jq '.[].author.login' 2>/dev/null | sort -u | grep -ivE '^anupamme$' > "${tmp_logins}" || true
 
           # Fetch merged PRs in range using commits
           tmp_merged=$(mktemp)
@@ -265,7 +265,7 @@ jobs:
             | sort -u > "${tmp_merged}" || true
 
           if [ -s "${tmp_merged}" ]; then
-            cat "${tmp_merged}" > "${CONTRIBUTORS_FILE}"
+            grep -ivE '^anupamme$' "${tmp_merged}" > "${CONTRIBUTORS_FILE}" || true
           elif [ -s "${tmp_logins}" ]; then
             cat "${tmp_logins}" > "${CONTRIBUTORS_FILE}"
           else
