@@ -167,10 +167,6 @@ Cảm ơn tất cả những người đóng góp cho Codex Mate ❤️
   <img src="https://contrib.rocks/image?repo=SakuraByteCore/codexmate" alt="Contributors" />
 </a>
 
-## Lịch sử Star
-
-[![Star History Chart](https://api.star-history.com/svg?repos=SakuraByteCore/codexmate&type=Date)](https://star-history.com/#SakuraByteCore/codexmate&Date)
-
 ## Giấy phép
 
 Apache-2.0
