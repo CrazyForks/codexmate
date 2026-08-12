@@ -696,6 +696,7 @@ const en = Object.freeze({
     'sessions.preview.importNative.failedWithReason': 'Import to native failed: {reason}',
     'sessions.preview.copyLink': 'Copy link',
     'sessions.preview.copyPath': 'Copy path',
+    'sessions.preview.copyMessage': 'Copy message',
     'sessions.preview.openLink': 'Open link',
     'sessions.preview.loadingBody': 'Loading session content...',
     'sessions.preview.emptyMsgs': 'No messages to display',

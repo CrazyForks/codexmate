@@ -695,6 +695,7 @@ const zhTw = Object.freeze({
     'sessions.preview.importNative.failedWithReason': '匯入原生目錄失敗：{reason}',
     'sessions.preview.copyLink': '複製鏈接',
     'sessions.preview.copyPath': '複製路徑',
+    'sessions.preview.copyMessage': '複製記錄',
     'sessions.preview.openLink': '打開鏈接',
     'sessions.preview.loadingBody': '正在載入會話內容...',
     'sessions.preview.emptyMsgs': '目前會話暫無可展示消息',

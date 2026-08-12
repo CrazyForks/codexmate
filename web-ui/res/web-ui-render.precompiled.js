@@ -3812,7 +3812,33 @@ return function render(_ctx, _cache) {
                                                         _createElementVNode("div", {
                                                           class: "session-msg-content",
                                                           innerHTML: _ctx.highlightQueryText(msg.text) || ''
-                                                        }, null, 8 /* PROPS */, ["innerHTML"])
+                                                        }, null, 8 /* PROPS */, ["innerHTML"]),
+                                                        (msg.normalizedRole === 'user')
+                                                          ? (_openBlock(), _createElementBlock("button", {
+                                                              key: 0,
+                                                              type: "button",
+                                                              class: "session-msg-copy",
+                                                              onClick: $event => (_ctx.copySessionMessage(msg)),
+                                                              "aria-label": _ctx.t('sessions.preview.copyMessage'),
+                                                              title: _ctx.t('sessions.preview.copyMessage')
+                                                            }, [
+                                                              (_openBlock(), _createElementBlock("svg", {
+                                                                viewBox: "0 0 24 24",
+                                                                fill: "none",
+                                                                stroke: "currentColor",
+                                                                "stroke-width": "2"
+                                                              }, [
+                                                                _createElementVNode("rect", {
+                                                                  x: "8",
+                                                                  y: "8",
+                                                                  width: "12",
+                                                                  height: "12",
+                                                                  rx: "2"
+                                                                }),
+                                                                _createElementVNode("path", { d: "M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" })
+                                                              ]))
+                                                            ], 8 /* PROPS */, ["onClick", "aria-label", "title"]))
+                                                          : _createCommentVNode("v-if", true)
                                                       ], 10 /* CLASS, PROPS */, ["data-message-key"]))
                                                       _item.memo = _memo
                                                       return _item

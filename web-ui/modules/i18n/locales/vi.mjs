@@ -867,6 +867,7 @@ const vi = Object.freeze({
     'sessions.preview.importNative.failedWithReason': 'Nhập vào native thất bại: {reason}',
     'sessions.preview.copyLink': 'Sao chép link',
     'sessions.preview.copyPath': 'Sao chép đường dẫn',
+    'sessions.preview.copyMessage': 'Sao chép tin nhắn',
     'sessions.preview.loadingBody': 'Đang tải nội dung phiên...',
     'sessions.preview.emptyMsgs': 'Không có tin nhắn để hiển thị',
     'sessions.preview.rendering': 'Đang render nội dung phiên...',

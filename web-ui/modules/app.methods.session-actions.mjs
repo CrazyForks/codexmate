@@ -393,6 +393,27 @@ export function createSessionActionMethods(options = {}) {
             }
         },
 
+        async copySessionMessage(msg) {
+            const text = msg && typeof msg.text === 'string' ? msg.text : '';
+            if (!text) {
+                this.showMessage(typeof this.t === 'function' ? this.t('toast.copy.empty') : 'Nothing to copy', 'info');
+                return;
+            }
+            const ok = this.fallbackCopyText(text);
+            if (ok) {
+                this.showMessage(typeof this.t === 'function' ? this.t('toast.copy.ok') : 'Copied', 'success');
+                return;
+            }
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                    this.showMessage(typeof this.t === 'function' ? this.t('toast.copy.ok') : 'Copied', 'success');
+                    return;
+                }
+            } catch (_) {}
+            this.showMessage(typeof this.t === 'function' ? this.t('toast.copy.fail') : 'Copy failed', 'error');
+        },
+
         copyAgentsContent() {
             const text = typeof this.agentsContent === 'string' ? this.agentsContent : '';
             if (!text) {
