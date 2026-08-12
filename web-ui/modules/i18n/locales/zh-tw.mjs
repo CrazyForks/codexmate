@@ -1178,6 +1178,10 @@ const zhTw = Object.freeze({
     'settings.timeline.style.dots': '點狀',
     'settings.timeline.style.bar': '條狀',
     'settings.timeline.style.hint': '點狀適合快速定位，條狀更直觀顯示進度',
+    'settings.configTabs.title': '配置面板可見性',
+    'settings.configTabs.meta': '控制側邊欄顯示哪些配置子頁面',
+    'settings.configTabs.hint': '關閉後對應的配置子頁面將不再顯示，至少需保留一個',
+    'settings.configTabs.minRequired': '至少需要保留一個可見的配置頁面',
 
     'settings.reset.title': '設定重置',
     'settings.reset.meta': '謹慎操作',

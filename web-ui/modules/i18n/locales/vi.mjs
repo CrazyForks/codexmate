@@ -469,6 +469,10 @@ const vi = Object.freeze({
     'settings.timeline.style.dots': 'Chấm',
     'settings.timeline.style.bar': 'Thanh',
     'settings.timeline.style.hint': 'Chấm để điều hướng nhanh, Thanh để hiển thị tiến trình trực quan',
+    'settings.configTabs.title': 'Hiển thị bảng cấu hình',
+    'settings.configTabs.meta': 'Kiểm soát các sub-tab cấu hình hiển thị trên thanh bên',
+    'settings.configTabs.hint': 'Tab bị ẩn sẽ không hiển thị; cần giữ lại ít nhất một tab',
+    'settings.configTabs.minRequired': 'Phải giữ lại ít nhất một tab cấu hình',
 
     // Diff / Agents hints
     'diff.hint.busy': 'Đang tạo diff hoặc áp dụng. Thao tác tạm thời bị vô hiệu hóa.',

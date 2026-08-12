@@ -138,6 +138,41 @@
                                     </div>
                                 </div>
                             </section>
+
+                            <section class="settings-card" :aria-label="t('settings.configTabs.title')">
+                                <div class="settings-card-main">
+                                    <div class="settings-card-content">
+                                        <div class="settings-card-title">{{ t('settings.configTabs.title') }}</div>
+                                        <p class="settings-card-desc">{{ t('settings.configTabs.meta') }}</p>
+                                        <label class="settings-toggle-row">
+                                            <input type="checkbox" :checked="configModeVisibility.codex" @change="setConfigModeVisibility('codex', $event.target.checked)">
+                                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                            <span>{{ t('tab.config.codex') }}</span>
+                                        </label>
+                                        <label class="settings-toggle-row">
+                                            <input type="checkbox" :checked="configModeVisibility.claude" @change="setConfigModeVisibility('claude', $event.target.checked)">
+                                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                            <span>{{ t('tab.config.claude') }}</span>
+                                        </label>
+                                        <label class="settings-toggle-row">
+                                            <input type="checkbox" :checked="configModeVisibility.openclaw" @change="setConfigModeVisibility('openclaw', $event.target.checked)">
+                                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                            <span>{{ t('tab.config.openclaw') }}</span>
+                                        </label>
+                                        <label class="settings-toggle-row">
+                                            <input type="checkbox" :checked="configModeVisibility.opencode" @change="setConfigModeVisibility('opencode', $event.target.checked)">
+                                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                            <span>{{ t('tab.config.opencode') }}</span>
+                                        </label>
+                                        <label class="settings-toggle-row">
+                                            <input type="checkbox" :checked="configModeVisibility.kilocode" @change="setConfigModeVisibility('kilocode', $event.target.checked)">
+                                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                            <span>{{ t('tab.config.kilocode') }}</span>
+                                        </label>
+                                        <p class="settings-card-hint">{{ t('settings.configTabs.hint') }}</p>
+                                    </div>
+                                </div>
+                            </section>
                         </div>
                     </div>
 

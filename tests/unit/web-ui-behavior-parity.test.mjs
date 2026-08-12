@@ -465,6 +465,7 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
     ];
     allowedExtraCurrentKeys.push(
         'lang',
+        'configModeVisibility',
         'configTemplateContext',
         'configTemplateDiffVisible',
         'configTemplateDiffLoading',
@@ -908,7 +909,10 @@ test('captured bundled app skeleton only exposes expected data key drift versus 
         'isAllVisibleBatchSelected',
         'toggleSelectAllVisibleForBatch',
         'clearSessionBatchSelection',
-        'deleteSelectedSessions'
+        'deleteSelectedSessions',
+        'isConfigModeVisible',
+        'normalizeConfigModeVisibility',
+        'setConfigModeVisibility'
     );
     const allowedMissingCurrentMethodKeys = [
         'convertSession',

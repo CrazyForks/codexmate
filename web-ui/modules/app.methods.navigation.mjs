@@ -145,7 +145,13 @@
             if (typeof this.ensureMainTabSwitchState === 'function') {
                 this.ensureMainTabSwitchState().pendingConfigMode = '';
             }
-            this.configMode = configModeSet.has(normalizedMode) ? normalizedMode : 'codex';
+            const resolvedMode = configModeSet.has(normalizedMode) ? normalizedMode : 'codex';
+            if (typeof this.isConfigModeVisible === 'function' && !this.isConfigModeVisible(resolvedMode)) {
+                const fallback = ['codex', 'claude', 'openclaw', 'opencode', 'kilocode'].find(m => this.isConfigModeVisible(m)) || 'codex';
+                this.configMode = configModeSet.has(fallback) ? fallback : 'codex';
+            } else {
+                this.configMode = resolvedMode;
+            }
             if (this.mainTab === 'config') {
                 if (this.configMode === 'kilocode' && typeof this.loadKilocodeConfig === 'function') {
                     this.loadKilocodeConfig();

@@ -334,9 +334,9 @@
     grid-auto-columns: max-content;
     column-gap: var(--spacing-xs);
     row-gap: 6px;
-    align-items: center;
+    align-items: start;
     justify-content: end;
-    align-self: center;
+    align-self: flex-start;
 }
 
 .card-trailing .card-actions {

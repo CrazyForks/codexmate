@@ -137,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 configTemplateDiffFingerprint: '',
                 _configTemplateDiffPreviewRequestToken: null,
                 configTemplateDiffConfirmEnabled: true,
+                configModeVisibility: { codex: true, claude: true, openclaw: true, opencode: true, kilocode: true },
                 codexApplying: false,
                 _pendingCodexApplyOptions: null,
                 agentsContent: '',

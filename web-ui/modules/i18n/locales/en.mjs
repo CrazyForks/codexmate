@@ -1180,6 +1180,10 @@ const en = Object.freeze({
     'settings.timeline.style.dots': 'Dots',
     'settings.timeline.style.bar': 'Bar',
     'settings.timeline.style.hint': 'Dots for quick navigation, Bar for visual progress',
+    'settings.configTabs.title': 'Config panel visibility',
+    'settings.configTabs.meta': 'Control which configuration sub-tabs appear in the sidebar',
+    'settings.configTabs.hint': 'Hidden sub-tabs will no longer be visible; at least one must remain',
+    'settings.configTabs.minRequired': 'At least one configuration tab must remain visible',
 
     'settings.reset.title': 'Config reset',
     'settings.reset.meta': 'Proceed with caution',

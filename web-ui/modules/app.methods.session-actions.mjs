@@ -357,6 +357,42 @@ export function createSessionActionMethods(options = {}) {
             }
         },
 
+        normalizeConfigModeVisibility(value) {
+            const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+            const result = {};
+            for (const mode of ['codex', 'claude', 'openclaw', 'opencode', 'kilocode']) {
+                result[mode] = typeof source[mode] === 'boolean' ? source[mode] : true;
+            }
+            return result;
+        },
+
+        isConfigModeVisible(mode) {
+            const normalizedMode = typeof mode === 'string' ? mode.trim().toLowerCase() : '';
+            if (!this.configModeVisibility) return true;
+            return this.configModeVisibility[normalizedMode] !== false;
+        },
+
+        setConfigModeVisibility(mode, visible) {
+            const normalizedMode = typeof mode === 'string' ? mode.trim().toLowerCase() : '';
+            if (!normalizedMode || !['codex', 'claude', 'openclaw', 'opencode', 'kilocode'].includes(normalizedMode)) return;
+            const visibility = this.configModeVisibility || { codex: true, claude: true, openclaw: true, opencode: true, kilocode: true };
+            const next = { ...visibility, [normalizedMode]: !!visible };
+            const visibleCount = Object.values(next).filter(Boolean).length;
+            if (visibleCount === 0) {
+                this.showMessage(typeof this.t === 'function' ? this.t('settings.configTabs.minRequired') : 'At least one tab must remain visible', 'info');
+                return;
+            }
+            this.configModeVisibility = next;
+            if (typeof this.persistWebUiPreferences === 'function') {
+                this.persistWebUiPreferences({ configModeVisibility: next });
+            }
+            if (this.mainTab === 'config' && this.configMode === normalizedMode && !next[normalizedMode]) {
+                const fallback = ['codex', 'claude', 'openclaw', 'opencode', 'kilocode'].find(m => next[m] !== false);
+                if (fallback) this.switchConfigMode(fallback);
+            }
+        },
+
+
         getShareCommandPrefixInvocation() {
             const prefix = this.normalizeShareCommandPrefix(this.shareCommandPrefix);
             return prefix === 'codexmate' ? 'codexmate' : 'npm start --';

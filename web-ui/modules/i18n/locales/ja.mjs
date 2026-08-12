@@ -1182,6 +1182,10 @@ const ja = Object.freeze({
     'settings.timeline.style.dots': 'ドット',
     'settings.timeline.style.bar': 'バー',
     'settings.timeline.style.hint': 'ドットは素早いナビゲーション、バーは進捗を直感的に表示',
+    'settings.configTabs.title': '設定パネルの表示',
+    'settings.configTabs.meta': 'サイドバーに表示する設定サブページを制御します',
+    'settings.configTabs.hint': 'オフにすると対応するサブページが非表示になります。最低1つは必要です',
+    'settings.configTabs.minRequired': '少なくとも1つの設定ページを表示する必要があります',
 
     'settings.reset.title': '設定リセット',
     'settings.reset.meta': '注意して操作してください',

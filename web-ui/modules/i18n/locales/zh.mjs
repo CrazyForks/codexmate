@@ -1178,6 +1178,10 @@ const zh = Object.freeze({
     'settings.timeline.style.dots': '点状',
     'settings.timeline.style.bar': '条状',
     'settings.timeline.style.hint': '点状适合快速定位，条状更直观显示进度',
+    'settings.configTabs.title': '配置面板可见性',
+    'settings.configTabs.meta': '控制侧栏中哪些配置子页面可见',
+    'settings.configTabs.hint': '关闭后对应的配置子页面将不再显示，至少需保留一个',
+    'settings.configTabs.minRequired': '至少需要保留一个可见的配置页面',
 
     'settings.reset.title': '配置重置',
     'settings.reset.meta': '谨慎操作',

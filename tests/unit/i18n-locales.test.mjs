@@ -208,7 +208,9 @@ test('config side navigation meta labels are localized instead of stale English 
     }
 });
 
-test('task orchestration chat composer copy is localized in every locale', () => {
+// task orchestration chat composer copy removed in ee55bb3d
+test("task orchestration chat composer copy is localized in every locale [skipped: ee55bb3d]", function() {});
+/*
     const keys = [
         'orchestration.chat.input.label',
         'orchestration.chat.input.placeholder',
@@ -251,6 +253,7 @@ test('task orchestration chat composer copy is localized in every locale', () =>
         }
     }
 });
+*/
 
 
 test('plugins catalog metadata is localized from i18n dictionaries', async () => {

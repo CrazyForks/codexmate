@@ -347,6 +347,9 @@ export function createWebUiPreferencesMethods(options = {}) {
                     ? source.projectClaudeMdPath
                     : (typeof this.projectClaudeMdPath === 'string' ? this.projectClaudeMdPath : ''),
                 sidebarCollapsed: normalizeBoolean(hasOwn(source, 'sidebarCollapsed') ? source.sidebarCollapsed : this.sidebarCollapsed, false),
+                configModeVisibility: typeof this.normalizeConfigModeVisibility === 'function'
+                    ? this.normalizeConfigModeVisibility(hasOwn(source, 'configModeVisibility') ? source.configModeVisibility : this.configModeVisibility)
+                    : { codex: true, claude: true, openclaw: true, opencode: true, kilocode: true },
                 starPrompted: normalizeBoolean(hasOwn(source, 'starPrompted') ? source.starPrompted : this.starPrompted, false),
                 sessionLoadNativeDialog: normalizeBoolean(hasOwn(source, 'sessionLoadNativeDialog') ? source.sessionLoadNativeDialog : this.sessionLoadNativeDialog, false),
                 language: typeof source.language === 'string'
@@ -411,6 +414,9 @@ export function createWebUiPreferencesMethods(options = {}) {
                 }
                 if (hasOwn(source, 'sidebarCollapsed')) {
                     this.sidebarCollapsed = normalizeBoolean(source.sidebarCollapsed, false);
+                }
+                if (hasOwn(source, 'configModeVisibility') && typeof this.normalizeConfigModeVisibility === 'function') {
+                    this.configModeVisibility = this.normalizeConfigModeVisibility(source.configModeVisibility);
                 }
                 if (hasOwn(source, 'starPrompted')) {
                     this.starPrompted = normalizeBoolean(source.starPrompted, false);

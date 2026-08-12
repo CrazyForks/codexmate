@@ -183,6 +183,7 @@
                 <div class="side-section" role="navigation" :aria-label="t('side.config')">
                     <div class="side-section-title">{{ t('side.config') }}</div>
                     <button
+                        v-if="isConfigModeVisible('codex')"
                         id="side-tab-config-codex"
                         data-main-tab="config"
                         data-config-mode="codex"
@@ -197,6 +198,7 @@
                         </div>
                     </button>
                     <button
+                        v-if="isConfigModeVisible('claude')"
                         id="side-tab-config-claude"
                         data-main-tab="config"
                         data-config-mode="claude"
@@ -211,6 +213,7 @@
                         </div>
                     </button>
                     <button
+                        v-if="isConfigModeVisible('openclaw')"
                         id="side-tab-config-openclaw"
                         data-main-tab="config"
                         data-config-mode="openclaw"
@@ -225,6 +228,7 @@
                         </div>
                     </button>
                     <button
+                        v-if="isConfigModeVisible('opencode')"
                         id="side-tab-config-opencode"
                         data-main-tab="config"
                         data-config-mode="opencode"
@@ -240,6 +244,7 @@
                     </button>
 
                     <button
+                        v-if="isConfigModeVisible('kilocode')"
                         id="side-tab-config-kilocode"
                         data-main-tab="config"
                         data-config-mode="kilocode"
